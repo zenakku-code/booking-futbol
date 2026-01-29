@@ -56,7 +56,7 @@ export default async function FieldDetailPage({ params }: { params: Promise<{ id
                         )}
                     </div>
 
-                    <div className="mt-8 lg:mt-0">
+                    <div className="mt-8 lg:mt-0 px-4 sm:px-0">
                         <BookingFlow field={field} />
                     </div>
                 </div>
