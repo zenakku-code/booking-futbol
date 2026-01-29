@@ -83,7 +83,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {fields.map((field: any) => (
+                            {fields.map((field) => (
                                 <FieldCard key={field.id} field={field} />
                             ))}
                             {fields.length === 0 && (
