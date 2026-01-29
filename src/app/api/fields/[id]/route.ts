@@ -1,12 +1,28 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getComplexId } from '@/lib/auth'
 
 export async function DELETE(
     request: Request,
     { params }: { params: Promise<{ id: string }> } // Handling async params (Next.js 15)
 ) {
     try {
+        const complexId = await getComplexId()
+        if (!complexId) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        }
+
         const { id } = await params
+
+        // Verificar que la cancha pertenece al complejo
+        const field = await prisma.field.findFirst({
+            where: { id, complexId }
+        })
+
+        if (!field) {
+            return NextResponse.json({ error: 'Cancha no encontrada o no pertenece a tu complejo' }, { status: 404 })
+        }
+
         await prisma.field.delete({
             where: { id }
         })
@@ -25,9 +41,23 @@ export async function PUT(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
+        const complexId = await getComplexId()
+        if (!complexId) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        }
+
         const { id } = await params
         const body = await request.json()
         const { name, type, price, imageUrl, availableDays, openTime, closeTime } = body
+
+        // Verificar que la cancha pertenece al complejo
+        const existingField = await prisma.field.findFirst({
+            where: { id, complexId }
+        })
+
+        if (!existingField) {
+            return NextResponse.json({ error: 'Cancha no encontrada o no pertenece a tu complejo' }, { status: 404 })
+        }
 
         const field = await prisma.field.update({
             where: { id },

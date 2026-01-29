@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getComplexId } from '@/lib/auth'
 
 export async function GET() {
     try {
-        const fields = await prisma.field.findMany()
+        const complexId = await getComplexId()
+        if (!complexId) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        }
+
+        const fields = await prisma.field.findMany({
+            where: { complexId }
+        })
         return NextResponse.json(fields)
     } catch (error) {
         return NextResponse.json({ error: 'Error fetching fields' }, { status: 500 })
@@ -12,6 +20,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
     try {
+        const complexId = await getComplexId()
+        if (!complexId) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        }
+
         const body = await request.json()
         const { name, type, price, imageUrl, availableDays, openTime, closeTime } = body
 
@@ -27,7 +40,8 @@ export async function POST(request: Request) {
                 imageUrl,
                 availableDays: availableDays || undefined,
                 openTime: openTime || undefined,
-                closeTime: closeTime || undefined
+                closeTime: closeTime || undefined,
+                complexId // Vincular al complejo actual
             }
         })
 

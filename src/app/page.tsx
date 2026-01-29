@@ -4,8 +4,24 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ complex?: string }> }) {
+    const { complex: slug } = await searchParams
+
+    let whereClause = {}
+    let currentComplex = null
+
+    if (slug) {
+        currentComplex = await prisma.complex.findUnique({
+            where: { slug }
+        })
+        if (currentComplex) {
+            whereClause = { complexId: currentComplex.id }
+        }
+    }
+
     const fields = await prisma.field.findMany({
+        where: whereClause,
+        include: { complex: true },
         orderBy: { type: 'asc' }
     })
 

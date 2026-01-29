@@ -11,30 +11,47 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+model Complex {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String    @unique
+  address     String?
+  logoUrl     String?
+  fields      Field[]
+  accounts    Account[]
+  users       User[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Field {
-  id        String   @id @default(uuid())
-  name      String
-  type      String   // "5", "7", "11"
-  price     Float
-  imageUrl  String?
-  availableDays String @default("Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo") // Comma separated
-  openTime  String     @default("09:00")
-  closeTime String     @default("23:00")
-  bookings  Booking[]
+  id            String    @id @default(uuid())
+  name          String
+  type          String    // "5", "7", "11"
+  price         Float
+  imageUrl      String?
+  availableDays String    @default("Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo")
+  openTime      String    @default("09:00")
+  closeTime     String    @default("23:00")
+  bookings      Booking[]
+  
+  // SaaS Link
+  complexId     String?
+  complex       Complex?  @relation(fields: [complexId], references: [id])
 }
 
 model Booking {
-  id        String   @id @default(uuid())
-  fieldId   String
-  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  date      DateTime
-  startTime String   // e.g. "18:00"
-  endTime   String   // e.g. "19:00"
-  clientName String
+  id          String   @id @default(uuid())
+  fieldId     String
+  field       Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  date        DateTime
+  startTime   String   
+  endTime     String   
+  clientName  String
   clientPhone String?
-  totalPrice Float
-  status    String   @default("pending") // pending, confirmed, cancelled
-  createdAt DateTime @default(now())
+  totalPrice  Float
+  status      String   @default("pending") 
+  createdAt   DateTime @default(now())
 }
 
 model Account {
@@ -43,7 +60,12 @@ model Account {
   accessToken  String
   refreshToken String?
   publicKey    String?
-  userId       String   @default("admin") // Simple single-user mapping
+  userId       String   @default("admin") 
+  
+  // SaaS Link
+  complexId    String?   @unique
+  complex      Complex?  @relation(fields: [complexId], references: [id])
+  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -51,7 +73,12 @@ model Account {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  password  String   // Hashed password
+  password  String   
+  
+  // SaaS Link
+  complexId String?
+  complex   Complex? @relation(fields: [complexId], references: [id])
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
