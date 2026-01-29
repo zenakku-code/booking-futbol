@@ -4,6 +4,7 @@ import AccountSettings from "@/components/admin/AccountSettings"
 import ComplexImageSettings from "@/components/admin/ComplexImageSettings"
 import ComplexNameSettings from "@/components/admin/ComplexNameSettings"
 import SubscriptionStatus from "@/components/admin/SubscriptionStatus"
+import ApiKeySettings from "@/components/admin/ApiKeySettings"
 import { getComplexId } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
@@ -35,6 +36,9 @@ export default async function SettingsPage() {
                 </div>
                 <ComplexNameSettings initialComplex={complex} />
                 <ComplexImageSettings initialComplex={complex} />
+                <div className="lg:col-span-2">
+                    <ApiKeySettings />
+                </div>
                 <AccountSettings initialAccount={account} />
             </div>
         </div>
