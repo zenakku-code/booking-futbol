@@ -9,13 +9,18 @@ const globalForPrisma = globalThis as unknown as {
 const isTurso = process.env.DATABASE_URL?.startsWith('libsql:') || process.env.DATABASE_URL?.includes('turso.io')
 
 const createPrismaClient = () => {
-    if (isTurso) {
-        const libsql = createClient({
-            url: process.env.DATABASE_URL as string,
-            authToken: process.env.TURSO_AUTH_TOKEN,
-        })
-        const adapter = new PrismaLibSql(libsql as any)
-        return new PrismaClient({ adapter })
+    // Only use LibSQL adapter if we have a valid Turso URL
+    if (isTurso && process.env.DATABASE_URL) {
+        try {
+            const libsql = createClient({
+                url: process.env.DATABASE_URL as string,
+                authToken: process.env.TURSO_AUTH_TOKEN,
+            })
+            const adapter = new PrismaLibSql(libsql as any)
+            return new PrismaClient({ adapter })
+        } catch (e) {
+            console.warn('Failed to initialize LibSQL adapter, falling back to default Prisma client:', e)
+        }
     }
     return new PrismaClient()
 }
