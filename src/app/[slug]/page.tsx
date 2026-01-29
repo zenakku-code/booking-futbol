@@ -5,8 +5,15 @@ import { notFound } from "next/navigation"
 
 export const dynamic = 'force-dynamic'
 
-export default async function ComplexPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ComplexPage({
+    params,
+    searchParams
+}: {
+    params: Promise<{ slug: string }>,
+    searchParams: Promise<{ status?: string, booking_id?: string }>
+}) {
     const { slug } = await params
+    const { status, booking_id } = await searchParams
 
     const currentComplex = await prisma.complex.findUnique({
         where: { slug }
@@ -42,6 +49,29 @@ export default async function ComplexPage({ params }: { params: Promise<{ slug: 
                     <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[128px] -z-10 animate-float" style={{ animationDelay: '2s' }} />
 
                     <div className="max-w-4xl animate-fade-in z-10">
+                        {status === 'success' && (
+                            <div className="mb-8 p-6 bg-green-500/20 border border-green-500/50 rounded-3xl backdrop-blur-xl animate-fade-in">
+                                <h4 className="text-xl font-bold text-green-400 mb-1 flex items-center justify-center gap-2">
+                                    <span>✓</span> ¡Reserva Confirmada!
+                                </h4>
+                                <p className="text-green-200/70 text-smSmall">
+                                    Tu pago ha sido procesado con éxito. Te esperamos en la cancha.
+                                    {booking_id && <span className="block mt-1 opacity-50 text-[10px]">ID: {booking_id}</span>}
+                                </p>
+                            </div>
+                        )}
+
+                        {status === 'failure' && (
+                            <div className="mb-8 p-6 bg-red-500/20 border border-red-500/50 rounded-3xl backdrop-blur-xl animate-shake">
+                                <h4 className="text-xl font-bold text-red-400 mb-1 flex items-center justify-center gap-2">
+                                    <span>✕</span> Error en el Pago
+                                </h4>
+                                <p className="text-red-200/70 text-sm">
+                                    No pudimos procesar tu pago. Por favor, intenta nuevamente o contacta al complejo.
+                                </p>
+                            </div>
+                        )}
+
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8 hover:bg-white/10 transition-colors cursor-default">
                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                             <span className="text-gray-300 text-sm font-medium">Disponible para Reserva</span>

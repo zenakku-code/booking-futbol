@@ -77,7 +77,10 @@ export async function POST(request: Request) {
         }
 
         // Validate within field hours
-        const field = await prisma.field.findUnique({ where: { id: fieldId } })
+        const field = await prisma.field.findUnique({
+            where: { id: fieldId },
+            include: { complex: true }
+        })
         if (!field) return NextResponse.json({ error: 'Field not found' }, { status: 404 })
 
         const isWithinHours = startTime >= field.openTime && endTime <= field.closeTime
@@ -113,6 +116,9 @@ export async function POST(request: Request) {
                 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
+                // Build redirect path - if complex exists, use dynamic route
+                const returnPath = field.complex?.slug ? `/${field.complex.slug}` : ''
+
                 const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
                     method: 'POST',
                     headers: {
@@ -129,9 +135,9 @@ export async function POST(request: Request) {
                             }
                         ],
                         back_urls: {
-                            success: `${baseUrl}/?status=success&booking_id=${booking.id}`,
-                            failure: `${baseUrl}/?status=failure&booking_id=${booking.id}`,
-                            pending: `${baseUrl}/?status=pending&booking_id=${booking.id}`
+                            success: `${baseUrl}${returnPath}?status=success&booking_id=${booking.id}`,
+                            failure: `${baseUrl}${returnPath}?status=failure&booking_id=${booking.id}`,
+                            pending: `${baseUrl}${returnPath}?status=pending&booking_id=${booking.id}`
                         },
                         auto_return: 'approved',
                         external_reference: booking.id

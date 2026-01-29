@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 export default function FieldCard({ field }: { field: any }) {
     return (
-        <Link href={`/fields/${field.id}`} className="block group w-full h-full">
+        <Link href={`/${field.complex?.slug || 'error'}/fields/${field.id}`} className="block group w-full h-full">
             <div className="glass-card flex flex-col overflow-hidden relative transition-all duration-300 transform group-hover:-translate-y-2 group-hover:shadow-2xl hover:shadow-primary/20 h-full">
                 {/* Image Section - Fixed Aspect Ratio */}
                 <div className="relative w-full pt-[60%] bg-slate-800 overflow-hidden">
