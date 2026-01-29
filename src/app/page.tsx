@@ -77,8 +77,12 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
                     <div className="container">
                         <div className="flex justify-between items-end mb-12">
                             <div>
-                                <h3 className="text-3xl font-bold text-white mb-2">Nuestras Canchas</h3>
-                                <p className="text-gray-400">Selecciona tu campo de juego ideal.</p>
+                                <h3 className="text-3xl font-bold text-white mb-2">
+                                    {currentComplex ? currentComplex.name : 'Nuestras Canchas'}
+                                </h3>
+                                <p className="text-gray-400">
+                                    {currentComplex ? `Bienvenidos a ${currentComplex.name}. Selecciona tu campo de juego.` : 'Selecciona tu campo de juego ideal.'}
+                                </p>
                             </div>
                         </div>
 
