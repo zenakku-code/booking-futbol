@@ -35,7 +35,7 @@ export default async function ComplexPage({
 
             <div className="relative z-10">
                 {/* Header */}
-                <header className="absolute top-0 w-full p-6">
+                <header className="absolute top-0 w-full p-6 z-50">
                     <div className="container flex justify-between items-center">
                         <Link href="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                             Booking Futbol
