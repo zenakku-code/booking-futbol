@@ -27,7 +27,7 @@ export default function ComplexNameSettings({ initialComplex }: Props) {
 
         try {
             const res = await fetch('/api/admin/complex', {
-                method: 'PUT',
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: name.trim() })
             })
