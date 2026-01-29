@@ -10,10 +10,10 @@ This document outlines the strategic growth plan for the SaaS platform.
 - [x] Complex registration and self-management.
 - [x] Security audit and sanitization.
 
-## Phase 2: Monetization & Core Features (IN PROGRESS)
-- [ ] **Subscription Model**: Restrict field management until the initial platform fee is paid via Mercado Pago.
-- [ ] **Inventory Management**: Allow complex owners to list rental items (balls, bibs, etc.).
-- [ ] **Booking Add-ons**: Clients can select inventory items during the booking flow.
+## Phase 2: Monetization & Core Features (COMPLETED)
+- [x] **Subscription Model**: Restrict field management until the initial platform fee is paid via Mercado Pago.
+- [x] **Inventory Management**: Allow complex owners to list rental items (balls, bibs, etc.).
+- [x] **Booking Add-ons**: Clients can select inventory items during the booking flow.
 
 ## Phase 3: Engagement & Scaling (UPCOMING)
 - [ ] **WhatsApp Notifications**: Automatic booking confirmations and owner alerts.
