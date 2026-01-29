@@ -2,11 +2,19 @@
 import { useState } from 'react'
 
 export default function SplitPaymentClient({ booking, remaining, isCompleted }: any) {
-    const [amount, setAmount] = useState<number>(Math.ceil(remaining / 2)) // Default to half or smart suggestion
+    // Calculos seguros pre-render
+    const playersRaw = parseInt(booking.field.type)
+    const players = isNaN(playersRaw) ? 5 : playersRaw
+
+    const oneShare = Math.ceil(remaining / players)
+    const halfShare = Math.ceil(remaining / 2)
+
+    // Estado inicial: sugerir la mitad, o el total si es poco
+    const [amount, setAmount] = useState<number>(halfShare)
     const [loading, setLoading] = useState(false)
 
     const handlePay = async () => {
-        if (amount <= 0 || amount > remaining + 1) { // +1 for floating point tolerance
+        if (amount <= 0 || amount > remaining + 1) {
             alert('Monto inválido')
             return
         }
@@ -61,14 +69,31 @@ export default function SplitPaymentClient({ booking, remaining, isCompleted }: 
             <h3 className="text-center text-lg font-bold mb-6 text-white">¿Cuánto ponés hoy?</h3>
 
             <div className="grid grid-cols-3 gap-2 mb-6">
-                <button onClick={() => setAmount(Math.ceil(remaining / parseInt(booking.field.type)))} className="py-2 px-1 bg-slate-800/80 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all">
-                    1/{booking.field.type} ({(remaining / parseInt(booking.field.type)).toFixed(0)})
+                <button
+                    onClick={() => {
+                        console.log('Setting amount to share:', oneShare);
+                        setAmount(oneShare);
+                    }}
+                    className="flex flex-col items-center justify-center py-3 px-1 bg-slate-800/80 rounded-xl text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all active:scale-95"
+                >
+                    <span className="text-[10px] sm:text-xs font-bold uppercase">1/{players}</span>
+                    <span className="text-sm font-black">${oneShare}</span>
                 </button>
-                <button onClick={() => setAmount(Math.ceil(remaining / 2))} className="py-2 px-1 bg-slate-800/80 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all">
-                    La Mitad
+
+                <button
+                    onClick={() => setAmount(halfShare)}
+                    className="flex flex-col items-center justify-center py-3 px-1 bg-slate-800/80 rounded-xl text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all active:scale-95"
+                >
+                    <span className="text-[10px] sm:text-xs font-bold uppercase">La Mitad</span>
+                    <span className="text-sm font-black">${halfShare}</span>
                 </button>
-                <button onClick={() => setAmount(remaining)} className="py-2 px-1 bg-slate-800/80 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all">
-                    Lo que falta
+
+                <button
+                    onClick={() => setAmount(remaining)}
+                    className="flex flex-col items-center justify-center py-3 px-1 bg-slate-800/80 rounded-xl text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all active:scale-95"
+                >
+                    <span className="text-[10px] sm:text-xs font-bold uppercase">Falta</span>
+                    <span className="text-sm font-black">${remaining}</span>
                 </button>
             </div>
 
@@ -80,7 +105,7 @@ export default function SplitPaymentClient({ booking, remaining, isCompleted }: 
                     onChange={(e) => setAmount(Number(e.target.value))}
                     max={remaining}
                     placeholder="0"
-                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 pl-10 pr-4 text-3xl font-black text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center placeholder:text-gray-700"
+                    className="w-full bg-slate-950/50 border border-white/10 rounded-2xl py-5 pl-10 pr-4 text-3xl font-black text-white focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-center placeholder:text-gray-700 font-mono"
                 />
                 <p className="text-center text-xs text-gray-500 mt-2">Quedan ${remaining} por pagar</p>
             </div>
