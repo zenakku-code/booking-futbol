@@ -60,8 +60,9 @@ export default async function ComplexPage({
 
                 {/* Hero Section */}
                 <section className="min-h-[80vh] flex items-center justify-center text-center px-4 pt-20 relative overflow-hidden">
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] -z-10 animate-float" />
-                    <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[128px] -z-10 animate-float" style={{ animationDelay: '2s' }} />
+                    {/* Performance: Hide heavy animations on mobile */}
+                    <div className="hidden md:block absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] -z-10 animate-float" />
+                    <div className="hidden md:block absolute bottom-1/4 right-1/4 w-96 h-96 bg-accent/20 rounded-full blur-[128px] -z-10 animate-float" style={{ animationDelay: '2s' }} />
 
                     <div className="max-w-4xl animate-fade-in z-10">
                         {status === 'success' && (

@@ -21,7 +21,9 @@ export default async function HomePage() {
                     className="object-cover opacity-10 grayscale pointer-events-none"
                     sizes="100vw"
                 />
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
+
+                {/* Optimización Mobile: Ocultar efectos pesados de blur en pantallas pequeñas */}
+                <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
 
                 <div className="container relative z-10 text-center px-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">

@@ -64,6 +64,7 @@ a {
 }
 
 /* Glassmorphism System */
+/* Glassmorphism System - Optimized for Mobile */
 .glass {
   background: var(--glass);
   backdrop-filter: blur(16px);
@@ -80,6 +81,17 @@ a {
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
   border-radius: 1.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 768px) {
+
+  .glass,
+  .glass-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(15, 23, 42, 0.95);
+    /* Fallback más opaco */
+  }
 }
 
 .glass-card:hover {
@@ -149,13 +161,13 @@ a {
   from {
     opacity: 0;
     transform: translateY(20px);
-    filter: blur(10px);
+    /* filter: blur(10px); Removed for performance */
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
+    /* filter: blur(0); */
   }
 }
 
