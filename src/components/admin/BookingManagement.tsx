@@ -145,9 +145,21 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                             style={{ width: `${Math.min(100, (booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100)}%` }}
                                                         ></div>
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-[9px] text-blue-400 font-bold uppercase tracking-wide">
-                                                        <span>🐄 Vaquita</span>
-                                                        {booking.calculatedPaidAmount >= booking.totalPrice && <span className="text-emerald-500">✓</span>}
+                                                    <div className="flex items-center justify-between mt-1">
+                                                        <div className="flex items-center gap-1 text-[9px] text-blue-400 font-bold uppercase tracking-wide">
+                                                            <span>🐄 Vaquita</span>
+                                                            {booking.calculatedPaidAmount >= booking.totalPrice && <span className="text-emerald-500">✓</span>}
+                                                        </div>
+                                                        <a
+                                                            href={`/pay/${booking.id}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex items-center gap-1 text-[9px] bg-slate-800 hover:bg-slate-700 border border-white/10 text-gray-300 hover:text-white px-2 py-0.5 rounded-md transition-all group"
+                                                            title="Ver link de pago"
+                                                        >
+                                                            <span className="group-hover:underline decoration-white/30">Link</span>
+                                                            <span className="text-[8px]">🔗</span>
+                                                        </a>
                                                     </div>
                                                 </div>
                                             )}
