@@ -19,6 +19,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
         }
 
+        if (booking.status === 'confirmed' || booking.status === 'approved' || booking.status === 'cancelled') {
+            return NextResponse.json({ error: 'Esta reserva ya está confirmada o finalizada.' }, { status: 400 })
+        }
+
         // Crear Payment (casting a any por si types no refrescaron)
         const payment = await (prisma as any).payment.create({
             data: {
