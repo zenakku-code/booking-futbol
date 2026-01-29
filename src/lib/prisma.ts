@@ -10,21 +10,32 @@ const createPrismaClient = () => {
     const url = process.env.DATABASE_URL
     const token = process.env.TURSO_AUTH_TOKEN
 
+    console.log('[Prisma] Environment check:', {
+        hasUrl: !!url,
+        urlType: typeof url,
+        urlLength: url?.length || 0,
+        urlPrefix: url?.substring(0, 10) || 'none',
+        hasToken: !!token,
+        tokenLength: token?.length || 0
+    })
+
     if (url && token && (url.startsWith('libsql://') || url.includes('turso.io'))) {
-        console.log(`[Prisma] Turso connection to: ${url}`)
+        console.log(`[Prisma] Initializing Turso adapter`)
         try {
             const libsql = createClient({
                 url: url,
                 authToken: token,
             })
             const adapter = new PrismaLibSQL(libsql as any)
-            return new PrismaClient({ adapter })
+            const client = new PrismaClient({ adapter })
+            console.log('[Prisma] Turso client created successfully')
+            return client
         } catch (e) {
-            console.error('[Prisma] Turso error:', e)
+            console.error('[Prisma] Turso initialization failed:', e)
         }
     }
 
-    console.log('[Prisma] Local SQLite')
+    console.log('[Prisma] Falling back to local SQLite')
     return new PrismaClient()
 }
 
