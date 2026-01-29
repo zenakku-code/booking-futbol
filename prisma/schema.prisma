@@ -88,6 +88,7 @@ model BookingItem {
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
   quantity        Int           @default(1)
   priceAtBooking  Float         // Snapshot of price when booked
+  returned        Boolean       @default(false)
 }
 
 model Account {

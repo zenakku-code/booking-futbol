@@ -15,7 +15,7 @@ export default async function ComplexPage({
     const { slug } = await params
     const { status, booking_id } = await searchParams
 
-    const currentComplex = await prisma.complex.findUnique({
+    const currentComplex = await (prisma as any).complex.findUnique({
         where: { slug }
     })
 
@@ -23,7 +23,7 @@ export default async function ComplexPage({
         notFound()
     }
 
-    const fields = await prisma.field.findMany({
+    const fields = await (prisma as any).field.findMany({
         where: { complexId: currentComplex.id },
         include: { complex: true },
         orderBy: { type: 'asc' }
@@ -39,6 +39,9 @@ export default async function ComplexPage({
                     <div className="container flex justify-between items-center">
                         <Link href="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                             Booking Futbol
+                        </Link>
+                        <Link href="/" className="text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest border border-white/5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10">
+                            ← Plataforma
                         </Link>
                     </div>
                 </header>
@@ -109,7 +112,7 @@ export default async function ComplexPage({
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {fields.map((field) => (
+                            {fields.map((field: any) => (
                                 <FieldCard key={field.id} field={field} />
                             ))}
                             {fields.length === 0 && (

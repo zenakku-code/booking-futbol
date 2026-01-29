@@ -1,6 +1,17 @@
 'use client'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+
+type BookingItem = {
+    id: string
+    quantity: number
+    priceAtBooking: number
+    returned: boolean
+    inventoryItem: {
+        id: string
+        name: string
+    }
+}
 
 type Booking = {
     id: string
@@ -15,6 +26,7 @@ type Booking = {
         name: string
         type: string
     }
+    items?: BookingItem[]
 }
 
 export default function BookingManagement({ initialBookings }: { initialBookings: any[] }) {
@@ -35,6 +47,33 @@ export default function BookingManagement({ initialBookings }: { initialBookings
             router.refresh()
         } catch (err) {
             alert('Error updating booking')
+        }
+    }
+
+    const handleReturnItem = async (bookingId: string, itemId: string) => {
+        try {
+            const res = await fetch(`/api/booking-items/${itemId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ returned: true })
+            })
+
+            if (!res.ok) throw new Error('Failed to return item')
+
+            setBookings(bookings.map(b => {
+                if (b.id === bookingId && b.items) {
+                    return {
+                        ...b,
+                        items: b.items.map(item =>
+                            item.id === itemId ? { ...item, returned: true } : item
+                        )
+                    }
+                }
+                return b
+            }))
+            router.refresh()
+        } catch (err) {
+            alert('Error returning item')
         }
     }
 
@@ -68,58 +107,89 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                         </thead>
                         <tbody className="divide-y divide-slate-800/50">
                             {bookings.map(booking => (
-                                <tr key={booking.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="text-white font-medium">
-                                            {new Date(booking.date).toLocaleDateString()}
-                                        </div>
-                                        <div className="text-sm text-gray-500">
-                                            {booking.startTime} - {booking.endTime}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="text-gray-300">{booking.field.name}</span>
-                                        <span className="ml-2 text-xs bg-slate-700 px-1.5 py-0.5 rounded text-gray-400">F{booking.field.type}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-white">{booking.clientName}</div>
-                                        <div className="text-xs text-gray-500">{booking.clientPhone || 'No phone'}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-primary font-bold">
-                                        ${booking.totalPrice}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(booking.status)} uppercase tracking-wider`}>
-                                            {booking.status}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-right space-x-2">
-                                        {booking.status === 'pending' && (
-                                            <>
-                                                <button
-                                                    onClick={() => handleStatusChange(booking.id, 'confirmed')}
-                                                    className="text-green-400 hover:text-green-300 font-medium text-sm transition-colors"
-                                                >
-                                                    Aprobar
-                                                </button>
+                                <React.Fragment key={booking.id}>
+                                    <tr className="hover:bg-white/5 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="text-white font-medium">
+                                                {new Date(booking.date).toLocaleDateString()}
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                {booking.startTime} - {booking.endTime}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="text-gray-300">{booking.field.name}</span>
+                                            <span className="ml-2 text-xs bg-slate-700 px-1.5 py-0.5 rounded text-gray-400">F{booking.field.type}</span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="text-white">{booking.clientName}</div>
+                                            <div className="text-xs text-gray-500">{booking.clientPhone || 'No phone'}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-primary font-bold">
+                                            ${booking.totalPrice}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(booking.status)} uppercase tracking-wider`}>
+                                                {booking.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right space-x-2">
+                                            {booking.status === 'pending' && (
+                                                <>
+                                                    <button
+                                                        onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                                        className="text-green-400 hover:text-green-300 font-medium text-sm transition-colors"
+                                                    >
+                                                        Aprobar
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                                                        className="text-red-400 hover:text-red-300 font-medium text-sm transition-colors"
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </>
+                                            )}
+                                            {booking.status === 'confirmed' && (
                                                 <button
                                                     onClick={() => handleStatusChange(booking.id, 'cancelled')}
                                                     className="text-red-400 hover:text-red-300 font-medium text-sm transition-colors"
                                                 >
                                                     Cancelar
                                                 </button>
-                                            </>
-                                        )}
-                                        {booking.status === 'confirmed' && (
-                                            <button
-                                                onClick={() => handleStatusChange(booking.id, 'cancelled')}
-                                                className="text-red-400 hover:text-red-300 font-medium text-sm transition-colors"
-                                            >
-                                                Cancelar
-                                            </button>
-                                        )}
-                                    </td>
-                                </tr>
+                                            )}
+                                        </td>
+                                    </tr>
+                                    {booking.items && booking.items.length > 0 && (
+                                        <tr className="bg-slate-900/30">
+                                            <td colSpan={6} className="px-6 py-3">
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span className="text-xs text-gray-500 mr-2">Adicionales:</span>
+                                                    {booking.items.map((item: BookingItem) => (
+                                                        <span
+                                                            key={item.id}
+                                                            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${item.returned
+                                                                ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                                                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                                                }`}
+                                                        >
+                                                            {item.inventoryItem.name} (x{item.quantity})
+                                                            {!item.returned && (
+                                                                <button
+                                                                    onClick={() => handleReturnItem(booking.id, item.id)}
+                                                                    className="ml-1 text-[10px] bg-white/10 hover:bg-white/20 px-1.5 py-0.5 rounded transition-colors"
+                                                                >
+                                                                    Devolver
+                                                                </button>
+                                                            )}
+                                                            {item.returned && <span className="text-[10px] opacity-50">✓</span>}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
                             ))}
                             {bookings.length === 0 && (
                                 <tr>

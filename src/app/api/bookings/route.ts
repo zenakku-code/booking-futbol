@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getComplexId } from '@/lib/auth'
 
 export async function GET(request: Request) {
     try {
@@ -30,7 +31,29 @@ export async function GET(request: Request) {
             include: { field: true },
             orderBy: { date: 'asc' }
         })
-        return NextResponse.json(bookings)
+
+        // Security: Sanitize sensitive data for public view
+        const currentComplexId = await getComplexId()
+
+        const sanitizedBookings = bookings.map(b => {
+            const isOwner = currentComplexId && (b.field as any).complexId === currentComplexId
+            if (isOwner) return b
+
+            return {
+                ...b,
+                clientName: 'Reservado',
+                clientPhone: '***',
+                // Keep only public info for availability check
+                id: b.id,
+                fieldId: b.fieldId,
+                date: b.date,
+                startTime: b.startTime,
+                endTime: b.endTime,
+                status: b.status
+            }
+        })
+
+        return NextResponse.json(sanitizedBookings)
     } catch (error) {
         return NextResponse.json({ error: 'Error fetching bookings' }, { status: 500 })
     }

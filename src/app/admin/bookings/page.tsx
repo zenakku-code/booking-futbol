@@ -9,11 +9,14 @@ export default async function BookingsPage() {
     const complexId = await getComplexId()
     if (!complexId) redirect('/admin/login')
 
-    const bookings = await prisma.booking.findMany({
+    const bookings = await (prisma as any).booking.findMany({
         where: {
             field: { complexId }
         },
-        include: { field: true },
+        include: {
+            field: true,
+            items: { include: { inventoryItem: true } }
+        },
         orderBy: { date: 'desc' }
     })
 

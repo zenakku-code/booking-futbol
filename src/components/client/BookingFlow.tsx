@@ -164,7 +164,7 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-2 px-1">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary">Reserva tu lugar</span>
-                    <span className="text-xs font-medium text-gray-500">Paso {step} de 2</span>
+                    <span className="text-[10px] sm:text-xs font-medium text-gray-500 whitespace-nowrap">Paso {step} de 2</span>
                 </div>
                 <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                     <div

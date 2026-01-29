@@ -31,9 +31,14 @@ export default async function FieldDetailPage({
             <div className="absolute top-0 w-full h-[50vh] bg-gradient-to-b from-primary/20 to-slate-900 -z-0 pointer-events-none" />
 
             <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
-                <Link href={`/${slug}`} className="text-gray-400 hover:text-white mb-8 inline-flex items-center gap-2 transition-colors">
-                    ← Volver a {(field as any).complex?.name || 'la página'}
-                </Link>
+                <div className="flex justify-between items-center mb-8">
+                    <Link href={`/${slug}`} className="text-gray-400 hover:text-white inline-flex items-center gap-2 transition-colors">
+                        ← Volver a {(field as any).complex?.name || 'la página'}
+                    </Link>
+                    <Link href="/" className="text-[10px] font-bold text-gray-500 hover:text-white transition-colors uppercase tracking-widest border border-white/5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10">
+                        Plataforma
+                    </Link>
+                </div>
 
                 <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start mt-6">
                     <div className="animate-fade-in text-white">
