@@ -10,7 +10,7 @@ export default async function BookingsPage() {
     })
 
     // Serialize dates to strings to avoid warning with Pass Client Component
-    const serializedBookings = bookings.map(b => ({
+    const serializedBookings = bookings.map((b: any) => ({
         ...b,
         date: b.date.toISOString(),
         createdAt: b.createdAt.toISOString()

@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "@prisma/adapter-libsql": "^7.3.0",
     "@prisma/client": "^6.19.2",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
