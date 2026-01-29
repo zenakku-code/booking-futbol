@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
-import SplitPaymentClient from './SplitPaymentClient'
+import SplitPaymentForm from './SplitPaymentForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -95,7 +95,7 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 </div>
 
                 {/* Cliente Interactivo */}
-                <SplitPaymentClient
+                <SplitPaymentForm
                     booking={booking}
                     remaining={remaining}
                     isCompleted={isCompleted}

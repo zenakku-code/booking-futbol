@@ -26,6 +26,8 @@ type Booking = {
         name: string
         type: string
     }
+    paymentType?: string
+    calculatedPaidAmount?: number
     items?: BookingItem[]
 }
 
@@ -125,8 +127,30 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                             <div className="text-white">{booking.clientName}</div>
                                             <div className="text-xs text-gray-500">{booking.clientPhone || 'No phone'}</div>
                                         </td>
-                                        <td className="px-6 py-4 text-primary font-bold">
-                                            ${booking.totalPrice}
+                                        <td className="px-6 py-4">
+                                            <div className="text-primary font-bold text-lg">
+                                                ${booking.totalPrice}
+                                            </div>
+                                            {booking.paymentType === 'SPLIT' && booking.calculatedPaidAmount !== undefined && (
+                                                <div className="mt-2 w-32">
+                                                    <div className="flex justify-between text-[10px] text-gray-400 mb-1 font-medium">
+                                                        <span className={booking.calculatedPaidAmount >= booking.totalPrice ? 'text-emerald-400' : 'text-blue-400'}>
+                                                            {Math.min(100, Math.round((booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100))}%
+                                                        </span>
+                                                        <span>${booking.calculatedPaidAmount}</span>
+                                                    </div>
+                                                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden mb-1">
+                                                        <div
+                                                            className={`h-full transition-all duration-500 ${booking.calculatedPaidAmount >= booking.totalPrice ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                                                            style={{ width: `${Math.min(100, (booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100)}%` }}
+                                                        ></div>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-[9px] text-blue-400 font-bold uppercase tracking-wide">
+                                                        <span>🐄 Vaquita</span>
+                                                        {booking.calculatedPaidAmount >= booking.totalPrice && <span className="text-emerald-500">✓</span>}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(booking.status)} uppercase tracking-wider`}>

@@ -15,17 +15,28 @@ export default async function BookingsPage() {
         },
         include: {
             field: true,
-            items: { include: { inventoryItem: true } }
+            items: { include: { inventoryItem: true } },
+            payments: true
         },
         orderBy: { date: 'desc' }
     })
 
     // Serialize dates to strings to avoid warning with Pass Client Component
-    const serializedBookings = bookings.map((b: any) => ({
-        ...b,
-        date: b.date.toISOString(),
-        createdAt: b.createdAt.toISOString()
-    }))
+    const serializedBookings = bookings.map((b: any) => {
+        const approvedPaymentsSum = b.payments?.filter((p: any) => p.status === 'approved')
+            .reduce((acc: number, curr: any) => acc + curr.amount, 0) || 0
+
+        // Sumamos lo que ya estaba en booking.paidAmount (legacy o manual) + pagos individuales
+        const totalPaidCalculator = (b.paidAmount || 0) + approvedPaymentsSum
+
+        return {
+            ...b,
+            date: b.date.toISOString(),
+            createdAt: b.createdAt.toISOString(),
+            // Añadimos paymentType explícito por si acaso (aunque viene en b) y el calculado
+            calculatedPaidAmount: totalPaidCalculator
+        }
+    })
 
     return <BookingManagement initialBookings={serializedBookings} />
 }
