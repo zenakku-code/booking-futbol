@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { PrismaLibSQL } from '@prisma/adapter-libsql'
 import { createClient } from '@libsql/client'
 
 const globalForPrisma = globalThis as unknown as {
@@ -17,7 +17,7 @@ const createPrismaClient = () => {
                 url: url,
                 authToken: process.env.TURSO_AUTH_TOKEN,
             })
-            const adapter = new PrismaLibSql(libsql as any)
+            const adapter = new PrismaLibSQL(libsql as any)
             return new PrismaClient({ adapter })
         } catch (e) {
             console.error('[Prisma] LibSQL initialization failed:', e)
