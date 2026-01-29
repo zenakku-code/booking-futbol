@@ -1,26 +1,30 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSQL } from '@prisma/adapter-libsql'
-import { createClient } from '@libsql/client/web'
-
-// Capture env vars at module load time to avoid runtime issues
-const TURSO_URL = process.env.DATABASE_URL || ''
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || ''
+import { createClient } from '@libsql/client'
 
 const globalForPrisma = globalThis as unknown as {
     prisma: PrismaClient | undefined
 }
 
 const createPrismaClient = () => {
-    const isValidTurso = TURSO_URL.startsWith('libsql://') || TURSO_URL.includes('turso.io')
+    const url = process.env.DATABASE_URL
+    const token = process.env.TURSO_AUTH_TOKEN
 
-    if (isValidTurso && TURSO_URL && TURSO_TOKEN) {
-        console.log(`[Prisma] Turso Init: ${TURSO_URL.substring(0, 20)}`)
-        const libsql = createClient({ url: TURSO_URL, authToken: TURSO_TOKEN })
-        const adapter = new PrismaLibSQL(libsql as any)
-        return new PrismaClient({ adapter })
+    if (url && token && (url.startsWith('libsql://') || url.includes('turso.io'))) {
+        console.log(`[Prisma] Turso connection to: ${url}`)
+        try {
+            const libsql = createClient({
+                url: url,
+                authToken: token,
+            })
+            const adapter = new PrismaLibSQL(libsql)
+            return new PrismaClient({ adapter })
+        } catch (e) {
+            console.error('[Prisma] Turso error:', e)
+        }
     }
 
-    console.log('[Prisma] Local SQLite fallback')
+    console.log('[Prisma] Local SQLite')
     return new PrismaClient()
 }
 
