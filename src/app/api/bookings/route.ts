@@ -111,8 +111,7 @@ export async function POST(request: Request) {
 
                 // Get base URL from environment or request
                 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
-                    'http://localhost:3000'
+                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
                 const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
                     method: 'POST',
