@@ -17,16 +17,16 @@ const createPrismaClient = () => {
     const isTurso = url.startsWith('libsql:') || url.includes('turso.io')
 
     if (isTurso) {
-        console.log('[Prisma] Initializing with LibSQL adapter...')
+        console.log(`[Prisma] Initializing Turso with URL: ${url.substring(0, 15)}...`)
         try {
             const libsql = createClient({
                 url: url,
-                authToken: process.env.TURSO_AUTH_TOKEN,
+                authToken: process.env.TURSO_AUTH_TOKEN?.trim(),
             })
             const adapter = new PrismaLibSQL(libsql as any)
             return new PrismaClient({ adapter })
         } catch (e) {
-            console.error('[Prisma] LibSQL initialization failed:', e)
+            console.error('[Prisma] LibSQL adapter instantiation error:', e)
         }
     }
 
