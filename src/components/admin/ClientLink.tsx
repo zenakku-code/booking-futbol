@@ -9,7 +9,7 @@ export default function ClientLink({ slug }: { slug: string }) {
         setBaseUrl(window.location.origin)
     }, [])
 
-    const clientUrl = `${baseUrl}/?complex=${slug}`
+    const clientUrl = `${baseUrl}/${slug}`
 
     const handleCopy = async () => {
         try {
@@ -30,8 +30,8 @@ export default function ClientLink({ slug }: { slug: string }) {
             <button
                 onClick={handleCopy}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${copied
-                        ? 'bg-green-500 text-white'
-                        : 'bg-primary text-slate-900 hover:scale-105 active:scale-95'
+                    ? 'bg-green-500 text-white'
+                    : 'bg-primary text-slate-900 hover:scale-105 active:scale-95'
                     }`}
             >
                 {copied ? (
