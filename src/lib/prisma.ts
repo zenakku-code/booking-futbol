@@ -7,11 +7,16 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 const createPrismaClient = () => {
-    const url = process.env.DATABASE_URL
-    // Check for undefined string because some CI environments provide it as literal "undefined"
-    const isTurso = url && url !== "undefined" && (url.startsWith('libsql:') || url.includes('turso.io'))
+    let url = process.env.DATABASE_URL
 
-    if (isTurso && url) {
+    // Fallback for build time if URL is missing or literally "undefined"
+    if (!url || url === "undefined") {
+        url = "file:./dev.db"
+    }
+
+    const isTurso = url.startsWith('libsql:') || url.includes('turso.io')
+
+    if (isTurso) {
         console.log('[Prisma] Initializing with LibSQL adapter...')
         try {
             const libsql = createClient({
