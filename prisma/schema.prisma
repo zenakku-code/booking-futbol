@@ -77,15 +77,37 @@ model Booking {
   clientName  String
   clientPhone String?
   totalPrice  Float
-  status      String   @default("pending") 
+  status      String   @default("pending") // pending, confirmed, cancelled, collecting
+  
+  // Payment Upgrade Phase 3
+  paymentType String   @default("FULL") // FULL, SPLIT
+  paidAmount  Float    @default(0)
   
   items       BookingItem[]
+  payments    Payment[]
   
   createdAt   DateTime @default(now())
 
   @@index([fieldId])
   @@index([fieldId, date])
   @@index([status])
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  amount      Float
+  status      String   @default("pending") // pending, approved, rejected
+  externalId  String?  // MercadoPago Payment ID
+  payerEmail  String?
+  
+  bookingId   String
+  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([bookingId])
+  @@index([externalId])
 }
 
 // Join table for Booking and InventoryItem to track rented items per booking

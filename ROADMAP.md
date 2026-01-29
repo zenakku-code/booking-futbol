@@ -16,6 +16,7 @@ This document outlines the strategic growth plan for the SaaS platform.
 - [x] **Booking Add-ons**: Clients can select inventory items during the booking flow.
 
 ## Phase 3: Engagement & Scaling (UPCOMING)
+- [ ] **Split Payments ("La Vaquita")**: Allow users to split the booking fee among teammates via a shared link.
 - [ ] **WhatsApp Notifications**: Automatic booking confirmations and owner alerts.
 - [x] **Advanced Dashboards**: Financial reports and peak hour heatmaps for owners.
 - [ ] **Custom Subdomains**: Support for `complex-name.platform.com`.

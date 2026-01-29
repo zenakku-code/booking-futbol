@@ -39,6 +39,7 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
     const [takenSlots, setTakenSlots] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState(false)
+    const [paymentType, setPaymentType] = useState('FULL')
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
@@ -122,7 +123,8 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                     clientName,
                     clientPhone,
                     totalPrice: field.price + itemsTotal,
-                    items: itemsPayload
+                    items: itemsPayload,
+                    paymentType
                 })
             })
 
@@ -311,6 +313,32 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                             </div>
                         </div>
                     )}
+
+                    {/* Payment Type Selection */}
+                    <div className="mb-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                        <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-4 px-1">Método de Pago</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setPaymentType('FULL')}
+                                className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${paymentType === 'FULL' ? 'bg-primary/20 border-primary text-white shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-slate-900/50 border-white/10 text-gray-400 hover:border-white/20 hover:bg-slate-800'}`}
+                            >
+                                <span className="text-2xl">💳</span>
+                                <span className="font-bold text-sm">Pago Total</span>
+                            </button>
+                            <button
+                                onClick={() => setPaymentType('SPLIT')}
+                                className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${paymentType === 'SPLIT' ? 'bg-accent/20 border-accent text-white shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'bg-slate-900/50 border-white/10 text-gray-400 hover:border-white/20 hover:bg-slate-800'}`}
+                            >
+                                <span className="text-2xl">🐄</span>
+                                <span className="font-bold text-sm">Hacer Vaquita</span>
+                            </button>
+                        </div>
+                        {paymentType === 'SPLIT' && (
+                            <div className="mt-3 p-3 bg-accent/10 rounded-lg border border-accent/20 text-xs text-accent text-center animate-fade-in">
+                                <span className="font-bold">¡Nueva Feature!</span> Reservás ahora y te damos un link para que cada amigo pague su parte.
+                            </div>
+                        )}
+                    </div>
 
                     <div>
                         <label className="block text-gray-300 font-medium mb-2 pl-1">Nombre Completo</label>

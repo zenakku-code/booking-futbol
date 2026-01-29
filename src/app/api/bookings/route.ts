@@ -63,7 +63,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice, items = [] } = body
+        const { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice, items = [], paymentType = 'FULL' } = body
 
         if (!fieldId || !date || !startTime || !endTime || !clientName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -109,7 +109,8 @@ export async function POST(request: Request) {
                     clientName,
                     clientPhone,
                     totalPrice: parseFloat(totalPrice),
-                    status: 'pending'
+                    status: 'pending',
+                    paymentType // Guardo el tipo de pago
                 }
             })
 
@@ -136,65 +137,69 @@ export async function POST(request: Request) {
             return b
         })
 
-        // Mercado Pago Integration
-        const account = await prisma.account.findFirst({
-            where: { complexId: (field as any).complexId } as any
-        })
-
         let paymentUrl = null
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
-        if (account && account.accessToken) {
-            try {
-                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
-                    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+        if (paymentType === 'SPLIT') {
+            // Generar link interno para la página de pago dividido
+            paymentUrl = `${baseUrl}/pay/${booking.id}`
+        } else {
+            // Mercado Pago Integration FULL PAYMENT
+            const account = await prisma.account.findFirst({
+                where: { complexId: (field as any).complexId } as any
+            })
 
-                const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
+            if (account && account.accessToken) {
+                try {
+                    const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
 
-                // Build MP items array
-                const mpItems = [{
-                    title: `Reserva Cancha - ${date}`,
-                    quantity: 1,
-                    currency_id: 'ARS',
-                    unit_price: field.price
-                }]
+                    // Build MP items array
+                    const mpItems = [{
+                        title: `Reserva Cancha - ${date}`,
+                        quantity: 1,
+                        currency_id: 'ARS',
+                        unit_price: field.price
+                    }]
 
-                // Add inventory items to MP
-                for (const item of items) {
-                    const invItem = await (prisma as any).inventoryItem.findUnique({ where: { id: item.id } })
-                    if (invItem && item.quantity > 0) {
-                        mpItems.push({
-                            title: invItem.name,
-                            quantity: item.quantity,
-                            currency_id: 'ARS',
-                            unit_price: invItem.price
-                        })
+                    // Add inventory items to MP
+                    for (const item of items) {
+                        const invItem = await (prisma as any).inventoryItem.findUnique({ where: { id: item.id } })
+                        if (invItem && item.quantity > 0) {
+                            mpItems.push({
+                                title: invItem.name,
+                                quantity: item.quantity,
+                                currency_id: 'ARS',
+                                unit_price: invItem.price
+                            })
+                        }
                     }
-                }
 
-                const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${account.accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        items: mpItems,
-                        back_urls: {
-                            success: `${baseUrl}${returnPath}?status=success&booking_id=${booking.id}`,
-                            failure: `${baseUrl}${returnPath}?status=failure&booking_id=${booking.id}`,
-                            pending: `${baseUrl}${returnPath}?status=pending&booking_id=${booking.id}`
+                    const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${account.accessToken}`,
+                            'Content-Type': 'application/json'
                         },
-                        auto_return: 'approved',
-                        external_reference: booking.id
+                        body: JSON.stringify({
+                            items: mpItems,
+                            back_urls: {
+                                success: `${baseUrl}${returnPath}?status=success&booking_id=${booking.id}`,
+                                failure: `${baseUrl}${returnPath}?status=failure&booking_id=${booking.id}`,
+                                pending: `${baseUrl}${returnPath}?status=pending&booking_id=${booking.id}`
+                            },
+                            auto_return: 'approved',
+                            external_reference: booking.id
+                        })
                     })
-                })
 
-                const preference = await preferenceRes.json()
-                if (preference.init_point) {
-                    paymentUrl = preference.init_point
+                    const preference = await preferenceRes.json()
+                    if (preference.init_point) {
+                        paymentUrl = preference.init_point
+                    }
+                } catch (error) {
+                    console.error('MP Preference Error', error)
                 }
-            } catch (error) {
-                console.error('MP Preference Error', error)
             }
         }
 
