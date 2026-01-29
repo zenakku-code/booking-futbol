@@ -15,7 +15,7 @@ export async function DELETE(
         const { id } = await params
 
         // Verificar que la cancha pertenece al complejo
-        const field = await prisma.field.findFirst({
+        const field = await (prisma as any).field.findFirst({
             where: { id, complexId }
         })
 
@@ -23,7 +23,16 @@ export async function DELETE(
             return NextResponse.json({ error: 'Cancha no encontrada o no pertenece a tu complejo' }, { status: 404 })
         }
 
-        await prisma.field.delete({
+        // Check subscription status
+        const complex = await (prisma as any).complex.findUnique({
+            where: { id: complexId }
+        })
+
+        if (!complex?.subscriptionActive) {
+            return NextResponse.json({ error: 'Suscripción requerida' }, { status: 403 })
+        }
+
+        await (prisma as any).field.delete({
             where: { id }
         })
         return NextResponse.json({ message: 'Field deleted' })
@@ -51,7 +60,7 @@ export async function PUT(
         const { name, type, price, imageUrl, availableDays, openTime, closeTime } = body
 
         // Verificar que la cancha pertenece al complejo
-        const existingField = await prisma.field.findFirst({
+        const existingField = await (prisma as any).field.findFirst({
             where: { id, complexId }
         })
 
@@ -59,7 +68,16 @@ export async function PUT(
             return NextResponse.json({ error: 'Cancha no encontrada o no pertenece a tu complejo' }, { status: 404 })
         }
 
-        const field = await prisma.field.update({
+        // Check subscription status
+        const complex = await (prisma as any).complex.findUnique({
+            where: { id: complexId }
+        })
+
+        if (!complex?.subscriptionActive) {
+            return NextResponse.json({ error: 'Suscripción requerida' }, { status: 403 })
+        }
+
+        const field = await (prisma as any).field.update({
             where: { id },
             data: {
                 name,
