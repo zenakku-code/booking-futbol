@@ -108,6 +108,12 @@ export async function POST(request: Request) {
         if (account && account.accessToken) {
             try {
                 console.log('Using MP Access Token:', account.accessToken.substring(0, 15) + '...')
+
+                // Get base URL from environment or request
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+                    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` :
+                    'http://localhost:3000'
+
                 const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
                     method: 'POST',
                     headers: {
@@ -124,9 +130,9 @@ export async function POST(request: Request) {
                             }
                         ],
                         back_urls: {
-                            success: `http://localhost:3000/?status=success`,
-                            failure: `http://localhost:3000/?status=failure`,
-                            pending: `http://localhost:3000/?status=pending`
+                            success: `${baseUrl}/?status=success&booking_id=${booking.id}`,
+                            failure: `${baseUrl}/?status=failure&booking_id=${booking.id}`,
+                            pending: `${baseUrl}/?status=pending&booking_id=${booking.id}`
                         },
                         auto_return: 'approved',
                         external_reference: booking.id
