@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         // Validate within field hours
         const field = await prisma.field.findUnique({
             where: { id: fieldId },
-            include: { complex: true }
+            include: { complex: true } as any
         })
         if (!field) return NextResponse.json({ error: 'Field not found' }, { status: 404 })
 
@@ -103,21 +103,21 @@ export async function POST(request: Request) {
 
         // Mercado Pago Integration - Fetch account of the field's complex
         const account = await prisma.account.findFirst({
-            where: { complexId: field.complexId }
+            where: { complexId: (field as any).complexId } as any
         })
 
         let paymentUrl = null
 
         if (account && account.accessToken) {
             try {
-                console.log('Using MP Access Token:', account.accessToken.substring(0, 15) + '...')
+                // Create MP Preference
 
                 // Get base URL from environment or request
                 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
                 // Build redirect path - if complex exists, use dynamic route
-                const returnPath = field.complex?.slug ? `/${field.complex.slug}` : ''
+                const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
 
                 const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
                     method: 'POST',

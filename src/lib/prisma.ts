@@ -9,14 +9,16 @@ const createPrismaClient = () => {
     const url = process.env.DATABASE_URL
     const token = process.env.TURSO_AUTH_TOKEN
 
-    console.log('[Prisma] Environment check:', {
-        hasUrl: !!url,
-        urlType: typeof url,
-        urlLength: url?.length || 0,
-        urlPrefix: url?.substring(0, 10) || 'none',
-        hasToken: !!token,
-        tokenLength: token?.length || 0
-    })
+    if (process.env.NODE_ENV !== 'production') {
+        console.log('[Prisma] Environment check:', {
+            hasUrl: !!url,
+            urlType: typeof url,
+            urlLength: url?.length || 0,
+            urlPrefix: url?.substring(0, 10) || 'none',
+            hasToken: !!token,
+            tokenLength: token?.length || 0
+        })
+    }
 
     if (url && token && (url.startsWith('libsql://') || url.includes('turso.io'))) {
         console.log(`[Prisma] Initializing Turso adapter with config`)

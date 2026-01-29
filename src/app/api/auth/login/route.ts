@@ -7,7 +7,6 @@ import { cookies } from 'next/headers'
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        console.log('Login request body:', JSON.stringify(body))
         const { email, password } = body
 
         if (!email || !password) {
@@ -33,7 +32,7 @@ export async function POST(request: Request) {
         const token = await createToken({
             id: user.id,
             email: user.email,
-            complexId: user.complexId
+            complexId: (user as any).complexId
         })
         console.log('Token created for:', email)
         const cookieStore = await cookies()
@@ -50,8 +49,7 @@ export async function POST(request: Request) {
         console.error('FATAL Login error:', error)
         return NextResponse.json({
             error: 'Error en el servidor',
-            details: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined
+            details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
         }, { status: 500 })
     }
 }
