@@ -139,8 +139,8 @@ export default function BookingFlow({ field }: { field: Field }) {
     }
 
     return (
-        <div className="glass-card p-6 md:p-10 max-w-2xl mx-auto transform transition-all duration-500">
-            <div className="mb-8">
+        <div className="glass-card p-4 sm:p-6 md:p-10 max-w-2xl mx-auto transform transition-all duration-500">
+            <div className="mb-6 md:mb-8">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary">Reserva tu lugar</span>
                     <span className="text-xs font-medium text-gray-500">Paso {step} de 2</span>
@@ -154,24 +154,24 @@ export default function BookingFlow({ field }: { field: Field }) {
             </div>
 
             {step === 1 && (
-                <div className="animate-fade-in space-y-8">
+                <div className="animate-fade-in space-y-6 md:space-y-8">
                     {/* Date Strip */}
                     <div>
                         <label className="block text-gray-300 font-medium mb-4">Selecciona una Fecha</label>
-                        <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar">
+                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
                             {availableDates.map((d) => (
                                 <button
                                     key={d.date}
                                     onClick={() => setDate(d.date)}
                                     className={`
-                                        flex-shrink-0 w-20 h-24 rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all duration-300
+                                        flex-shrink-0 w-16 h-20 sm:w-20 sm:h-24 rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-1 border transition-all duration-300
                                         ${date === d.date
                                             ? 'bg-primary text-slate-900 border-primary scale-105 shadow-[0_0_15px_rgba(34,197,94,0.4)]'
                                             : 'bg-slate-800/50 text-gray-400 border-white/5 hover:bg-slate-800 hover:border-white/20 hover:text-white'}
                                     `}
                                 >
-                                    <span className="text-sm font-medium uppercase tracking-wider">{d.dayName}</span>
-                                    <span className="text-2xl font-bold">{d.dayNumber}</span>
+                                    <span className="text-xs sm:text-sm font-medium uppercase tracking-wider">{d.dayName}</span>
+                                    <span className="text-xl sm:text-2xl font-bold">{d.dayNumber}</span>
                                 </button>
                             ))}
                         </div>
