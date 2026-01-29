@@ -20,7 +20,7 @@ async function seedNewTenant() {
     const email = "dueno2@test.com";
     const password = "password123";
     const hashedPassword = await bcrypt.hash(password, 10);
-    const complexSlug = "cancha-premium";
+    const complexSlug = "cancha-premium-2";
 
     try {
         // 1. Create Complex
