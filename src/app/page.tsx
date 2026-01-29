@@ -31,16 +31,16 @@ export default async function HomePage() {
                         Digitaliza tu negocio y aumenta tus ingresos hoy.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                        <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center sm:items-stretch">
+                        <div className="flex flex-col items-center gap-2">
                             <Link href="/register" className="btn btn-primary px-12 py-5 text-xl font-black rounded-2xl shadow-[0_20px_40px_-15px_rgba(74,222,128,0.5)]">
                                 Registrar mi Complejo
                             </Link>
-                            <span className="text-gray-500 text-sm font-medium">
+                            <span className="text-gray-500 text-xs font-medium">
                                 Software Fee: <span className="text-white font-bold">$15.000 ARS</span> (pago único inicial)
                             </span>
                         </div>
-                        <Link href="#explorar" className="px-12 py-5 text-xl font-bold border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-gray-300">
+                        <Link href="#explorar" className="px-12 py-5 text-xl font-bold border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-gray-300 self-start sm:self-center">
                             Explorar Canchas
                         </Link>
                     </div>

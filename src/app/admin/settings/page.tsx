@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import AccountSettings from "@/components/admin/AccountSettings"
 import ComplexImageSettings from "@/components/admin/ComplexImageSettings"
+import ComplexNameSettings from "@/components/admin/ComplexNameSettings"
 import SubscriptionStatus from "@/components/admin/SubscriptionStatus"
 import { getComplexId } from "@/lib/auth"
 import { redirect } from "next/navigation"
@@ -13,10 +14,10 @@ export default async function SettingsPage() {
     if (!complexId) redirect('/admin/login')
 
     const [account, complex] = await Promise.all([
-        prisma.account.findFirst({
+        (prisma as any).account.findFirst({
             where: { complexId }
         }),
-        prisma.complex.findUnique({
+        (prisma as any).complex.findUnique({
             where: { id: complexId }
         })
     ])
@@ -32,6 +33,7 @@ export default async function SettingsPage() {
                 <div className="lg:col-span-2">
                     <SubscriptionStatus complex={complex} />
                 </div>
+                <ComplexNameSettings initialComplex={complex} />
                 <ComplexImageSettings initialComplex={complex} />
                 <AccountSettings initialAccount={account} />
             </div>
