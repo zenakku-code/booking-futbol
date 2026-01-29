@@ -25,15 +25,15 @@ export default async function FieldDetailPage({ params }: { params: Promise<{ id
             {/* Decorative Background */}
             <div className="absolute top-0 w-full h-[50vh] bg-gradient-to-b from-primary/20 to-slate-900 -z-0 pointer-events-none" />
 
-            <div className="container pt-10 relative z-10">
+            <div className="container px-4 md:px-6 pt-10 relative z-10">
                 <Link href="/" className="text-gray-400 hover:text-white mb-8 inline-flex items-center gap-2 transition-colors">
                     ← Volver al listado
                 </Link>
 
-                <div className="grid lg:grid-cols-2 gap-12 items-start mt-6">
+                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start mt-6">
                     <div className="animate-fade-in">
                         <span className="text-primary font-bold tracking-wider uppercase text-sm mb-2 block">Cancha Profesional</span>
-                        <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight break-words">
                             {field.name}
                         </h1>
                         <div className="flex flex-wrap gap-4 mb-8">
@@ -44,7 +44,7 @@ export default async function FieldDetailPage({ params }: { params: Promise<{ id
                                 ${field.price}/hr
                             </span>
                         </div>
-                        <p className="text-lg text-gray-400 leading-relaxed mb-8">
+                        <p className="text-base md:text-lg text-gray-400 leading-relaxed mb-8">
                             Disfruta de la mejor calidad de césped sintético.
                             Iluminación LED de última generación y vestuarios incluidos.
                             Ideal para torneos o partidos amistosos.
