@@ -6,7 +6,6 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted }: an
     const router = useRouter()
 
     // Parser inteligente para extraer número de jugadores
-    // Ej: "Futbol 5" -> 5, "F7" -> 7, "11" -> 11
     const extractPlayers = (type: string) => {
         if (!type) return 0
         const match = type.toString().match(/\d+/)
@@ -14,21 +13,20 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted }: an
     }
 
     const playersRaw = extractPlayers(booking.field.type)
-    // Default a 5 si no se puede determinar
-    const players = playersRaw > 0 ? playersRaw : 5
+    // Default a 5 si no se puede determinar (F5)
+    const playersPerTeam = playersRaw > 0 ? playersRaw : 5
+    // El total de jugadores es el doble (2 equipos)
+    const totalPlayers = playersPerTeam * 2
 
-    // Safety check para evitar NaN si remaining viene mal
+    // Safety check
     const safeRemaining = typeof remaining === 'number' && !isNaN(remaining) ? remaining : 0
 
     // Floor para asegurar enteros
-    const oneShare = Math.floor(safeRemaining / players)
+    const oneShare = Math.floor(safeRemaining / totalPlayers)
     const halfShare = Math.floor(safeRemaining / 2)
 
     const [amount, setAmount] = useState<number>(0)
     const [loading, setLoading] = useState(false)
-
-    // Auto-refresh si cambia el estado (polling simple o reload manual requerido)
-    // Por ahora confiamos en el render inicial.
 
     const handleAmountChange = (val: number) => {
         if (!isNaN(val) && val > 0) {
@@ -105,7 +103,7 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted }: an
                     onClick={() => handleAmountChange(oneShare)}
                     className="group relative flex sm:flex-col items-center justify-between sm:justify-center p-4 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.02] transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-xs uppercase font-bold text-gray-400 group-hover:text-primary transition-colors pointer-events-none">1/{players} P.</span>
+                    <span className="text-xs uppercase font-bold text-gray-400 group-hover:text-primary transition-colors pointer-events-none">1/{totalPlayers} P.</span>
                     <span className="text-xl font-black text-white group-hover:text-primary transition-colors pointer-events-none">${oneShare}</span>
                 </button>
 
