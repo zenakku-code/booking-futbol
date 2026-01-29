@@ -24,13 +24,7 @@ const createPrismaClient = () => {
                 authToken: process.env.TURSO_AUTH_TOKEN?.trim(),
             })
             const adapter = new PrismaLibSQL(libsql as any)
-            return new PrismaClient({
-                adapter,
-                // Override the engine's view of the URL to prevent it from trying to parse libsql://
-                datasources: {
-                    db: { url: 'file:./main.db' }
-                }
-            })
+            return new PrismaClient({ adapter })
         } catch (e) {
             console.error('[Prisma] LibSQL adapter instantiation error:', e)
         }
