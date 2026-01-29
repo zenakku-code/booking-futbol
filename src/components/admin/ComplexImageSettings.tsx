@@ -8,6 +8,23 @@ export default function ComplexImageSettings({ initialComplex }: { initialComple
     const [message, setMessage] = useState({ type: '', text: '' })
     const router = useRouter()
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        // 2MB Limit for Base64 (to avoid DB/payload issues in MVP)
+        if (file.size > 2 * 1024 * 1024) {
+            setMessage({ type: 'error', text: 'La imagen es muy pesada (máx 2MB)' })
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+            setLogoUrl(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+    }
+
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
@@ -42,39 +59,70 @@ export default function ComplexImageSettings({ initialComplex }: { initialComple
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-white">Imagen del Complejo</h3>
-                    <p className="text-gray-400 text-sm">Esta imagen aparecerá en el directorio y en tu página principal.</p>
+                    <p className="text-gray-400 text-sm">Sube una foto o pega un link para personalizar tu página.</p>
                 </div>
             </div>
 
             <form onSubmit={handleSave} className="space-y-6 border-t border-slate-700 pt-6">
-                <div>
-                    <label className="block text-gray-300 font-medium mb-2">URL de la Imagen</label>
-                    <div className="flex gap-2">
+                <div className="space-y-4">
+                    {/* File Upload Option */}
+                    <div>
+                        <label className="block text-gray-300 font-medium mb-2">Subir desde dispositivo</label>
+                        <div className="relative group">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="hidden"
+                                id="logo-upload"
+                            />
+                            <label
+                                htmlFor="logo-upload"
+                                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all text-gray-500 group-hover:text-primary"
+                            >
+                                <span className="text-3xl mb-1">📤</span>
+                                <span className="text-sm font-medium">Hacer click para seleccionar foto</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        <div className="h-[1px] flex-1 bg-white/5"></div>
+                        <span className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">o usa un link</span>
+                        <div className="h-[1px] flex-1 bg-white/5"></div>
+                    </div>
+
+                    {/* URL Option */}
+                    <div>
                         <input
                             type="url"
-                            placeholder="https://ejemplo.com/mi-logo.jpg"
-                            className="flex-1 p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                            placeholder="https://ejemplo.com/logo.jpg"
+                            className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
                             value={logoUrl}
                             onChange={(e) => setLogoUrl(e.target.value)}
                         />
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                        💡 Tip: Puedes usar links de Unsplash, Imgur o cualquier URL pública.
-                    </p>
                 </div>
 
                 {logoUrl && (
-                    <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-800 border border-white/5">
+                    <div className="relative group aspect-video w-full rounded-2xl overflow-hidden bg-slate-800 border border-white/5">
                         <img
                             src={logoUrl}
                             alt="Vista previa"
                             className="w-full h-full object-cover"
                             onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1e293b/FFFFFF?text=Error+al+cargar+imagen'
+                                (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1e293b/FFFFFF?text=URL+Invalida'
                             }}
                         />
+                        <button
+                            type="button"
+                            onClick={() => setLogoUrl('')}
+                            className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-xl"
+                        >
+                            <span className="text-xs">✕</span>
+                        </button>
                         <div className="absolute top-2 left-2 px-2 py-1 bg-black/50 backdrop-blur-md rounded text-[10px] text-white font-bold uppercase tracking-widest">
-                            Vista Previa
+                            {logoUrl.startsWith('data:') ? 'Foto Local' : 'Link Web'}
                         </div>
                     </div>
                 )}
