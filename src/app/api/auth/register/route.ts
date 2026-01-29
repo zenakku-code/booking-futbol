@@ -1,0 +1,69 @@
+import { NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import bcrypt from 'bcryptjs'
+
+export async function POST(request: Request) {
+    try {
+        const body = await request.json()
+        const { complexName, email, password } = body
+
+        if (!complexName || !email || !password) {
+            return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
+        }
+
+        // 1. Generate Slug
+        const slug = complexName
+            .toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+
+        // 2. Check if complex slug or email already exists
+        const existingUser = await prisma.user.findUnique({ where: { email } })
+        if (existingUser) {
+            return NextResponse.json({ error: 'El email ya está registrado' }, { status: 400 })
+        }
+
+        const existingComplex = await prisma.complex.findUnique({ where: { slug } })
+        if (existingComplex) {
+            return NextResponse.json({ error: 'Ya existe un complejo con ese nombre o similar' }, { status: 400 })
+        }
+
+        // 3. Hash Password
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        // 4. Create Complex and User in a Transaction
+        const result = await prisma.$transaction(async (tx) => {
+            const newComplex = await tx.complex.create({
+                data: {
+                    name: complexName,
+                    slug: slug,
+                }
+            })
+
+            const newUser = await tx.user.create({
+                data: {
+                    email,
+                    password: hashedPassword,
+                    complexId: newComplex.id
+                }
+            })
+
+            return { newComplex, newUser }
+        })
+
+        return NextResponse.json({
+            success: true,
+            message: 'Complejo registrado correctamente',
+            complex: result.newComplex.slug
+        })
+
+    } catch (error) {
+        console.error('Registration Error:', error)
+        return NextResponse.json({
+            error: 'Error al registrar el complejo',
+            details: error instanceof Error ? error.message : String(error)
+        }, { status: 500 })
+    }
+}
