@@ -27,15 +27,7 @@ const createPrismaClient = () => {
                 authToken: token,
             })
             const adapter = new PrismaLibSQL(libsql as any)
-            // CRITICAL: Override datasources to prevent Prisma from using schema URL
-            const client = new PrismaClient({
-                adapter,
-                datasources: {
-                    db: {
-                        url: url
-                    }
-                }
-            })
+            const client = new PrismaClient({ adapter })
             console.log('[Prisma] Turso client created successfully')
             return client
         } catch (e) {
