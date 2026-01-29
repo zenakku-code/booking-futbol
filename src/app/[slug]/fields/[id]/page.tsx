@@ -17,9 +17,13 @@ export default async function FieldDetailPage({
         include: { complex: true }
     })
 
-    if (!field || field.complex?.slug !== slug) {
+    if (!field || (field as any).complex?.slug !== slug) {
         notFound()
     }
+
+    const inventory = await (prisma as any).inventoryItem.findMany({
+        where: { complexId: (field as any).complexId }
+    })
 
     return (
         <div className="min-h-screen bg-slate-900 pb-20 relative overflow-hidden">
@@ -28,7 +32,7 @@ export default async function FieldDetailPage({
 
             <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
                 <Link href={`/${slug}`} className="text-gray-400 hover:text-white mb-8 inline-flex items-center gap-2 transition-colors">
-                    ← Volver a {field.complex?.name || 'la página'}
+                    ← Volver a {(field as any).complex?.name || 'la página'}
                 </Link>
 
                 <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start mt-6">
@@ -57,12 +61,15 @@ export default async function FieldDetailPage({
                     </div>
 
                     <div className="mt-8 lg:mt-0 w-full overflow-hidden">
-                        <BookingFlow field={{
-                            ...field,
-                            availableDays: field.availableDays || undefined,
-                            openTime: field.openTime || undefined,
-                            closeTime: field.closeTime || undefined
-                        }} />
+                        <BookingFlow
+                            field={{
+                                ...(field as any),
+                                availableDays: field.availableDays || undefined,
+                                openTime: field.openTime || undefined,
+                                closeTime: field.closeTime || undefined
+                            }}
+                            inventory={inventory}
+                        />
                     </div>
                 </div>
             </div>

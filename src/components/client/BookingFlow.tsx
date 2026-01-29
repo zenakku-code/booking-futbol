@@ -2,6 +2,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
+type InventoryItem = {
+    id: string
+    name: string
+    price: number
+    stock: number
+}
+
 type Field = {
     id: string
     name: string
@@ -22,12 +29,13 @@ const DAYS_MAP: { [key: number]: string } = {
     6: "Sábado"
 }
 
-export default function BookingFlow({ field }: { field: Field }) {
+export default function BookingFlow({ field, inventory = [] }: { field: Field, inventory?: InventoryItem[] }) {
     const [step, setStep] = useState(1)
     const [date, setDate] = useState('')
     const [selectedTime, setSelectedTime] = useState('')
     const [clientName, setClientName] = useState('')
     const [clientPhone, setClientPhone] = useState('')
+    const [selectedItems, setSelectedItems] = useState<{ [id: string]: number }>({})
     const [takenSlots, setTakenSlots] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState(false)
@@ -90,6 +98,18 @@ export default function BookingFlow({ field }: { field: Field }) {
 
     const handleBooking = async () => {
         setIsLoading(true)
+        const itemsPayload = Object.entries(selectedItems)
+            .filter(([_, qty]) => qty > 0)
+            .map(([id, qty]) => ({
+                id,
+                quantity: qty
+            }))
+
+        const itemsTotal = itemsPayload.reduce((acc, item) => {
+            const invItem = inventory.find(i => i.id === item.id)
+            return acc + (invItem?.price || 0) * item.quantity
+        }, 0)
+
         try {
             const res = await fetch('/api/bookings', {
                 method: 'POST',
@@ -101,7 +121,8 @@ export default function BookingFlow({ field }: { field: Field }) {
                     endTime: `${parseInt(selectedTime) + 1}:00`,
                     clientName,
                     clientPhone,
-                    totalPrice: field.price
+                    totalPrice: field.price + itemsTotal,
+                    items: itemsPayload
                 })
             })
 
@@ -226,13 +247,70 @@ export default function BookingFlow({ field }: { field: Field }) {
                 <div className="animate-fade-in space-y-6">
                     <div className="bg-slate-800/50 p-6 rounded-2xl border border-white/5 mb-6 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-                        <h3 className="text-gray-400 text-sm font-medium uppercase tracking-wider mb-4">Resumen de Reserva</h3>
-                        <div className="flex items-center justify-between mb-2 relative z-10">
-                            <span className="text-2xl font-bold text-white">{date}</span>
-                            <span className="px-3 py-1 bg-primary/20 text-primary rounded-lg font-bold">{selectedTime} hs</span>
+                        <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-4 opacity-50">Resumen del Turno</h3>
+                        <div className="flex items-center justify-between mb-4 relative z-10">
+                            <div>
+                                <p className="text-2xl font-black text-white">{date}</p>
+                                <p className="text-sm text-gray-400">{field.name} • Futbol {field.type}</p>
+                            </div>
+                            <span className="px-4 py-2 bg-primary/20 text-primary rounded-xl font-black shadow-lg shadow-primary/5">{selectedTime} hs</span>
                         </div>
-                        <div className="text-3xl font-bold text-primary">${field.price}</div>
+
+                        <div className="space-y-2 border-t border-white/5 pt-4 mt-2">
+                            <div className="flex justify-between text-sm">
+                                <span className="text-gray-400">Cancha</span>
+                                <span className="text-white font-bold">${field.price}</span>
+                            </div>
+                            {Object.entries(selectedItems).map(([id, qty]) => {
+                                if (qty === 0) return null
+                                const itm = inventory.find(i => i.id === id)
+                                return (
+                                    <div key={id} className="flex justify-between text-sm">
+                                        <span className="text-gray-400">{itm?.name} (x{qty})</span>
+                                        <span className="text-white font-bold">${(itm?.price || 0) * qty}</span>
+                                    </div>
+                                )
+                            })}
+                            <div className="flex justify-between text-xl font-black text-primary pt-2 border-t border-white/10 mt-2">
+                                <span>TOTAL</span>
+                                <span>${field.price + Object.entries(selectedItems).reduce((acc, [id, qty]) => {
+                                    const itm = inventory.find(i => i.id === id)
+                                    return acc + (itm?.price || 0) * qty
+                                }, 0)}</span>
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Inventory Items Selection */}
+                    {inventory.length > 0 && (
+                        <div className="mb-6 animate-fade-in-up">
+                            <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-4 px-1">¿Necesitas algo más?</h3>
+                            <div className="grid grid-cols-1 gap-3">
+                                {inventory.map(item => (
+                                    <div key={item.id} className="flex items-center justify-between p-4 bg-slate-900/50 border border-white/5 rounded-2xl hover:border-white/10 transition-all">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xl">🎒</div>
+                                            <div>
+                                                <p className="text-white font-bold text-sm">{item.name}</p>
+                                                <p className="text-primary text-xs font-bold">${item.price}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-3 bg-slate-800 rounded-xl p-1">
+                                            <button
+                                                onClick={() => setSelectedItems({ ...selectedItems, [item.id]: Math.max(0, (selectedItems[item.id] || 0) - 1) })}
+                                                className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+                                            >-</button>
+                                            <span className="w-4 text-center text-white font-black text-sm">{selectedItems[item.id] || 0}</span>
+                                            <button
+                                                onClick={() => setSelectedItems({ ...selectedItems, [item.id]: Math.min(item.stock, (selectedItems[item.id] || 0) + 1) })}
+                                                className="w-8 h-8 flex items-center justify-center text-primary font-bold hover:scale-110 transition-transform"
+                                            >+</button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     <div>
                         <label className="block text-gray-300 font-medium mb-2 pl-1">Nombre Completo</label>

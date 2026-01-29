@@ -39,35 +39,22 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice } = body
+        const { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice, items = [] } = body
 
         if (!fieldId || !date || !startTime || !endTime || !clientName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        // TODO: Validate availability?
-        // Robust overlap check
+        // Validate overlap
         const overlappingBooking = await prisma.booking.findFirst({
             where: {
                 fieldId,
                 date: new Date(date),
                 status: { not: 'cancelled' },
                 OR: [
-                    {
-                        // New booking starts during an existing one
-                        startTime: { lte: startTime },
-                        endTime: { gt: startTime }
-                    },
-                    {
-                        // New booking ends during an existing one
-                        startTime: { lt: endTime },
-                        endTime: { gte: endTime }
-                    },
-                    {
-                        // Existing booking is entirely inside new one
-                        startTime: { gte: startTime },
-                        endTime: { lte: endTime }
-                    }
+                    { startTime: { lte: startTime }, endTime: { gt: startTime } },
+                    { startTime: { lt: endTime }, endTime: { gte: endTime } },
+                    { startTime: { gte: startTime }, endTime: { lte: endTime } }
                 ]
             }
         })
@@ -76,7 +63,6 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'El horario seleccionado ya está ocupado (solapamiento)' }, { status: 409 })
         }
 
-        // Validate within field hours
         const field = await prisma.field.findUnique({
             where: { id: fieldId },
             include: { complex: true } as any
@@ -88,20 +74,45 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'El horario seleccionado está fuera de rango de apertura de la cancha' }, { status: 400 })
         }
 
-        const booking = await prisma.booking.create({
-            data: {
-                fieldId,
-                date: new Date(date),
-                startTime,
-                endTime,
-                clientName,
-                clientPhone,
-                totalPrice: parseFloat(totalPrice),
-                status: 'pending'
+        // Use transaction for Booking, BookingItems, and Stock update
+        const booking = await prisma.$transaction(async (tx) => {
+            const b = await tx.booking.create({
+                data: {
+                    fieldId,
+                    date: new Date(date),
+                    startTime,
+                    endTime,
+                    clientName,
+                    clientPhone,
+                    totalPrice: parseFloat(totalPrice),
+                    status: 'pending'
+                }
+            })
+
+            // Create BookingItems and Update Stock
+            for (const item of items) {
+                const invItem = await (tx as any).inventoryItem.findUnique({ where: { id: item.id } })
+                if (invItem && invItem.stock >= item.quantity) {
+                    await (tx as any).bookingItem.create({
+                        data: {
+                            bookingId: b.id,
+                            inventoryItemId: item.id,
+                            quantity: item.quantity,
+                            priceAtBooking: invItem.price
+                        }
+                    })
+                    // Decrement stock
+                    await (tx as any).inventoryItem.update({
+                        where: { id: item.id },
+                        data: { stock: { decrement: item.quantity } }
+                    })
+                }
             }
+
+            return b
         })
 
-        // Mercado Pago Integration - Fetch account of the field's complex
+        // Mercado Pago Integration
         const account = await prisma.account.findFirst({
             where: { complexId: (field as any).complexId } as any
         })
@@ -110,14 +121,31 @@ export async function POST(request: Request) {
 
         if (account && account.accessToken) {
             try {
-                // Create MP Preference
-
-                // Get base URL from environment or request
                 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
                     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
-                // Build redirect path - if complex exists, use dynamic route
                 const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
+
+                // Build MP items array
+                const mpItems = [{
+                    title: `Reserva Cancha - ${date}`,
+                    quantity: 1,
+                    currency_id: 'ARS',
+                    unit_price: field.price
+                }]
+
+                // Add inventory items to MP
+                for (const item of items) {
+                    const invItem = await (prisma as any).inventoryItem.findUnique({ where: { id: item.id } })
+                    if (invItem && item.quantity > 0) {
+                        mpItems.push({
+                            title: invItem.name,
+                            quantity: item.quantity,
+                            currency_id: 'ARS',
+                            unit_price: invItem.price
+                        })
+                    }
+                }
 
                 const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
                     method: 'POST',
@@ -126,14 +154,7 @@ export async function POST(request: Request) {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        items: [
-                            {
-                                title: `Reserva Cancha - ${date}`,
-                                quantity: 1,
-                                currency_id: 'ARS',
-                                unit_price: parseFloat(totalPrice)
-                            }
-                        ],
+                        items: mpItems,
                         back_urls: {
                             success: `${baseUrl}${returnPath}?status=success&booking_id=${booking.id}`,
                             failure: `${baseUrl}${returnPath}?status=failure&booking_id=${booking.id}`,
@@ -147,14 +168,10 @@ export async function POST(request: Request) {
                 const preference = await preferenceRes.json()
                 if (preference.init_point) {
                     paymentUrl = preference.init_point
-                } else {
-                    console.error('MP Preference Error:', preference)
                 }
             } catch (error) {
-                console.error('CRITICAL: Error creating MP preference', error)
+                console.error('MP Preference Error', error)
             }
-        } else {
-            console.warn('MP Integration skipped: No account or access token found.')
         }
 
         return NextResponse.json({ ...booking, paymentUrl })
