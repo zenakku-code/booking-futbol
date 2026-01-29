@@ -4,7 +4,7 @@ import Link from 'next/link'
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-    const complexes = await prisma.complex.findMany({
+    const complexes = await (prisma as any).complex.findMany({
         orderBy: { name: 'asc' }
     })
 
@@ -31,10 +31,15 @@ export default async function HomePage() {
                         Digitaliza tu negocio y aumenta tus ingresos hoy.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center">
-                        <Link href="/register" className="btn btn-primary px-12 py-5 text-xl font-black rounded-2xl shadow-[0_20px_40px_-15px_rgba(74,222,128,0.5)]">
-                            Registrar mi Complejo
-                        </Link>
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                        <div className="flex flex-col items-center gap-4">
+                            <Link href="/register" className="btn btn-primary px-12 py-5 text-xl font-black rounded-2xl shadow-[0_20px_40px_-15px_rgba(74,222,128,0.5)]">
+                                Registrar mi Complejo
+                            </Link>
+                            <span className="text-gray-500 text-sm font-medium">
+                                Software Fee: <span className="text-white font-bold">$15.000 ARS</span> (pago único inicial)
+                            </span>
+                        </div>
                         <Link href="#explorar" className="px-12 py-5 text-xl font-bold border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-gray-300">
                             Explorar Canchas
                         </Link>
@@ -56,7 +61,7 @@ export default async function HomePage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {complexes.map((complex) => (
+                        {complexes.map((complex: any) => (
                             <Link
                                 key={complex.id}
                                 href={`/${complex.slug}`}
