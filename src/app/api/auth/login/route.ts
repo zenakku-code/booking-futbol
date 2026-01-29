@@ -18,14 +18,12 @@ export async function POST(request: Request) {
         })
 
         if (!user) {
-            console.log('User not found:', email)
             return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
         }
 
         const isValid = await bcrypt.compare(password, user.password)
 
         if (!isValid) {
-            console.log('Invalid password for:', email)
             return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
         }
 
@@ -34,7 +32,6 @@ export async function POST(request: Request) {
             email: user.email,
             complexId: (user as any).complexId
         })
-        console.log('Token created for:', email)
         const cookieStore = await cookies()
 
         cookieStore.set('auth_token', token, {

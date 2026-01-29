@@ -8,13 +8,13 @@ export async function GET(request: Request) {
         const fieldId = searchParams.get('fieldId')
         const date = searchParams.get('date')
 
-        const where: any = {}
-        if (fieldId) where.fieldId = fieldId
-        // Date filtering can be complex with timezones, simpler for now:
-        // If date provided, filter by day approximate or exact match?
-        // Let's assume frontend sends ISO date start of day or we fetch all and filter in client for mvp,
-        // OR just fetch all bookings for a field.
-        // Efficient way:
+        // Security check: Must provide fieldId for public availability check
+        if (!fieldId) {
+            return NextResponse.json({ error: 'fieldId is required parameter for public query' }, { status: 400 })
+        }
+
+        const where: any = { fieldId }
+
         if (date) {
             const startOfDay = new Date(date)
             startOfDay.setHours(0, 0, 0, 0)
@@ -37,24 +37,25 @@ export async function GET(request: Request) {
 
         const sanitizedBookings = bookings.map(b => {
             const isOwner = currentComplexId && (b.field as any).complexId === currentComplexId
+
             if (isOwner) return b
 
+            // Public View: Strict sanitization - whitelist fields
             return {
-                ...b,
-                clientName: 'Reservado',
-                clientPhone: '***',
-                // Keep only public info for availability check
                 id: b.id,
                 fieldId: b.fieldId,
                 date: b.date,
                 startTime: b.startTime,
                 endTime: b.endTime,
-                status: b.status
+                status: b.status,
+                clientName: 'Reservado',
+                // Explicitly excluding other fields like totalPrice, phone, etc from the destructured return
             }
         })
 
         return NextResponse.json(sanitizedBookings)
     } catch (error) {
+        console.error('Error fetching bookings:', error)
         return NextResponse.json({ error: 'Error fetching bookings' }, { status: 500 })
     }
 }

@@ -46,6 +46,8 @@ model Field {
   // SaaS Link
   complexId     String?
   complex       Complex?  @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
 }
 
 model InventoryItem {
@@ -61,6 +63,8 @@ model InventoryItem {
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([complexId])
 }
 
 model Booking {
@@ -78,6 +82,10 @@ model Booking {
   items       BookingItem[]
   
   createdAt   DateTime @default(now())
+
+  @@index([fieldId])
+  @@index([fieldId, date])
+  @@index([status])
 }
 
 // Join table for Booking and InventoryItem to track rented items per booking
@@ -90,6 +98,9 @@ model BookingItem {
   quantity        Int           @default(1)
   priceAtBooking  Float         // Snapshot of price when booked
   returned        Boolean       @default(false)
+
+  @@index([bookingId])
+  @@index([inventoryItemId])
 }
 
 model Account {
@@ -106,6 +117,8 @@ model Account {
   
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([complexId])
 }
 
 model User {
@@ -119,6 +132,8 @@ model User {
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([complexId])
 }
 
 model ApiKey {
@@ -129,4 +144,6 @@ model ApiKey {
   complex   Complex  @relation(fields: [complexId], references: [id])
   createdAt DateTime @default(now())
   lastUsed  DateTime?
+
+  @@index([complexId])
 }
