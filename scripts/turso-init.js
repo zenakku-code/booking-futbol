@@ -25,18 +25,28 @@ async function main() {
         const sqlPath = path.join(__dirname, '../init.sql');
         const sql = fs.readFileSync(sqlPath, 'utf8');
 
-        // Split by semicolon but ignore semicolons inside strings or comments might be tricky
-        // For simplicity, we split by common Prisma patterns or just execute the whole thing if the driver supports it
-        // LibSQL executeMultiple or similar?
+        console.log('Ejecutando script de inicialización...');
 
-        console.log('Ejecutando script de inicializaciÃ³n...');
+        // Split by semicolon and filter out empty/whitespace statements
+        const statements = sql
+            .split(';')
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
 
-        // We can use executeMultiple for a block of commands
-        await client.executeMultiple(sql);
+        for (const statement of statements) {
+            try {
+                await client.execute(statement);
+            } catch (err) {
+                // Ignore "already exists" errors if any, but log others
+                if (!err.message.includes('already exists')) {
+                    throw err;
+                }
+            }
+        }
 
-        console.log('âœ… Base de datos inicializada correctamente!');
+        console.log('✅ Base de datos inicializada correctamente!');
     } catch (error) {
-        console.error('â Œ Error inicializando la base de datos:', error);
+        console.error('❌ Error inicializando la base de datos:', error);
     } finally {
         // No disconnect needed for this client usually, but good to exit
         process.exit(0);
