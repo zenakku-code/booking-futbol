@@ -3,18 +3,27 @@ import { useState, useEffect } from 'react'
 
 export default function SplitPaymentForm({ booking, remaining, isCompleted }: any) {
     const playersRaw = parseInt(booking.field.type)
-    const players = isNaN(playersRaw) ? 5 : playersRaw
+    const players = isNaN(playersRaw) || playersRaw <= 0 ? 5 : playersRaw
 
-    // Floor para asegurar que la suma de partes no exceda por redondeo, 
-    // aunque un centavo menos no mata a nadie.
+    // Safety floor
     const oneShare = Math.floor(remaining / players)
     const halfShare = Math.floor(remaining / 2)
 
     const [amount, setAmount] = useState<number>(0)
     const [loading, setLoading] = useState(false)
 
+    // Debug mount
+    useEffect(() => {
+        console.log('SplitPaymentForm mounted. Players:', players, 'OneShare:', oneShare)
+    }, [players, oneShare])
+
     const handleAmountChange = (val: number) => {
-        setAmount(val)
+        console.log('Setting amount:', val)
+        if (val > 0) {
+            setAmount(val)
+        } else {
+            console.warn('Attempted to set invalid amount:', val)
+        }
     }
 
     const handlePay = async () => {
@@ -73,28 +82,28 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted }: an
                 <button
                     type="button"
                     onClick={() => handleAmountChange(oneShare)}
-                    className="group flex flex-col items-center justify-center py-4 px-2 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.05] transition-all duration-300 active:scale-95"
+                    className="group relative flex flex-col items-center justify-center py-4 px-2 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.05] transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-primary mb-1 transition-colors">1/{players} P.</span>
-                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors">${oneShare}</span>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-primary mb-1 transition-colors pointer-events-none">1/{players} P.</span>
+                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors pointer-events-none">${oneShare}</span>
                 </button>
 
                 <button
                     type="button"
                     onClick={() => handleAmountChange(halfShare)}
-                    className="group flex flex-col items-center justify-center py-4 px-2 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.05] transition-all duration-300 active:scale-95"
+                    className="group relative flex flex-col items-center justify-center py-4 px-2 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.05] transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-primary mb-1 transition-colors">La Mitad</span>
-                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors">${halfShare}</span>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-primary mb-1 transition-colors pointer-events-none">La Mitad</span>
+                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors pointer-events-none">${halfShare}</span>
                 </button>
 
                 <button
                     type="button"
                     onClick={() => handleAmountChange(remaining)}
-                    className="group flex flex-col items-center justify-center py-4 px-2 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.05] transition-all duration-300 active:scale-95"
+                    className="group relative flex flex-col items-center justify-center py-4 px-2 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.05] transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-primary mb-1 transition-colors">Total</span>
-                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors">${remaining}</span>
+                    <span className="text-[10px] uppercase font-bold text-gray-400 group-hover:text-primary mb-1 transition-colors pointer-events-none">Total</span>
+                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors pointer-events-none">${remaining}</span>
                 </button>
             </div>
 

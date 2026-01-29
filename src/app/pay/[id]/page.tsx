@@ -27,7 +27,9 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
 
     const remaining = Math.max(0, booking.totalPrice - grandTotalPaid)
     const progress = Math.min(100, (grandTotalPaid / booking.totalPrice) * 100)
-    const isCompleted = remaining <= 10 // Margen de error de $10
+
+    // Consideramos completado si falta poco dinero O si el estado ya está confirmado (manual por admin)
+    const isCompleted = remaining <= 10 || booking.status === 'confirmed' || booking.status === 'approved'
 
     return (
         <div className="min-h-screen bg-slate-950 text-white pb-20 font-sans selection:bg-primary/30">
