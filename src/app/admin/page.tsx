@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { getComplexId } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
+import ClientLink from "@/components/admin/ClientLink"
+
 // Force dynamic to ensure stats are fresh on every request
 export const dynamic = 'force-dynamic';
 
@@ -26,19 +28,29 @@ export default async function AdminDashboard() {
     const complexId = await getComplexId()
     if (!complexId) redirect('/admin/login')
 
-    const stats = await getStats(complexId)
+    const [stats, complex] = await Promise.all([
+        getStats(complexId),
+        prisma.complex.findUnique({ where: { id: complexId } })
+    ])
 
     return (
         <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto">
-            {/* Header Section - Stack on mobile, Row on Desktop */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/5 pb-6 gap-4">
+            {/* Header Section */}
+            <header className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/5 pb-8 gap-6">
                 <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">Dashboard</h2>
+                    <h2 className="text-3xl md:text-5xl font-black text-white mb-2 tracking-tight">
+                        {complex?.name || 'Dashboard'}
+                    </h2>
                     <p className="text-gray-400 text-base">Visión general del estado de tu complejo.</p>
                 </div>
-                <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 self-start md:self-auto">
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--primary)]"></div>
-                    <span className="text-sm font-medium text-white">Sistema Operativo</span>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                    {complex?.slug && <ClientLink slug={complex.slug} />}
+
+                    <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 self-start">
+                        <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--primary)]"></div>
+                        <span className="text-sm font-medium text-white whitespace-nowrap">Sistema Operativo</span>
+                    </div>
                 </div>
             </header>
 
