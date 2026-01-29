@@ -32,6 +32,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
+        // Check subscription status
+        const complex = await prisma.complex.findUnique({
+            where: { id: complexId }
+        })
+
+        if (!complex?.subscriptionActive) {
+            return NextResponse.json({
+                error: 'Suscripción requerida',
+                message: 'Debes abonar el software para poder crear y gestionar canchas.',
+                requireSubscription: true
+            }, { status: 403 })
+        }
+
         const field = await prisma.field.create({
             data: {
                 name,

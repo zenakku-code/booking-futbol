@@ -17,9 +17,16 @@ model Complex {
   slug        String    @unique
   address     String?
   logoUrl     String?
+  
+  // Subscription status
+  subscriptionActive Boolean @default(false)
+  subscriptionDate   DateTime?
+  
   fields      Field[]
   accounts    Account[]
   users       User[]
+  inventory   InventoryItem[]
+  
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
@@ -40,6 +47,21 @@ model Field {
   complex       Complex?  @relation(fields: [complexId], references: [id])
 }
 
+model InventoryItem {
+  id          String   @id @default(uuid())
+  name        String
+  price       Float    // Price per rental
+  stock       Int      @default(0)
+  
+  complexId   String
+  complex     Complex  @relation(fields: [complexId], references: [id])
+  
+  bookings    BookingItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Booking {
   id          String   @id @default(uuid())
   fieldId     String
@@ -51,7 +73,21 @@ model Booking {
   clientPhone String?
   totalPrice  Float
   status      String   @default("pending") 
+  
+  items       BookingItem[]
+  
   createdAt   DateTime @default(now())
+}
+
+// Join table for Booking and InventoryItem to track rented items per booking
+model BookingItem {
+  id              String        @id @default(uuid())
+  bookingId       String
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  quantity        Int           @default(1)
+  priceAtBooking  Float         // Snapshot of price when booked
 }
 
 model Account {

@@ -9,10 +9,16 @@ export default async function FieldsPage() {
     const complexId = await getComplexId()
     if (!complexId) redirect('/admin/login')
 
-    const fields = await prisma.field.findMany({
-        where: { complexId },
-        orderBy: { type: 'asc' }
-    })
+    const [fields, complex] = await Promise.all([
+        prisma.field.findMany({
+            where: { complexId },
+            orderBy: { type: 'asc' }
+        }),
+        prisma.complex.findUnique({
+            where: { id: complexId },
+            select: { subscriptionActive: true }
+        })
+    ])
 
-    return <FieldManagement initialFields={fields} />
+    return <FieldManagement initialFields={fields} subscriptionActive={complex?.subscriptionActive || false} />
 }
