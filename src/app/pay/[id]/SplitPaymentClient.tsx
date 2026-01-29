@@ -61,7 +61,7 @@ export default function SplitPaymentClient({ booking, remaining, isCompleted }: 
             <h3 className="text-center text-lg font-bold mb-6 text-white">¿Cuánto ponés hoy?</h3>
 
             <div className="grid grid-cols-3 gap-2 mb-6">
-                <button onClick={() => setAmount(Math.ceil(remaining / booking.type))} className="py-2 px-1 bg-slate-800/80 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all">
+                <button onClick={() => setAmount(Math.ceil(remaining / parseInt(booking.field.type)))} className="py-2 px-1 bg-slate-800/80 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all">
                     1/{booking.field.type} ({(remaining / parseInt(booking.field.type)).toFixed(0)})
                 </button>
                 <button onClick={() => setAmount(Math.ceil(remaining / 2))} className="py-2 px-1 bg-slate-800/80 rounded-xl text-[10px] sm:text-xs font-bold text-gray-400 hover:bg-primary/20 hover:text-primary hover:border-primary/50 border border-transparent transition-all">
