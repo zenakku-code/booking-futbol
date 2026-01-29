@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import Link from 'next/link'
+import Image from 'next/image'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +13,14 @@ export default async function HomePage() {
         <div className="min-h-screen bg-slate-950 text-white selection:bg-primary/30">
             {/* Hero Section - SaaS Landing */}
             <div className="relative overflow-hidden pt-20 pb-32">
-                <div className="absolute top-0 left-0 w-full h-full bg-[url('/bg-hero.jpg')] bg-cover opacity-10 grayscale pointer-events-none"></div>
+                <Image
+                    src="/bg-hero.jpg"
+                    alt="Background"
+                    fill
+                    priority
+                    className="object-cover opacity-10 grayscale pointer-events-none"
+                    sizes="100vw"
+                />
                 <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
 
                 <div className="container relative z-10 text-center px-4">
@@ -69,7 +77,13 @@ export default async function HomePage() {
                             >
                                 <div className="relative h-64 w-full rounded-2xl overflow-hidden bg-slate-800">
                                     {complex.logoUrl ? (
-                                        <img src={complex.logoUrl} alt={complex.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        <img
+                                            src={complex.logoUrl}
+                                            alt={complex.name}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
                                             <span className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-500">🏟️</span>

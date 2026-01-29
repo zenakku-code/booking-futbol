@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import FieldCard from "@/components/client/FieldCard"
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from "next/navigation"
 
 export const dynamic = 'force-dynamic'
@@ -30,8 +31,19 @@ export default async function ComplexPage({
     })
 
     return (
-        <div className="min-h-screen bg-[url('/bg-hero.jpg')] bg-cover bg-fixed relative">
-            <div className="absolute inset-0 bg-slate-900/90 z-0" />
+        <div className="min-h-screen relative">
+            {/* Fixed Background for better performance */}
+            <div className="fixed inset-0 z-0">
+                <Image
+                    src="/bg-hero.jpg" // Using same efficient hero asset
+                    alt="Stadium Background"
+                    fill
+                    priority
+                    className="object-cover"
+                    sizes="100vw"
+                />
+                <div className="absolute inset-0 bg-slate-900/90" />
+            </div>
 
             <div className="relative z-10">
                 {/* Header */}

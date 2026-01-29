@@ -12,6 +12,8 @@ export default function FieldCard({ field }: { field: any }) {
                                 src={field.imageUrl}
                                 alt={field.name}
                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                loading="lazy"
+                                decoding="async"
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-primary/20 transition-colors">
