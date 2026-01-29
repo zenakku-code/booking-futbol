@@ -139,7 +139,7 @@ export default function BookingFlow({ field }: { field: Field }) {
     }
 
     return (
-        <div className="glass-card p-4 sm:p-6 md:p-10 max-w-2xl mx-auto transform transition-all duration-500">
+        <div className="glass-card p-3 sm:p-6 md:p-10 max-w-2xl mx-auto transform transition-all duration-500">
             <div className="mb-6 md:mb-8">
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary">Reserva tu lugar</span>
@@ -158,7 +158,7 @@ export default function BookingFlow({ field }: { field: Field }) {
                     {/* Date Strip */}
                     <div>
                         <label className="block text-gray-300 font-medium mb-4">Selecciona una Fecha</label>
-                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 custom-scrollbar">
                             {availableDates.map((d) => (
                                 <button
                                     key={d.date}
