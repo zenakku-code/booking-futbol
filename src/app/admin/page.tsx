@@ -1,18 +1,32 @@
 import { prisma } from "@/lib/prisma"
 import Link from 'next/link'
+import { getComplexId } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 // Force dynamic to ensure stats are fresh on every request
 export const dynamic = 'force-dynamic';
 
-async function getStats() {
-    const totalFields = await prisma.field.count()
-    const totalBookings = await prisma.booking.count()
-    const pendingBookings = await prisma.booking.count({ where: { status: 'pending' } })
+async function getStats(complexId: string) {
+    const totalFields = await prisma.field.count({ where: { complexId } })
+    const totalBookings = await prisma.booking.count({
+        where: {
+            field: { complexId }
+        }
+    })
+    const pendingBookings = await prisma.booking.count({
+        where: {
+            status: 'pending',
+            field: { complexId }
+        }
+    })
     return { totalFields, totalBookings, pendingBookings }
 }
 
 export default async function AdminDashboard() {
-    const stats = await getStats()
+    const complexId = await getComplexId()
+    if (!complexId) redirect('/admin/login')
+
+    const stats = await getStats(complexId)
 
     return (
         <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto">

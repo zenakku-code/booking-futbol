@@ -98,9 +98,9 @@ export async function POST(request: Request) {
             }
         })
 
-        // Mercado Pago Integration
+        // Mercado Pago Integration - Fetch account of the field's complex
         const account = await prisma.account.findFirst({
-            where: { provider: 'mercadopago' }
+            where: { complexId: field.complexId }
         })
 
         let paymentUrl = null

@@ -1,11 +1,16 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import { getComplexId } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage() {
+    const complexId = await getComplexId()
+    if (!complexId) redirect('/admin/login')
+
     const account = await prisma.account.findFirst({
-        where: { provider: 'mercadopago' } // Singleton for now
+        where: { complexId }
     })
 
     return (
