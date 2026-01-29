@@ -25,7 +25,7 @@ export default async function FieldDetailPage({ params }: { params: Promise<{ id
             {/* Decorative Background */}
             <div className="absolute top-0 w-full h-[50vh] bg-gradient-to-b from-primary/20 to-slate-900 -z-0 pointer-events-none" />
 
-            <div className="container pt-10 relative z-10">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 relative z-10">
                 <Link href="/" className="text-gray-400 hover:text-white mb-8 inline-flex items-center gap-2 transition-colors">
                     ← Volver al listado
                 </Link>
@@ -56,7 +56,7 @@ export default async function FieldDetailPage({ params }: { params: Promise<{ id
                         )}
                     </div>
 
-                    <div className="mt-8 lg:mt-0">
+                    <div className="mt-8 lg:mt-0 w-full overflow-hidden">
                         <BookingFlow field={field} />
                     </div>
                 </div>

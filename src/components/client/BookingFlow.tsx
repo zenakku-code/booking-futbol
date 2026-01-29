@@ -139,15 +139,15 @@ export default function BookingFlow({ field }: { field: Field }) {
     }
 
     return (
-        <div className="glass-card p-3 sm:p-6 md:p-10 max-w-2xl mx-auto transform transition-all duration-500">
-            <div className="mb-6 md:mb-8">
-                <div className="flex items-center justify-between mb-2">
+        <div className="glass-card w-full p-4 sm:p-6 md:p-10 max-w-2xl mx-auto transform transition-all duration-500">
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-2 px-1">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary">Reserva tu lugar</span>
                     <span className="text-xs font-medium text-gray-500">Paso {step} de 2</span>
                 </div>
-                <div className="h-1 w-full bg-slate-800 rounded-full overflow-hidden">
+                <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
                     <div
-                        className="h-full bg-primary transition-all duration-500 ease-out"
+                        className="h-full bg-primary transition-all duration-500 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
                         style={{ width: step === 1 ? '50%' : '100%' }}
                     />
                 </div>
@@ -157,8 +157,8 @@ export default function BookingFlow({ field }: { field: Field }) {
                 <div className="animate-fade-in space-y-6 md:space-y-8">
                     {/* Date Strip */}
                     <div>
-                        <label className="block text-gray-300 font-medium mb-4">Selecciona una Fecha</label>
-                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 custom-scrollbar">
+                        <label className="block text-gray-400 text-sm font-medium mb-3 pl-1">Selecciona una Fecha</label>
+                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-4 custom-scrollbar -mx-1 px-1">
                             {availableDates.map((d) => (
                                 <button
                                     key={d.date}
@@ -170,7 +170,7 @@ export default function BookingFlow({ field }: { field: Field }) {
                                             : 'bg-slate-800/50 text-gray-400 border-white/5 hover:bg-slate-800 hover:border-white/20 hover:text-white'}
                                     `}
                                 >
-                                    <span className="text-xs sm:text-sm font-medium uppercase tracking-wider">{d.dayName}</span>
+                                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider">{d.dayName}</span>
                                     <span className="text-xl sm:text-2xl font-bold">{d.dayNumber}</span>
                                 </button>
                             ))}
@@ -179,9 +179,9 @@ export default function BookingFlow({ field }: { field: Field }) {
 
                     {/* Time Slots */}
                     <div>
-                        <label className="block text-gray-300 font-medium mb-4">Horarios Disponibles</label>
+                        <label className="block text-gray-400 text-sm font-medium mb-3 pl-1">Horarios Disponibles</label>
                         {slots.length > 0 ? (
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
                                 {slots.map(slot => {
                                     const isTaken = takenSlots.includes(slot)
                                     return (
@@ -190,16 +190,16 @@ export default function BookingFlow({ field }: { field: Field }) {
                                             disabled={isTaken}
                                             onClick={() => setSelectedTime(slot)}
                                             className={`
-                                                py-3 px-2 rounded-xl text-sm font-bold border transition-all relative overflow-hidden group
+                                                py-3 px-1 rounded-xl text-sm font-bold border transition-all relative overflow-hidden
                                                 ${selectedTime === slot
                                                     ? 'bg-primary text-slate-900 border-primary shadow-[0_0_10px_rgba(74,222,128,0.3)]'
-                                                    : 'bg-slate-800/50 text-white border-white/5 hover:border-white/20'}
-                                                ${isTaken ? 'opacity-40 cursor-not-allowed bg-slate-900/50' : 'hover:-translate-y-0.5'}
+                                                    : 'bg-slate-800/50 text-white border-white/5'}
+                                                ${isTaken ? 'opacity-30 cursor-not-allowed grayscale bg-slate-900/50' : 'hover:border-white/20'}
                                             `}
                                         >
                                             <span className="relative z-10">{slot}</span>
-                                            {isTaken && <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="w-full h-px bg-red-500/50 rotate-45 transform scale-110"></div>
+                                            {isTaken && <div className="absolute inset-0 flex items-center justify-center -z-0">
+                                                <div className="w-full h-[1px] bg-red-500/30 rotate-45 transform scale-110"></div>
                                             </div>}
                                         </button>
                                     )
