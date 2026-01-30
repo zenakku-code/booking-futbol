@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import AccountSettings from "@/components/admin/AccountSettings"
 import ComplexImageSettings from "@/components/admin/ComplexImageSettings"
 import ComplexNameSettings from "@/components/admin/ComplexNameSettings"
 import SubscriptionStatus from "@/components/admin/SubscriptionStatus"
@@ -39,7 +38,6 @@ export default async function SettingsPage() {
                 <div className="lg:col-span-2">
                     <OAuthConnect isConnected={!!(account as any)?.accessToken} mpUserId={(account as any)?.userId} complexId={complexId} />
                 </div>
-                <AccountSettings initialAccount={account} />
             </div>
         </div>
     )
