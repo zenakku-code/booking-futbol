@@ -43,6 +43,12 @@ export default function BookingManagement({ initialBookings }: { initialBookings
         console.log('Admin Bookings List:', bookings)
     }, [bookings])
 
+    // FIX: Helper to display dates in UTC, ignoring local browser timezone
+    const formatDate = (dateInput: string | Date) => {
+        const date = new Date(dateInput)
+        return date.toLocaleDateString('es-AR', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' })
+    }
+
     const handleStatusChange = async (id: string, newStatus: string) => {
         if (!confirm(`¿Cambiar estado a ${newStatus}?`)) return
         try {
@@ -154,7 +160,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                         <td className="px-6 py-4">
                                             <div className="text-white font-medium flex items-center gap-2">
                                                 <span>📅</span>
-                                                {new Date(booking.date).toLocaleDateString()}
+                                                {formatDate(booking.date)}
                                             </div>
                                             <div className="text-sm text-gray-500 mt-1 pl-6 flex items-center gap-1">
                                                 <span>⏰</span>
@@ -300,7 +306,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                             <div className="flex justify-between items-start">
                                 <div>
                                     <div className="text-white font-bold text-lg flex items-center gap-2">
-                                        {new Date(booking.date).toLocaleDateString()}
+                                        {formatDate(booking.date)}
                                     </div>
                                     <div className="text-sm text-gray-400 font-medium">
                                         {booking.startTime} - {booking.endTime}

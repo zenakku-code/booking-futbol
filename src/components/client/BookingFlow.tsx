@@ -56,7 +56,7 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
 
             if (allowedDays.includes(dayName)) {
                 dates.push({
-                    date: d.toISOString().split('T')[0],
+                    date: d.toLocaleDateString('en-CA'), // YYYY-MM-DD Local (Fixes UTC shift bug)
                     dayName: dayName.slice(0, 3), // Lun, Mar
                     dayNumber: d.getDate(),
                     fullDate: d
