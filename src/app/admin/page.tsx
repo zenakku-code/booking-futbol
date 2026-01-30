@@ -42,7 +42,7 @@ async function getStats(complexId: string) {
         }
     })
 
-    // Get recent activity
+    // Recent Activity Logic (Existing)
     const recentActivity = await (prisma as any).booking.findMany({
         where: { field: { complexId } },
         orderBy: { createdAt: 'desc' },
@@ -50,13 +50,41 @@ async function getStats(complexId: string) {
         include: { field: true }
     })
 
+    // --- NEW: Calculate Last 7 Days Revenue ---
+    const chartData = []
+    const today = new Date()
+
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date(today)
+        d.setDate(d.getDate() - i)
+        d.setHours(0, 0, 0, 0)
+
+        const nextDay = new Date(d)
+        nextDay.setDate(d.getDate() + 1)
+
+        // Sum revenue for this specific day
+        const dayRevenue = confirmedBookings
+            .filter((b: any) => {
+                const bDate = new Date(b.date)
+                return bDate >= d && bDate < nextDay
+            })
+            .reduce((acc: number, b: any) => acc + b.totalPrice, 0)
+
+        chartData.push({
+            date: d.toLocaleDateString('es-AR', { weekday: 'short' }), // "lun", "mar"
+            fullDate: d.toLocaleDateString(),
+            revenue: dayRevenue
+        })
+    }
+
     return {
         totalFields,
         totalBookings,
         pendingBookings,
         totalRevenue,
         monthlyRevenue,
-        recentActivity
+        recentActivity,
+        chartData // Return the new data
     }
 }
 
@@ -69,8 +97,10 @@ export default async function AdminDashboard() {
         (prisma as any).complex.findUnique({ where: { id: complexId } })
     ])
 
+    const maxRevenue = Math.max(...stats.chartData.map((d: any) => d.revenue), 1) // Avoid div by zero
+
     return (
-        <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto">
+        <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto pb-20">
             {/* Header Section */}
             <header className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/5 pb-8 gap-6">
                 <div>
@@ -84,14 +114,16 @@ export default async function AdminDashboard() {
                     {complex?.slug && <ClientLink slug={complex.slug} />}
 
                     <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 self-start">
-                        <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--primary)]"></div>
+                        <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                        </span>
                         <span className="text-sm font-medium text-white whitespace-nowrap">Sistema Operativo</span>
                     </div>
                 </div>
             </header>
 
-            {/* Stats Grid - 1 Col Mobile, 2 Col Tablet, 3 Col Desktop */}
-            {/* Stats Grid - 1 Col Mobile, 2 Col Tablet, 4 Col Desktop */}
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard
                     title="Ingresos (Mes)"
@@ -131,52 +163,92 @@ export default async function AdminDashboard() {
 
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Chart Section - Takes 2 cols on Desktop */}
-                <div className="lg:col-span-2 glass-card p-6 md:p-8">
+                {/* Revenue Chart Section - Takes 2 cols on Desktop */}
+                <div className="lg:col-span-2 glass-card p-6 md:p-8 flex flex-col">
                     <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span className="text-primary">●</span> Estadísticas de Ocupación
-                        </h3>
-                        <div className="flex gap-2">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                            <div className="h-2 w-2 rounded-full bg-gray-600"></div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <span className="text-primary">●</span> Rendimiento Semanal
+                            </h3>
+                            <p className="text-sm text-gray-400 mt-1">Ingresos de los últimos 7 días</p>
+                        </div>
+                        <div className="hidden sm:flex gap-4 text-xs font-bold text-gray-500 uppercase">
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-primary/50"></span>
+                                Ingresos
+                            </div>
                         </div>
                     </div>
 
-                    <div className="h-64 w-full flex items-center justify-center rounded-2xl bg-slate-950/50 border border-dashed border-white/10 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                        <div className="text-center">
-                            <p className="text-3xl font-bold text-gray-700 mb-2">Coming Soon</p>
-                            <p className="text-sm text-gray-500">Gráfico de rendimiento semanal</p>
+                    <div className="flex-1 flex items-end justify-between gap-2 sm:gap-4 h-64 w-full relative pt-10">
+                        {/* Grid Lines */}
+                        <div className="absolute inset-x-0 top-10 bottom-0 flex flex-col justify-between text-[10px] text-gray-600 pointer-events-none z-0">
+                            {[100, 75, 50, 25, 0].map((pct) => (
+                                <div key={pct} className="border-t border-white/5 w-full h-0 relative">
+                                    <span className="absolute -top-3 right-0 opacity-0">{pct}%</span>
+                                </div>
+                            ))}
                         </div>
+
+                        {stats.chartData.map((d: any, i: number) => (
+                            <div key={i} className="flex-1 flex flex-col items-center gap-2 z-10 group relative h-full justify-end">
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] sm:text-xs py-1 px-2 rounded border border-white/10 whitespace-nowrap z-20 pointer-events-none shadow-xl transform translate-y-2 group-hover:translate-y-0">
+                                    {d.fullDate}: <span className="text-primary font-bold">${d.revenue}</span>
+                                </div>
+
+                                {/* Bar */}
+                                <div
+                                    className="w-full max-w-[40px] bg-gradient-to-t from-primary/10 to-primary/60 rounded-t-lg transition-all duration-500 ease-out group-hover:to-primary group-hover:shadow-[0_0_20px_rgba(74,222,128,0.3)] relative overflow-hidden"
+                                    style={{ height: `${(d.revenue / maxRevenue) * 100}%`, minHeight: '4px' }}
+                                >
+                                    {/* Inner sheen effect */}
+                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+
+                                {/* Label */}
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase group-hover:text-primary transition-colors">
+                                    {d.date}
+                                </span>
+                            </div>
+                        ))}
                     </div>
                 </div>
 
                 {/* Activity Feed - Takes 1 col */}
-                <div className="glass-card p-6 md:p-8 flex flex-col h-full">
-                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                <div className="glass-card p-6 md:p-8 flex flex-col h-full min-h-[400px]">
+                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                         <span className="text-accent">●</span> Última Actividad
                     </h3>
-                    <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+                    <div className="space-y-2 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar -mr-2 p-2">
                         {stats.recentActivity.length === 0 ? (
-                            <p className="text-gray-500 text-sm text-center py-10">No hay actividad reciente.</p>
+                            <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-50">
+                                <span className="text-4xl mb-2">💤</span>
+                                <p className="text-sm text-gray-400">Sin actividad reciente.</p>
+                            </div>
                         ) : (
                             stats.recentActivity.map((booking: any) => (
-                                <div key={booking.id} className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-all cursor-default group border border-transparent hover:border-white/5">
-                                    <div className="w-10 h-10 rounded-full bg-slate-800 flex-shrink-0 flex items-center justify-center border border-white/5 group-hover:border-primary/50 transition-colors">
-                                        <span className="text-lg">👤</span>
+                                <div key={booking.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-default group border border-transparent hover:border-white/10">
+                                    <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border border-white/5 shadow-lg
+                                        ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
+                                            booking.status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}
+                                    `}>
+                                        <span className="text-lg">
+                                            {booking.status === 'confirmed' ? '✓' : booking.status === 'pending' ? '⏳' : '✕'}
+                                        </span>
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-white font-medium text-sm truncate">{booking.clientName}</p>
-                                        <p className="text-xs text-gray-500">
-                                            {booking.field.name} • {new Date(booking.createdAt).toLocaleDateString()}
-                                        </p>
+                                        <p className="text-white font-bold text-sm truncate">{booking.clientName}</p>
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-wide">
+                                            <span>{booking.field.name}</span>
+                                            <span>•</span>
+                                            <span>${booking.totalPrice}</span>
+                                        </div>
                                     </div>
-                                    <div className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${booking.status === 'confirmed' ? 'text-green-400 bg-green-500/10' :
-                                        booking.status === 'cancelled' ? 'text-red-400 bg-red-500/10' :
-                                            'text-amber-400 bg-amber-500/10'
-                                        }`}>
-                                        {booking.status}
+                                    <div className="text-right">
+                                        <span className="text-[10px] font-mono text-gray-500 block">
+                                            {new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
                                     </div>
                                 </div>
                             ))

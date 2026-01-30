@@ -134,7 +134,8 @@ export default function BookingManagement({ initialBookings }: { initialBookings
             </header>
 
             <div className="glass overflow-hidden rounded-2xl border border-white/5">
-                <div className="overflow-x-auto">
+                {/* Desktop View (Table) */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left">
                         <thead className="bg-slate-800/50 text-gray-400 uppercase text-xs">
                             <tr>
@@ -290,6 +291,75 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile View (Cards) */}
+                <div className="md:hidden flex flex-col gap-4 p-4">
+                    {bookings.map(booking => (
+                        <div key={booking.id} className="bg-slate-800/50 rounded-xl border border-white/5 p-4 space-y-4">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <div className="text-white font-bold text-lg flex items-center gap-2">
+                                        {new Date(booking.date).toLocaleDateString()}
+                                    </div>
+                                    <div className="text-sm text-gray-400 font-medium">
+                                        {booking.startTime} - {booking.endTime}
+                                    </div>
+                                </div>
+                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold border ${getStatusColor(booking.status)} uppercase tracking-wider`}>
+                                    {booking.status}
+                                </span>
+                            </div>
+
+                            <div className="bg-slate-900/50 rounded-lg p-3 space-y-2 text-sm border border-white/5">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Cancha</span>
+                                    <span className="text-white">{booking.field.name}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-500">Cliente</span>
+                                    <span className="text-white font-medium">{booking.clientName}</span>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
+                                    <span className="text-gray-500 font-bold">Total</span>
+                                    <span className="text-primary font-bold text-lg">${booking.totalPrice}</span>
+                                </div>
+                            </div>
+
+                            {/* Mobile Actions */}
+                            {booking.status === 'pending' && (
+                                <div className="grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => handleStatusChange(booking.id, 'confirmed')}
+                                        className="bg-green-500/10 text-green-400 border border-green-500/30 py-2 rounded-lg font-bold text-xs"
+                                    >
+                                        Aprobar
+                                    </button>
+                                    <button
+                                        onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                                        className="bg-red-500/10 text-red-400 border border-red-500/30 py-2 rounded-lg font-bold text-xs"
+                                    >
+                                        Liberar
+                                    </button>
+                                </div>
+                            )}
+                            {booking.status === 'confirmed' && (
+                                <div className="flex justify-end">
+                                    <button
+                                        onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                                        className="text-red-400 text-xs font-medium border-b border-red-400/30 pb-0.5"
+                                    >
+                                        Cancelar Reserva
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                    {bookings.length === 0 && (
+                        <div className="text-center py-10 text-gray-500">
+                            No hay reservas para mostrar.
+                        </div>
+                    )}
                 </div>
             </div>
 
