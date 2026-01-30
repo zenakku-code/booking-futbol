@@ -201,7 +201,7 @@ export async function POST(request: Request) {
                     const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
 
                     // Build MP items array
-                    let mpItems = []
+                    const mpItems = []
                     let amountToPay = 0
 
                     if (paymentType === 'DEPOSIT' && (field as any).complex?.downPaymentEnabled) {

@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma"
-import Link from "next/link"
 import ComplexImageSettings from "@/components/admin/ComplexImageSettings"
 import ComplexNameSettings from "@/components/admin/ComplexNameSettings"
 import SubscriptionStatus from "@/components/admin/SubscriptionStatus"

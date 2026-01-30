@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 type InventoryItem = {
     id: string
@@ -75,7 +74,7 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
         if (dates.length > 0 && !date) {
             setDate(dates[0].date)
         }
-    }, [field.availableDays])
+    }, [field.availableDays, date])
 
     // Generate Slots based on Open/Close time
     const [slots, setSlots] = useState<string[]>([])
