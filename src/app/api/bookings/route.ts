@@ -72,7 +72,13 @@ export async function GET(request: Request) {
             }
         })
 
-        return NextResponse.json(sanitizedBookings)
+        return NextResponse.json(sanitizedBookings, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+            }
+        })
     } catch (error) {
         console.error('Error fetching bookings:', error)
         return NextResponse.json({ error: 'Error fetching bookings' }, { status: 500 })

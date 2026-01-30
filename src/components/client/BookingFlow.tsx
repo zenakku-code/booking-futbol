@@ -222,16 +222,16 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                                             disabled={isTaken}
                                             onClick={() => setSelectedTime(slot)}
                                             className={`
-                                                py-3 px-1 rounded-xl text-sm font-bold border transition-all relative overflow-hidden
+                                                py-3 px-1 rounded-xl text-sm font-bold border transition-all relative overflow-hidden min-h-[50px]
                                                 ${selectedTime === slot
-                                                    ? 'bg-primary text-slate-900 border-primary shadow-[0_0_10px_rgba(74,222,128,0.3)]'
-                                                    : 'bg-slate-800/50 text-white border-white/5'}
-                                                ${isTaken ? 'opacity-30 cursor-not-allowed grayscale bg-slate-900/50' : 'hover:border-white/20'}
+                                                    ? 'bg-primary text-slate-900 border-primary shadow-[0_0_10px_rgba(74,222,128,0.3)] scale-105 z-10'
+                                                    : 'bg-slate-800 text-white border-white/10 hover:border-white/40 hover:bg-slate-700'}
+                                                ${isTaken ? 'opacity-50 cursor-not-allowed border-red-500/20' : ''}
                                             `}
                                         >
-                                            <span className="relative z-10">{slot}</span>
-                                            {isTaken && <div className="absolute inset-0 flex items-center justify-center -z-0">
-                                                <div className="w-full h-[1px] bg-red-500/30 rotate-45 transform scale-110"></div>
+                                            <span className={isTaken ? 'opacity-0' : 'relative z-10'}>{slot}</span>
+                                            {isTaken && <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-20">
+                                                <span className="text-[9px] text-red-500 font-black uppercase tracking-wider transform -rotate-12 border border-red-500/30 px-1 rounded">Ocupado</span>
                                             </div>}
                                         </button>
                                     )
