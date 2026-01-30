@@ -324,7 +324,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                     </button>
                 </div>
                 <p className="text-[10px] text-gray-500 mt-2 max-w-md">
-                    Si ves canchas "Ocupadas" en el sitio web pero no hay reservas aquí, selecciona la fecha y usa este botón para eliminar cualquier reserva pendiente oculta.
+                    Si ves canchas &quot;Ocupadas&quot; en el sitio web pero no hay reservas aquí, selecciona la fecha y usa este botón para eliminar cualquier reserva pendiente oculta.
                 </p>
             </div>
         </div>
