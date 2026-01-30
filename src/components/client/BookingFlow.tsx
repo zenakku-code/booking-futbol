@@ -464,6 +464,17 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                                 {paymentType === 'SPLIT' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_10px_var(--accent)]"></div>}
                             </button>
                         </div>
+
+                        {/* DEBUG INFO - REMOVE IN PRODUCTION */}
+                        {!hasDeposit && field.complex?.downPaymentEnabled && (
+                            <div className="mt-4 p-2 bg-red-500/20 text-red-300 text-[10px] font-mono border border-red-500/30 rounded">
+                                [DEBUG] Seña Oculta:
+                                <br />Price: {price}
+                                <br />Deposit: {depositFixed}
+                                <br />Enabled: {String(field.complex.downPaymentEnabled)}
+                                <br />Condition: {depositFixed} &lt; {price} ? {String(depositFixed < price)}
+                            </div>
+                        )}
                     </div>
 
                     {/* Client Data Form */}
