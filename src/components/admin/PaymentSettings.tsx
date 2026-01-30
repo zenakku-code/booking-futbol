@@ -10,6 +10,7 @@ export default function PaymentSettings({ initialComplex }: { initialComplex: an
 
     const handleSave = async () => {
         setLoading(true)
+        console.log('Sending update:', { downPaymentEnabled: enabled, downPaymentFixed: amount })
         try {
             const res = await fetch('/api/admin/complex', {
                 method: 'PATCH',
@@ -40,20 +41,20 @@ export default function PaymentSettings({ initialComplex }: { initialComplex: an
             </h3>
 
             <div className="space-y-6">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between cursor-pointer" onClick={() => setEnabled(!enabled)}>
                     <div>
-                        <label className="text-white font-medium block">Habilitar Seña</label>
+                        <label className="text-white font-medium block cursor-pointer">Habilitar Seña</label>
                         <p className="text-xs text-gray-400">Permite a los usuarios reservar pagando solo un adelanto.</p>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
+                    <div className="relative inline-flex items-center pointer-events-none">
                         <input
                             type="checkbox"
                             className="sr-only peer"
                             checked={enabled}
-                            onChange={e => setEnabled(e.target.checked)}
+                            readOnly // Controlled by parent div click
                         />
                         <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
+                    </div>
                 </div>
 
                 <div className={`transition-all duration-300 ${enabled ? 'opacity-100' : 'opacity-40 pointer-events-none grayscale'}`}>
