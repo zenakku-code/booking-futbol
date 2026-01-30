@@ -21,6 +21,15 @@ export default async function FieldDetailPage({
         notFound()
     }
 
+    // Force-fetch settings to ensure freshness and avoid inclusion bugs
+    const complexSettings = await (prisma as any).complex.findUnique({
+        where: { id: (field as any).complexId },
+        select: { downPaymentEnabled: true, downPaymentFixed: true }
+    })
+
+    console.log(`[SERVER] Field: ${field.name}, Price: ${field.price}`)
+    console.log(`[SERVER] Settings for complex ${(field as any).complexId}:`, complexSettings)
+
     const inventory = await (prisma as any).inventoryItem.findMany({
         where: { complexId: (field as any).complexId }
     })
@@ -79,8 +88,8 @@ export default async function FieldDetailPage({
                             // Clean inventory prices too
                             inventory={inventory.map((i: any) => ({ ...i, price: Number(i.price) }))}
                             paymentSettings={{
-                                downPaymentEnabled: !!(field as any).complex?.downPaymentEnabled,
-                                downPaymentFixed: Number((field as any).complex?.downPaymentFixed || 0)
+                                downPaymentEnabled: complexSettings?.downPaymentEnabled || false,
+                                downPaymentFixed: Number(complexSettings?.downPaymentFixed || 0)
                             }}
                         />
                     </div>
