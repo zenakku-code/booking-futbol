@@ -174,7 +174,7 @@ export default async function AdminDashboard() {
                         </div>
                         <div className="hidden sm:flex gap-4 text-xs font-bold text-gray-500 uppercase">
                             <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-primary/50"></span>
+                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                                 Ingresos
                             </div>
                         </div>
@@ -197,17 +197,17 @@ export default async function AdminDashboard() {
                                     {d.fullDate}: <span className="text-primary font-bold">${d.revenue}</span>
                                 </div>
 
-                                {/* Bar */}
-                                <div
-                                    className="w-full max-w-[40px] bg-gradient-to-t from-primary/30 to-primary rounded-t-lg transition-all duration-300 group-hover:brightness-125 group-hover:shadow-[0_0_20px_rgba(74,222,128,0.4)] relative overflow-hidden"
-                                    style={{ height: `${(d.revenue / maxRevenue) * 100}%`, minHeight: '6px' }}
-                                >
-                                    {/* Inner sheen effect */}
-                                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                {/* Bar Track (Background) ensures visibility even if empty */}
+                                <div className="w-full max-w-[32px] sm:max-w-[40px] h-full bg-slate-800/50 rounded-t-lg relative flex items-end overflow-hidden border border-white/5 group-hover:border-white/20 transition-colors">
+                                    {/* Solid Bar Value */}
+                                    <div
+                                        className="w-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all duration-300 group-hover:bg-emerald-400 group-hover:shadow-[0_0_30px_rgba(52,211,153,0.8)]"
+                                        style={{ height: `${d.revenue > 0 ? (d.revenue / maxRevenue) * 100 : 0}%`, minHeight: d.revenue > 0 ? '4px' : '0px' }}
+                                    ></div>
                                 </div>
 
                                 {/* Label */}
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase group-hover:text-primary transition-colors">
+                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase group-hover:text-white transition-colors">
                                     {d.date}
                                 </span>
                             </div>
