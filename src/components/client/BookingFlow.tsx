@@ -72,18 +72,11 @@ export default function BookingFlow({
     // Reset payment type when time changes to ensure clean slate
     useEffect(() => {
         if (selectedTime) {
-            console.log('[CLIENT] Time changed, resetting payment type preference')
             setPaymentType(hasDeposit ? 'DEPOSIT' : 'FULL')
         }
     }, [selectedTime, hasDeposit])
 
     useEffect(() => {
-        console.log(`[CLIENT] BookingFlow Effect - hasDeposit: ${hasDeposit}`, {
-            propServerHasDeposit: serverHasDeposit,
-            computedDeposit: hasDeposit,
-            currentPaymentType: paymentType
-        })
-
         // Auto-correct payment type if deposit status changes
         if (hasDeposit) {
             // If deposit is available, strictly prefer it unless user explicitly chose FULL or SPLIT
@@ -192,7 +185,8 @@ export default function BookingFlow({
                     clientPhone,
                     totalPrice: field.price + itemsTotal,
                     items: itemsPayload,
-                    paymentType // 'DEPOSIT', 'FULL', or 'SPLIT'
+                    // FORCE correct payment type based on current button state
+                    paymentType: paymentType
                 })
             })
 
@@ -205,6 +199,7 @@ export default function BookingFlow({
             const data = await res.json()
 
             if (data.paymentUrl) {
+                console.log('[CLIENT] Redirecting to:', data.paymentUrl)
                 window.location.href = data.paymentUrl
             } else {
                 setSuccess(true)
@@ -471,7 +466,7 @@ export default function BookingFlow({
 
                     {/* Payment Method */}
                     <div>
-                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 pl-1">Método de Pago {process.env.NODE_ENV !== 'production' && `[${hasDeposit ? 'SEÑA ON' : 'SEÑA OFF'}]`}</h3>
+                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 pl-1">Método de Pago</h3>
                         <div className={`grid gap-4 ${hasDeposit ? 'grid-cols-3' : 'grid-cols-2'}`}>
                             <button
                                 onClick={() => setPaymentType('FULL')}

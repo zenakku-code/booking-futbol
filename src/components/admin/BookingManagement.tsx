@@ -225,16 +225,18 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                             <span>{booking.paymentType === 'DEPOSIT' ? '💰 Seña' : '🐄 Vaquita'}</span>
                                                             {booking.calculatedPaidAmount >= (booking.field.complex?.downPaymentFixed || booking.totalPrice) && <span className="text-emerald-500">✓</span>}
                                                         </div>
-                                                        <a
-                                                            href={`/pay/${booking.id}`}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-1 text-[9px] bg-slate-700 hover:bg-slate-600 border border-white/10 text-gray-300 hover:text-white px-2 py-0.5 rounded transition-all group/link"
-                                                            title="Ver link de pago"
-                                                        >
-                                                            <span className="group-hover/link:underline decoration-white/30">Link</span>
-                                                            <span className="text-[8px]">🔗</span>
-                                                        </a>
+                                                        {booking.paymentType === 'SPLIT' && (
+                                                            <a
+                                                                href={`/pay/${booking.id}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-1 text-[9px] bg-slate-700 hover:bg-slate-600 border border-white/10 text-gray-300 hover:text-white px-2 py-0.5 rounded transition-all group/link"
+                                                                title="Ver link de pago"
+                                                            >
+                                                                <span className="group-hover/link:underline decoration-white/30">Link</span>
+                                                                <span className="text-[8px]">🔗</span>
+                                                            </a>
+                                                        )}
                                                     </div>
                                                 </div>
                                             )}
