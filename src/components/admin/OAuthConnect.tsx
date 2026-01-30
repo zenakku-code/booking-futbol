@@ -15,6 +15,34 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
         window.location.href = `/api/auth/mercadopago/authorize?complexId=${complexId}`
     }
 
+    const handleDisconnect = async () => {
+        if (!confirm('¿Seguro que deseas desconectar Mercado Pago? Dejarás de recibir cobros automatizados.')) return
+
+        setLoading(true)
+        try {
+            const res = await fetch('/api/auth/mercadopago/disconnect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ complexId })
+            })
+
+            if (res.ok) {
+                // Remove param from URL first
+                const url = new URL(window.location.href)
+                url.searchParams.delete('status')
+                window.history.replaceState({}, '', url.toString())
+                window.location.reload()
+            } else {
+                alert('Error al desconectar')
+            }
+        } catch (e) {
+            console.error(e)
+            alert('Error de conexión')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     if (isConnected) {
         return (
             <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in">
@@ -31,12 +59,18 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
                         <p className="text-emerald-200/70 text-xs font-mono">ID Vendedor: {mpUserId || '***************'}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col items-end gap-2">
                     <span className="text-emerald-400 font-bold text-xs bg-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
                         <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
                         Activo
                     </span>
-                    {/* Botón de actualizar token si fuera necesario en el futuro */}
+                    <button
+                        onClick={handleDisconnect}
+                        disabled={loading}
+                        className="text-white/40 hover:text-red-400 text-[10px] uppercase font-bold tracking-wider transition-colors disabled:opacity-50"
+                    >
+                        {loading ? '...' : 'Desconectar'}
+                    </button>
                 </div>
             </div>
         )
