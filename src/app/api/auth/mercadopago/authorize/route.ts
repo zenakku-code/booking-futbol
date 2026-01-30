@@ -9,8 +9,9 @@ export async function GET(request: Request) {
     }
 
     const appId = process.env.MP_PLATFORM_APP_ID
-    // URL de retorno de tu aplicación
-    const redirectUri = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/mercadopago/callback`
+    // URL de retorno de tu aplicación (Fix double slash)
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
+    const redirectUri = `${baseUrl}/api/auth/mercadopago/callback`
 
     // State: Usamos esto para pasar el complexId de forma segura a través del flujo de OAuth
     // En producción serio, esto debería ser un token firmado o encriptado para evitar CSRF.

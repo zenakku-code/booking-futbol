@@ -25,12 +25,16 @@ export async function GET(request: Request) {
 
     try {
         console.log('🚀 [MP Callback] Solicitando Tokens a MP...')
+
+        // FIX: Remove trailing slash to prevent double slash in redirect_uri
+        const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
+
         const payload = {
             client_secret: process.env.MP_PLATFORM_CLIENT_SECRET,
             client_id: process.env.MP_PLATFORM_APP_ID,
             grant_type: 'authorization_code',
             code: code,
-            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/mercadopago/callback`
+            redirect_uri: `${baseUrl}/api/auth/mercadopago/callback`
         }
 
         // Ocultar secreto en logs
@@ -57,31 +61,43 @@ export async function GET(request: Request) {
 
         console.log('✅ [MP Callback] Tokens obtenidos. Guardando en DB...')
 
-        // data contiene: access_token, refresh_token, user_id, public_key, etc.
-
-        // Guardar en Base de Datos de forma segura
-        await prisma.account.upsert({
-            where: { complexId: complexId },
-            update: {
-                accessToken: data.access_token,
-                refreshToken: data.refresh_token,
-                publicKey: data.public_key,
-                userId: data.user_id.toString(), // ID de vendedor MP
-                provider: 'mercadopago',
-                updatedAt: new Date()
-            },
-            create: {
-                complexId: complexId,
-                accessToken: data.access_token,
-                refreshToken: data.refresh_token,
-                publicKey: data.public_key,
-                userId: data.user_id.toString(),
-                provider: 'mercadopago'
-            }
+        // Fix: Usar lógica manual en vez de upsert para evitar error de constraint faltante en DB
+        const existingAccount = await prisma.account.findFirst({
+            where: { complexId: complexId } as any
         })
 
+        const accountData = {
+            accessToken: data.access_token,
+            refreshToken: data.refresh_token,
+            publicKey: data.public_key,
+            userId: data.user_id.toString(),
+            provider: 'mercadopago',
+            updatedAt: new Date(),
+            complexId: complexId // Solo necesario en create
+        }
+
+        if (existingAccount) {
+            console.log(`🔄 [MP Callback] Actualizando cuenta existente ${existingAccount.id}`)
+            await prisma.account.update({
+                where: { id: existingAccount.id },
+                data: {
+                    accessToken: accountData.accessToken,
+                    refreshToken: accountData.refreshToken,
+                    publicKey: accountData.publicKey,
+                    userId: accountData.userId,
+                    provider: accountData.provider,
+                    updatedAt: accountData.updatedAt
+                }
+            })
+        } else {
+            console.log(`✨ [MP Callback] Creando nueva cuenta para complejo ${complexId}`)
+            await prisma.account.create({
+                data: accountData
+            })
+        }
+
         // Éxito: Redirigir al dashboard
-        const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/settings?status=mp_connected`
+        const dashboardUrl = `${baseUrl}/admin/settings?status=mp_connected`
         return NextResponse.redirect(dashboardUrl)
 
     } catch (err: any) {
