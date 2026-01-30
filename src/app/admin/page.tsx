@@ -199,11 +199,11 @@ export default async function AdminDashboard() {
 
                                 {/* Bar */}
                                 <div
-                                    className="w-full max-w-[40px] bg-gradient-to-t from-primary/10 to-primary/60 rounded-t-lg transition-all duration-500 ease-out group-hover:to-primary group-hover:shadow-[0_0_20px_rgba(74,222,128,0.3)] relative overflow-hidden"
-                                    style={{ height: `${(d.revenue / maxRevenue) * 100}%`, minHeight: '4px' }}
+                                    className="w-full max-w-[40px] bg-gradient-to-t from-primary/30 to-primary rounded-t-lg transition-all duration-300 group-hover:brightness-125 group-hover:shadow-[0_0_20px_rgba(74,222,128,0.4)] relative overflow-hidden"
+                                    style={{ height: `${(d.revenue / maxRevenue) * 100}%`, minHeight: '6px' }}
                                 >
                                     {/* Inner sheen effect */}
-                                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
 
                                 {/* Label */}
