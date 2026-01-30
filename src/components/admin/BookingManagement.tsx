@@ -35,8 +35,11 @@ export default function BookingManagement({ initialBookings }: { initialBookings
     const [bookings, setBookings] = useState<Booking[]>(initialBookings)
     const router = useRouter()
 
+    // Tools
+    const [debugDate, setDebugDate] = useState(new Date().toISOString().split('T')[0])
+    const [unlocking, setUnlocking] = useState(false)
+
     useEffect(() => {
-        // Debug para ver si llegan pending bookings
         console.log('Admin Bookings List:', bookings)
     }, [bookings])
 
@@ -94,8 +97,33 @@ export default function BookingManagement({ initialBookings }: { initialBookings
         }
     }
 
+    const handleForceUnlock = async () => {
+        if (!confirm(`⚠️ ¿Estás seguro? \n\nEsto eliminará TODAS las reservas "pendientes" o "canceladas" de la fecha ${debugDate}.\n\nÚsalo solo para liberar horarios que se muestran ocupados por error.`)) return
+
+        setUnlocking(true)
+        try {
+            const res = await fetch('/api/admin/force-unlock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: debugDate })
+            })
+            const data = await res.json()
+            if (res.ok && data.success) {
+                alert(`✅ ${data.message}`)
+                window.location.reload()
+            } else {
+                alert(`⚠️ ${data.message || 'Error desconocido'}`)
+            }
+        } catch (e) {
+            console.error(e)
+            alert('❌ Error de conexión.')
+        } finally {
+            setUnlocking(false)
+        }
+    }
+
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in pb-20">
             <header>
                 <div className="flex items-center justify-between">
                     <div>
@@ -186,11 +214,6 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                     booking.status === 'confirmed' ? 'Confirmada' :
                                                         booking.status === 'cancelled' ? 'Cancelada' : booking.status}
                                             </span>
-                                            {booking.status === 'pending' && (
-                                                <div className="text-[10px] text-orange-400/70 mt-1 max-w-[120px] leading-tight">
-                                                    Bloqueando horario. Cancelar si no paga.
-                                                </div>
-                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-right space-x-2">
                                             {booking.status === 'pending' && (
@@ -199,13 +222,13 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                         onClick={() => handleStatusChange(booking.id, 'confirmed')}
                                                         className="text-green-400 hover:text-green-300 font-medium text-xs border border-green-500/30 hover:bg-green-500/10 px-3 py-1.5 rounded-lg transition-all"
                                                     >
-                                                        Aprobar Manual
+                                                        Aprobar
                                                     </button>
                                                     <button
                                                         onClick={() => handleStatusChange(booking.id, 'cancelled')}
                                                         className="text-red-400 hover:text-red-300 font-medium text-xs border border-red-500/30 hover:bg-red-500/10 px-3 py-1.5 rounded-lg transition-all"
                                                     >
-                                                        Liberar Cancha
+                                                        Liberar
                                                     </button>
                                                 </>
                                             )}
@@ -268,6 +291,41 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <div className="mt-12 pt-8 border-t border-white/5 opacity-70 hover:opacity-100 transition-opacity">
+                <h3 className="text-sm font-bold text-gray-400 mb-4 flex items-center gap-2">
+                    🛠️ Herramientas de Mantenimiento
+                    <span className="text-[10px] bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">Zona de Peligro</span>
+                </h3>
+                <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5 flex flex-col sm:flex-row items-center gap-4 w-fit">
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs text-gray-500">Fecha a Limpiar</label>
+                        <input
+                            type="date"
+                            value={debugDate}
+                            onChange={e => setDebugDate(e.target.value)}
+                            className="bg-slate-800 border border-white/10 rounded px-3 py-2 text-sm text-gray-300 focus:border-red-500/50 outline-none"
+                        />
+                    </div>
+                    <button
+                        onClick={handleForceUnlock}
+                        disabled={unlocking}
+                        className="mt-4 sm:mt-0 bg-red-900/20 text-red-400 border border-red-500/30 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-900/40 hover:text-red-300 transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {unlocking ? (
+                            <span className="animate-pulse">Limpiando...</span>
+                        ) : (
+                            <>
+                                <span>🗑️</span>
+                                Liberar Horarios Trabados
+                            </>
+                        )}
+                    </button>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-2 max-w-md">
+                    Si ves canchas "Ocupadas" en el sitio web pero no hay reservas aquí, selecciona la fecha y usa este botón para eliminar cualquier reserva pendiente oculta.
+                </p>
             </div>
         </div>
     )
