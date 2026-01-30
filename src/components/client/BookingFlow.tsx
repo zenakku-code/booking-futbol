@@ -70,6 +70,12 @@ export default function BookingFlow({
     const [paymentType, setPaymentType] = useState(() => hasDeposit ? 'DEPOSIT' : 'FULL')
 
     useEffect(() => {
+        console.log(`[CLIENT] BookingFlow Render - hasDeposit: ${hasDeposit}`, {
+            propServerHasDeposit: serverHasDeposit,
+            computedDeposit: hasDeposit,
+            currentPaymentType: paymentType
+        })
+
         // Auto-correct payment type if deposit status changes
         if (hasDeposit && (paymentType === 'FULL' || paymentType !== 'DEPOSIT')) {
             // Default to deposit if available and we are currently asking for full
@@ -79,7 +85,7 @@ export default function BookingFlow({
         } else if (!hasDeposit && paymentType === 'DEPOSIT') {
             setPaymentType('FULL')
         }
-    }, [hasDeposit, paymentType])
+    }, [hasDeposit, paymentType, serverHasDeposit])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])

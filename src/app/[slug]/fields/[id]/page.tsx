@@ -22,20 +22,44 @@ export default async function FieldDetailPage({
     }
 
     // Force-fetch settings to ensure freshness and avoid inclusion bugs
-    const complexSettings = await (prisma as any).complex.findUnique({
-        where: { id: (field as any).complexId },
-        select: { downPaymentEnabled: true, downPaymentFixed: true }
-    })
+    let complexSettings = null
+    try {
+        complexSettings = await (prisma as any).complex.findUnique({
+            where: { id: (field as any).complexId },
+            select: { downPaymentEnabled: true, downPaymentFixed: true }
+        })
+        console.log(`[SERVER] Independent complex fetch SUCCESS:`, complexSettings)
+    } catch (e) {
+        console.error(`[SERVER] Independent complex fetch FAILED:`, e)
+        // Fallback to included complex if available
+        if ((field as any).complex) {
+            console.log(`[SERVER] Fallback to included complex:`, (field as any).complex)
+            complexSettings = {
+                downPaymentEnabled: (field as any).complex.downPaymentEnabled,
+                downPaymentFixed: (field as any).complex.downPaymentFixed
+            }
+        }
+    }
 
-    console.log(`[SERVER] Field: ${field.name}, Price: ${field.price}`)
-    console.log(`[SERVER] Settings for complex ${(field as any).complexId}:`, complexSettings)
+    const serverHasDeposit = Boolean(
+        (complexSettings?.downPaymentEnabled) &&
+        (Number(complexSettings?.downPaymentFixed || 0) > 0) &&
+        (Number(complexSettings?.downPaymentFixed || 0) < Number(field.price))
+    )
+
+    console.log(`[SERVER] FINAL DECISION - serverHasDeposit: ${serverHasDeposit}`, {
+        enabled: complexSettings?.downPaymentEnabled,
+        fixed: complexSettings?.downPaymentFixed,
+        price: field.price
+    })
 
     const inventory = await (prisma as any).inventoryItem.findMany({
         where: { complexId: (field as any).complexId }
     })
 
+    // Pass everything explicitly
     return (
-        <div className="min-h-screen bg-slate-900 pb-20 relative overflow-hidden">
+        <div className="min-h-screen relative bg-slate-900">
             {/* Decorative Background */}
             <div className="absolute top-0 w-full h-[50vh] bg-gradient-to-b from-primary/20 to-slate-900 -z-0 pointer-events-none" />
 
@@ -91,11 +115,7 @@ export default async function FieldDetailPage({
                                 downPaymentEnabled: complexSettings?.downPaymentEnabled || false,
                                 downPaymentFixed: Number(complexSettings?.downPaymentFixed || 0)
                             }}
-                            serverHasDeposit={
-                                (complexSettings?.downPaymentEnabled || false) &&
-                                (Number(complexSettings?.downPaymentFixed || 0) > 0) &&
-                                (Number(complexSettings?.downPaymentFixed || 0) < Number(field.price))
-                            }
+                            serverHasDeposit={serverHasDeposit}
                         />
                     </div>
                 </div>
