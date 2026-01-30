@@ -69,21 +69,34 @@ export default function BookingFlow({
     // Initialize with lazy state
     const [paymentType, setPaymentType] = useState(() => hasDeposit ? 'DEPOSIT' : 'FULL')
 
+    // Reset payment type when time changes to ensure clean slate
     useEffect(() => {
-        console.log(`[CLIENT] BookingFlow Render - hasDeposit: ${hasDeposit}`, {
+        if (selectedTime) {
+            console.log('[CLIENT] Time changed, resetting payment type preference')
+            setPaymentType(hasDeposit ? 'DEPOSIT' : 'FULL')
+        }
+    }, [selectedTime, hasDeposit])
+
+    useEffect(() => {
+        console.log(`[CLIENT] BookingFlow Effect - hasDeposit: ${hasDeposit}`, {
             propServerHasDeposit: serverHasDeposit,
             computedDeposit: hasDeposit,
             currentPaymentType: paymentType
         })
 
         // Auto-correct payment type if deposit status changes
-        if (hasDeposit && (paymentType === 'FULL' || paymentType !== 'DEPOSIT')) {
-            // Default to deposit if available and we are currently asking for full
-            // But don't override SPLIT if user selected it? 
-            // Better to default to DEPOSIT initially.
-            if (paymentType === 'FULL') setPaymentType('DEPOSIT')
-        } else if (!hasDeposit && paymentType === 'DEPOSIT') {
-            setPaymentType('FULL')
+        if (hasDeposit) {
+            // If deposit is available, strictly prefer it unless user explicitly chose FULL or SPLIT
+            // But if we are in a "stuck" state where the button was hidden, we must force it back.
+            // Let's force DEPOSIT if it was previously FULL or INVALID
+            if (paymentType === 'FULL') {
+                setPaymentType('DEPOSIT')
+            }
+        } else {
+            // If deposit is NOT available, forbid DEPOSIT type
+            if (paymentType === 'DEPOSIT') {
+                setPaymentType('FULL')
+            }
         }
     }, [hasDeposit, paymentType, serverHasDeposit])
 
@@ -458,7 +471,7 @@ export default function BookingFlow({
 
                     {/* Payment Method */}
                     <div>
-                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 pl-1">Método de Pago</h3>
+                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 pl-1">Método de Pago {process.env.NODE_ENV !== 'production' && `[${hasDeposit ? 'SEÑA ON' : 'SEÑA OFF'}]`}</h3>
                         <div className={`grid gap-4 ${hasDeposit ? 'grid-cols-3' : 'grid-cols-2'}`}>
                             <button
                                 onClick={() => setPaymentType('FULL')}
