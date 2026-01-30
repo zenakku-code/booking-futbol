@@ -75,16 +75,25 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
 
     useEffect(() => {
         if (!field.openTime || !field.closeTime) return
+        if (!date) return
 
         const start = parseInt(field.openTime.split(':')[0])
         const end = parseInt(field.closeTime.split(':')[0])
         const generatedSlots = []
 
+        const now = new Date()
+        // Ajuste zona horaria local simple
+        const todayStr = now.toLocaleDateString('en-CA') // YYYY-MM-DD local
+        const isToday = date === todayStr || date === now.toISOString().split('T')[0]
+        const currentHour = now.getHours()
+
         for (let i = start; i < end; i++) {
+            // Filter past slots only if it's today
+            if (isToday && i <= currentHour) continue
             generatedSlots.push(`${i}:00`)
         }
         setSlots(generatedSlots)
-    }, [field.openTime, field.closeTime])
+    }, [field.openTime, field.closeTime, date])
 
     useEffect(() => {
         if (date) {

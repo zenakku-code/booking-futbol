@@ -30,6 +30,21 @@ export async function GET(request: Request) {
             }
         }
 
+        // Lazy Cleanup: Eliminar reservas pendientes abandonadas (> 15 mins)
+        // Esto libera los horarios automáticamente si el usuario no completó el pago
+        try {
+            await prisma.booking.deleteMany({
+                where: {
+                    status: 'pending',
+                    createdAt: {
+                        lt: new Date(Date.now() - 15 * 60 * 1000)
+                    }
+                }
+            })
+        } catch (e) {
+            console.error('Cleanup error (non-fatal)', e)
+        }
+
         const bookings = await prisma.booking.findMany({
             where,
             include: { field: true },
