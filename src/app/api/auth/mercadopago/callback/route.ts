@@ -1,29 +1,24 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getComplexId } from '@/lib/auth'
 
 export async function GET(request: Request) {
-    const complexId = await getComplexId()
-    if (!complexId) {
-        return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-    }
-
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
+    const state = searchParams.get('state') // Aquí viaja el complexId
+    const error = searchParams.get('error')
 
-    if (!code) {
-        return NextResponse.json({ error: 'No code provided' }, { status: 400 })
+    if (error) {
+        return NextResponse.json({ error: 'El usuario denegó el acceso', details: error }, { status: 400 })
     }
 
-    const CLIENT_ID = process.env.MP_CLIENT_ID
-    const CLIENT_SECRET = process.env.MP_CLIENT_SECRET
-    const REDIRECT_URI = process.env.MP_REDIRECT_URI || 'http://localhost:3000/api/auth/mercadopago/callback'
-
-    if (!CLIENT_ID || !CLIENT_SECRET) {
-        return NextResponse.json({ error: 'Missing MP credentials' }, { status: 500 })
+    if (!code || !state) {
+        return NextResponse.json({ error: 'Faltan parámetros requeridos (code/state)' }, { status: 400 })
     }
+
+    const complexId = state
 
     try {
+        // Intercambiar Code por Tokens (Server-to-Server)
         const tokenRes = await fetch('https://api.mercadopago.com/oauth/token', {
             method: 'POST',
             headers: {
@@ -31,41 +26,53 @@ export async function GET(request: Request) {
                 'Accept': 'application/json'
             },
             body: JSON.stringify({
-                client_id: CLIENT_ID,
-                client_secret: CLIENT_SECRET,
+                client_secret: process.env.MP_PLATFORM_CLIENT_SECRET, // Credenciales de TU Plataforma
+                client_id: process.env.MP_PLATFORM_APP_ID,
                 grant_type: 'authorization_code',
-                code,
-                redirect_uri: REDIRECT_URI
+                code: code,
+                redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/mercadopago/callback`
             })
         })
 
         const data = await tokenRes.json()
 
         if (!tokenRes.ok) {
-            throw new Error(data.message || 'Error exchanging token')
+            console.error('Mercado Pago Token Error:', data)
+            throw new Error(data.message || 'Error al obtener tokens de MP')
         }
 
-        // Save or Update Account linked to the complex
+        // data contiene: access_token, refresh_token, user_id, public_key, etc.
+
+        // Guardar en Base de Datos de forma segura
         await prisma.account.upsert({
-            where: { complexId },
+            where: { complexId: complexId },
             update: {
                 accessToken: data.access_token,
                 refreshToken: data.refresh_token,
                 publicKey: data.public_key,
+                userId: data.user_id.toString(), // ID de vendedor MP
+                provider: 'mercadopago',
                 updatedAt: new Date()
             },
             create: {
+                complexId: complexId,
                 accessToken: data.access_token,
                 refreshToken: data.refresh_token,
                 publicKey: data.public_key,
-                complexId,
-                userId: 'admin' // Keep for compatibility but prioritize complexId
+                userId: data.user_id.toString(),
+                provider: 'mercadopago'
             }
         })
 
-        return NextResponse.redirect(new URL('/admin/settings', request.url))
-    } catch (error) {
-        console.error('MP OAuth Callback Error:', error)
-        return NextResponse.json({ error: 'Authentication Failed', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
+        // Éxito: Redirigir al dashboard
+        const dashboardUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/admin/settings?status=mp_connected`
+        return NextResponse.redirect(dashboardUrl)
+
+    } catch (err: any) {
+        console.error('OAuth Critical Error:', err)
+        return NextResponse.json({
+            error: 'Error interno en la vinculación',
+            details: err.message
+        }, { status: 500 })
     }
 }

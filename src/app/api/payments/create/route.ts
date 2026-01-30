@@ -77,10 +77,12 @@ export async function POST(request: Request) {
                 },
                 auto_return: 'approved',
                 external_reference: payment.id, // OJO: Usamos payment.id como referencia principal
+                notification_url: `${baseUrl}/api/webhooks/mercadopago?complexId=${complexId}`,
                 metadata: {
                     booking_id: bookingId,
                     payment_id: payment.id,
-                    type: 'split_payment'
+                    type: 'split_payment',
+                    complex_id: complexId // Guardamos complexId para buscar el token correcto en el webhook
                 }
             })
         })
