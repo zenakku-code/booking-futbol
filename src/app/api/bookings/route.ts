@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getComplexId } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { rateLimit } from '@/lib/rate-limit'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
     try {
@@ -48,8 +52,8 @@ export async function GET(request: Request) {
                 startTime: b.startTime,
                 endTime: b.endTime,
                 status: b.status,
-                clientName: 'Reservado',
-                // Explicitly excluding other fields like totalPrice, phone, etc from the destructured return
+                clientName: 'Reservado', // Hide real names
+                // Explicitly excluding other sensitive fields
             }
         })
 
@@ -62,12 +66,26 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
+        // 1. Rate Limiting Protection (Anti-Spam)
+        const headersList = await headers()
+        const ip = headersList.get('x-forwarded-for') || 'unknown'
+
+        // Limit: 5 bookings per minute per IP
+        if (!rateLimit(ip, 5, 60000)) {
+            console.warn(`[Security] Rate limit exceeded for IP: ${ip}`)
+            return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 })
+        }
+
         const body = await request.json()
-        const { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice, items = [], paymentType = 'FULL' } = body
+        let { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice, items = [], paymentType = 'FULL' } = body
 
         if (!fieldId || !date || !startTime || !endTime || !clientName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
+
+        // 2. Input Sanitization (Anti-XSS & Data Integrity)
+        clientName = typeof clientName === 'string' ? clientName.replace(/[<>]/g, '').trim().slice(0, 100) : 'Cliente'
+        clientPhone = clientPhone && typeof clientPhone === 'string' ? clientPhone.replace(/[^\d\+\-\s]/g, '').slice(0, 20) : null
 
         // Validate overlap
         const overlappingBooking = await prisma.booking.findFirst({
@@ -138,8 +156,10 @@ export async function POST(request: Request) {
         })
 
         let paymentUrl = null
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ||
+        // Fix trailing slash in base url if exists
+        const baseUrlRaw = process.env.NEXT_PUBLIC_BASE_URL ||
             (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+        const baseUrl = baseUrlRaw.replace(/\/$/, '')
 
         if (paymentType === 'SPLIT') {
             // Generar link interno para la página de pago dividido
@@ -189,13 +209,16 @@ export async function POST(request: Request) {
                                 pending: `${baseUrl}${returnPath}?status=pending&booking_id=${booking.id}`
                             },
                             auto_return: 'approved',
-                            external_reference: booking.id
+                            external_reference: booking.id,
+                            notification_url: `${baseUrl}/api/webhooks/mercadopago?complexId=${(field as any).complexId}`
                         })
                     })
 
                     const preference = await preferenceRes.json()
                     if (preference.init_point) {
                         paymentUrl = preference.init_point
+                    } else {
+                        console.error('MP Preference Init Error', preference)
                     }
                 } catch (error) {
                     console.error('MP Preference Error', error)
@@ -205,7 +228,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ ...booking, paymentUrl })
     } catch (error) {
-        console.error(error)
+        console.error('POST /bookings Error:', error)
         return NextResponse.json({ error: 'Error creating booking' }, { status: 500 })
     }
 }
