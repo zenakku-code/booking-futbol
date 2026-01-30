@@ -33,10 +33,16 @@ const DAYS_MAP: { [key: number]: string } = {
     6: "Sábado"
 }
 
-export default function BookingFlow({ field, inventory = [], paymentSettings }: {
+export default function BookingFlow({
+    field,
+    inventory = [],
+    paymentSettings,
+    serverHasDeposit
+}: {
     field: Field,
     inventory?: InventoryItem[],
-    paymentSettings?: { downPaymentEnabled: boolean, downPaymentFixed: number }
+    paymentSettings?: { downPaymentEnabled: boolean, downPaymentFixed: number },
+    serverHasDeposit?: boolean
 }) {
     const [step, setStep] = useState(1)
     const [date, setDate] = useState('')
@@ -55,7 +61,10 @@ export default function BookingFlow({ field, inventory = [], paymentSettings }: 
     const depositFixed = paymentSettings ? Number(paymentSettings.downPaymentFixed) : Number(field.complex?.downPaymentFixed || 0)
 
     // STRICT check: Enabled AND Greater than 0 AND Less than Full Price
-    const hasDeposit = Boolean(depositEnabled && depositFixed > 0 && depositFixed < price)
+    // Prefer server-side boolean if provided
+    const hasDeposit = serverHasDeposit !== undefined
+        ? serverHasDeposit
+        : Boolean(depositEnabled && depositFixed > 0 && depositFixed < price)
 
     // Initialize with lazy state
     const [paymentType, setPaymentType] = useState(() => hasDeposit ? 'DEPOSIT' : 'FULL')
@@ -70,7 +79,7 @@ export default function BookingFlow({ field, inventory = [], paymentSettings }: 
         } else if (!hasDeposit && paymentType === 'DEPOSIT') {
             setPaymentType('FULL')
         }
-    }, [hasDeposit, depositFixed, price, depositEnabled, paymentType])
+    }, [hasDeposit, paymentType])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
@@ -223,19 +232,6 @@ export default function BookingFlow({ field, inventory = [], paymentSettings }: 
             <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>
 
             <div className="mb-8 relative z-10">
-                {/* EMERGENCY DEBUGGER */}
-                <div className="bg-black text-green-400 p-2 text-xs font-mono mb-4 border border-green-500 overflow-auto">
-                    <p>DEBUG DATA:</p>
-                    <pre>{JSON.stringify({
-                        price,
-                        paymentSettings,
-                        depositEnabled,
-                        depositFixed,
-                        hasDeposit,
-                        check: `${depositFixed} < ${price}`
-                    }, null, 2)}</pre>
-                </div>
-
                 <div className="flex items-center justify-between mb-3 px-1">
                     <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Reserva tu cancha</span>
                     <span className="text-[10px] font-bold text-gray-500 bg-white/5 px-2 py-1 rounded-full">PASO {step} / 2</span>

@@ -91,6 +91,11 @@ export default async function FieldDetailPage({
                                 downPaymentEnabled: complexSettings?.downPaymentEnabled || false,
                                 downPaymentFixed: Number(complexSettings?.downPaymentFixed || 0)
                             }}
+                            serverHasDeposit={
+                                (complexSettings?.downPaymentEnabled || false) &&
+                                (Number(complexSettings?.downPaymentFixed || 0) > 0) &&
+                                (Number(complexSettings?.downPaymentFixed || 0) < Number(field.price))
+                            }
                         />
                     </div>
                 </div>
