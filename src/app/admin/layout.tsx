@@ -1,7 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import SubscriptionCheck from '@/components/admin/SubscriptionCheck'
 
 export default function AdminLayout({
     children,
@@ -14,6 +15,8 @@ export default function AdminLayout({
 
     const isLoginPage = pathname === '/admin/login'
 
+    const [userRole, setUserRole] = useState('')
+
     const handleLogout = async () => {
         try {
             await fetch('/api/auth/logout', { method: 'POST' })
@@ -24,12 +27,50 @@ export default function AdminLayout({
         }
     }
 
+    useEffect(() => {
+        fetch('/api/auth/me')
+            .then(res => res.json())
+            .then(data => {
+                if (data.tokenRefreshed) {
+                    console.log('Token was auto-refreshed due to role change. Reloading page...')
+                    window.location.reload()
+                } else {
+                    setUserRole(data.role)
+                }
+            })
+            .catch(err => console.error('Failed to fetch role', err))
+    }, [])
+
+    // OPTIONAL: Subscription enforcement (currently disabled)
+    // Uncomment this block if you want to FORCE users to activate trial or subscribe
+    /*
+    useEffect(() => {
+        const currentPath = window.location.pathname
+        const isSubscriptionPage = currentPath === '/admin/subscription'
+
+        // Don't check on login or subscription pages
+        if (isLoginPage || isSubscriptionPage) return
+
+        fetch('/api/saas/status')
+            .then(res => res.json())
+            .then(data => {
+                if (!data.hasAccess) {
+                    console.log('No access - redirecting to subscription page')
+                    router.push('/admin/subscription')
+                }
+            })
+            .catch(err => console.error('Failed to fetch subscription status', err))
+    }, [isLoginPage, router])
+    */
+
     if (isLoginPage) {
         return <>{children}</>
     }
 
+
     return (
         <div className="min-h-screen flex bg-[#020617] relative">
+            <SubscriptionCheck />
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 w-full z-50 glass-card rounded-none border-x-0 border-t-0 border-b border-white/10 px-6 py-4 flex items-center justify-between">
                 <span className="font-bold text-white text-lg">Admin Panel</span>
@@ -63,12 +104,26 @@ export default function AdminLayout({
                 </div>
 
                 <nav className="flex flex-col gap-2">
+                    {userRole === 'SUPERADMIN' && (
+                        <div className="mb-2 pb-2 border-b border-white/5">
+                            <NavLink href="/saas-admin" icon="👑" onClick={() => setSidebarOpen(false)}>
+                                <span className="text-indigo-400 font-bold">Panel Super Admin</span>
+                            </NavLink>
+                        </div>
+                    )}
                     <NavLink href="/admin" icon="📊" onClick={() => setSidebarOpen(false)}>Dashboard</NavLink>
                     <NavLink href="/admin/bookings" icon="📅" onClick={() => setSidebarOpen(false)}>Reservas</NavLink>
                     <NavLink href="/admin/reports" icon="📈" onClick={() => setSidebarOpen(false)}>Reportes</NavLink>
                     <NavLink href="/admin/fields" icon="🏟️" onClick={() => setSidebarOpen(false)}>Canchas</NavLink>
                     <NavLink href="/admin/inventory" icon="🎒" onClick={() => setSidebarOpen(false)}>Inventario</NavLink>
                     <NavLink href="/admin/settings" icon="⚙️" onClick={() => setSidebarOpen(false)}>Configuración</NavLink>
+
+                    {/* Subscription Section */}
+                    <div className="mt-2 pt-2 border-t border-white/5">
+                        <NavLink href="/admin/subscription" icon="💳" onClick={() => setSidebarOpen(false)}>
+                            <span className="text-primary font-semibold">Suscripción</span>
+                        </NavLink>
+                    </div>
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-white/5 space-y-4">

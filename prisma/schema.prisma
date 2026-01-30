@@ -22,8 +22,10 @@ model Complex {
   downPaymentFixed   Float    @default(0)
   downPaymentEnabled Boolean  @default(false)
   
-  // Subscription status
-  subscriptionActive Boolean @default(false)
+  // Subscription & Trial
+  subscriptionActive Boolean  @default(true) // Start active (trial)
+  trialEndsAt        DateTime?
+  isActive           Boolean  @default(true) // For manual ban/disable
   subscriptionDate   DateTime?
   
   fields      Field[]
@@ -151,6 +153,7 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String   
+  role      String   @default("USER") // USER, ADMIN, SUPERADMIN
   
   // SaaS Link
   complexId String?

@@ -11,6 +11,54 @@ export async function middleware(request: NextRequest) {
     const isAdminRoute = pathname.startsWith('/admin')
     const isLoginPage = pathname === '/admin/login' || pathname === '/api/auth/login' || pathname === '/api/auth/register'
 
+    // Protect /saas-admin routes
+    if (pathname.startsWith('/saas-admin') || pathname.startsWith('/api/saas')) {
+        console.log(`[MIDDLEWARE] Protecting ${pathname}`)
+        const token = request.cookies.get('auth_token')?.value
+        console.log(`[MIDDLEWARE] Token exists: ${!!token}`)
+
+        if (!token) {
+            console.log(`[MIDDLEWARE] No token found, redirecting to /admin/login`)
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            }
+            return NextResponse.redirect(new URL('/admin/login', request.url))
+        }
+
+        try {
+            const { payload } = await jwtVerify(token, SECRET)
+            console.log(`[MIDDLEWARE] Token verified. Role: ${payload.role}`)
+
+            if (payload.role !== 'SUPERADMIN') {
+                console.log(`[MIDDLEWARE] User is not SUPERADMIN, redirecting to /admin`)
+                if (pathname.startsWith('/api/')) {
+                    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+                }
+                // Redirect unauthorized users to their own dashboard
+                return NextResponse.redirect(new URL('/admin', request.url))
+            }
+            console.log(`[MIDDLEWARE] Access granted to ${pathname}`)
+
+            // Add user context to request headers for API routes
+            const requestHeaders = new Headers(request.headers)
+            requestHeaders.set('x-user-id', payload.id as string)
+            requestHeaders.set('x-user-role', payload.role as string)
+            requestHeaders.set('x-user-email', payload.email as string)
+
+            return NextResponse.next({
+                request: {
+                    headers: requestHeaders
+                }
+            })
+        } catch (e) {
+            console.error(`[MIDDLEWARE] Token verification failed:`, e)
+            if (pathname.startsWith('/api/')) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+            }
+            return NextResponse.redirect(new URL('/admin/login', request.url))
+        }
+    }
+
     if (isAdminRoute && !isLoginPage) {
         const token = request.cookies.get('auth_token')?.value
 
@@ -30,5 +78,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/admin/:path*', '/api/admin/:path*', '/api/fields/:path*', '/api/inventory/:path*'],
+    matcher: ['/admin/:path*', '/api/admin/:path*', '/api/fields/:path*', '/api/inventory/:path*', '/api/subscription/:path*', '/saas-admin/:path*', '/api/saas/:path*'],
 }

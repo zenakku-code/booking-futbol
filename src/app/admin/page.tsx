@@ -98,6 +98,14 @@ export default async function AdminDashboard() {
 
     const maxRevenue = Math.max(...stats.chartData.map((d: any) => d.revenue), 1) // Avoid div by zero
 
+    // Calculate remaining trial days
+    const trialEndsAt = complex?.trialEndsAt ? new Date(complex.trialEndsAt) : null
+    const now = new Date()
+    const daysRemaining = trialEndsAt
+        ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        : null
+    const isTrialActive = daysRemaining !== null && daysRemaining > 0
+
     return (
         <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto pb-20">
             {/* Header Section */}
@@ -121,6 +129,42 @@ export default async function AdminDashboard() {
                     </div>
                 </div>
             </header>
+
+            {/* Trial Days Banner */}
+            {isTrialActive && (
+                <div className={`glass-card p-6 border-2 ${daysRemaining <= 2 ? 'border-red-500/50 bg-red-500/10' :
+                        daysRemaining <= 5 ? 'border-amber-500/50 bg-amber-500/10' :
+                            'border-blue-500/50 bg-blue-500/10'
+                    }`}>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${daysRemaining <= 2 ? 'bg-red-500/20 text-red-400' :
+                                    daysRemaining <= 5 ? 'bg-amber-500/20 text-amber-400' :
+                                        'bg-blue-500/20 text-blue-400'
+                                }`}>
+                                <span className="text-2xl">⏱️</span>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-1">
+                                    {daysRemaining === 0 ? '¡Último día de prueba!' :
+                                        daysRemaining === 1 ? '¡1 día restante de prueba!' :
+                                            `${daysRemaining} días restantes de prueba`}
+                                </h3>
+                                <p className="text-sm text-gray-400">
+                                    {daysRemaining <= 2 ? '¡Contacta con soporte para continuar usando el sistema!' :
+                                        daysRemaining <= 5 ? 'Tu período de prueba está por finalizar.' :
+                                            'Estás en período de prueba gratuito.'}
+                                </p>
+                            </div>
+                        </div>
+                        {daysRemaining <= 5 && (
+                            <button className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/50 transition-all whitespace-nowrap">
+                                Contactar Soporte
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

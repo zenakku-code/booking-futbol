@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import ComplexImageSettings from "@/components/admin/ComplexImageSettings"
 import ComplexNameSettings from "@/components/admin/ComplexNameSettings"
-import SubscriptionStatus from "@/components/admin/SubscriptionStatus"
 import OAuthConnect from "@/components/admin/OAuthConnect"
 import PaymentSettings from "@/components/admin/PaymentSettings"
 import { getComplexId } from "@/lib/auth"
@@ -30,11 +29,6 @@ export default async function SettingsPage() {
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Full Width - Subscription */}
-                <div className="lg:col-span-2">
-                    <SubscriptionStatus complex={complex} />
-                </div>
-
                 {/* Left Column */}
                 <div className="space-y-8">
                     <ComplexNameSettings initialComplex={complex} />

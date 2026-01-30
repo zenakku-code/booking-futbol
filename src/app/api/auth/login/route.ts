@@ -30,18 +30,30 @@ export async function POST(request: Request) {
         const token = await createToken({
             id: user.id,
             email: user.email,
-            complexId: (user as any).complexId
+            complexId: (user as any).complexId,
+            role: (user as any).role || 'USER'
         })
+
+        console.log(`[LOGIN] User ${user.email} logged in with role: ${(user as any).role}`)
+        console.log(`[LOGIN] Token created, setting cookie...`)
+
         const cookieStore = await cookies()
 
         cookieStore.set('auth_token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'lax',
+            path: '/',
             maxAge: 60 * 60 * 24 // 1 day
         })
 
-        return NextResponse.json({ success: true })
+        console.log(`[LOGIN] Cookie set successfully`)
+
+        return NextResponse.json({
+            success: true,
+            role: (user as any).role,
+            complexId: (user as any).complexId
+        })
     } catch (error) {
         console.error('FATAL Login error:', error)
         return NextResponse.json({

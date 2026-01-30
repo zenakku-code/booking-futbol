@@ -25,10 +25,15 @@ function LoginContent() {
                 body: JSON.stringify({ email, password })
             })
 
+            const data = await res.json()
+
             if (res.ok) {
-                router.push('/admin')
+                if (data.role === 'SUPERADMIN') {
+                    router.push('/saas-admin')
+                } else {
+                    router.push('/admin')
+                }
             } else {
-                const data = await res.json()
                 setError(data.details || data.error || 'Credenciales incorrectas')
             }
         } catch (err) {

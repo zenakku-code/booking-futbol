@@ -35,10 +35,14 @@ export async function POST(request: Request) {
 
         // 4. Create Complex and User in a Transaction
         const result = await prisma.$transaction(async (tx) => {
+            // Create complex WITHOUT automatic trial activation
             const newComplex = await tx.complex.create({
                 data: {
                     name: complexName,
                     slug: slug,
+                    subscriptionActive: false,  // User must activate trial manually
+                    trialEndsAt: null,          // No trial until activated
+                    isActive: true
                 }
             })
 
