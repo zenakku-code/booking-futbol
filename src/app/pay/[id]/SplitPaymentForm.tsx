@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function SplitPaymentForm({ booking, remaining, isCompleted }: any) {
+export default function SplitPaymentForm({ booking, remaining, isCompleted, depositGoal, depositReached }: any) {
     const router = useRouter()
 
     // Parser inteligente para extraer número de jugadores
@@ -72,20 +72,32 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted }: an
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center animate-fade-in">
                 <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                    <span className="text-6xl">🎉</span>
+                    <span className="text-6xl">{remaining <= 10 ? '🎉' : '✅'}</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-4">¡Misión Cumplida!</h2>
+                <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
+                    {remaining <= 10 ? '¡Misión Cumplida!' : '¡Reserva Asegurada!'}
+                </h2>
                 <p className="text-emerald-300 text-lg md:text-xl max-w-md mx-auto mb-8 font-medium">
-                    La cancha está pagada completamente. ¡A jugar! ⚽
+                    {remaining <= 10
+                        ? 'La cancha está pagada completamente. ¡A jugar! ⚽'
+                        : `Ya se cubrió la seña mínima ($${depositGoal}). El turno está bloqueado.`}
                 </p>
                 <div className="bg-slate-900/50 p-6 rounded-3xl border border-white/10 w-full max-w-sm backdrop-blur-md">
                     <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">Detalle</p>
-                    <p className="text-white font-bold text-xl mb-1">{booking.field.name}</p>
+                    <p className="text-white font-bold text-xl mb-1">{(booking as any).field.name}</p>
                     <div className="flex justify-center items-center gap-2 text-gray-300">
-                        <span>🗓️ {new Date(booking.date).toLocaleDateString()}</span>
-                        <span>⏰ {booking.startTime}hs</span>
+                        <span>🗓️ {new Date((booking as any).date).toLocaleDateString()}</span>
+                        <span>⏰ {(booking as any).startTime}hs</span>
                     </div>
                 </div>
+                {remaining > 10 && (
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-8 text-primary font-bold hover:underline text-sm"
+                    >
+                        Seguir pagando para completar el total →
+                    </button>
+                )}
             </div>
         )
     }

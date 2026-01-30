@@ -210,7 +210,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                         {/* Seña Marker */}
                                                         {booking.field.complex?.downPaymentEnabled && booking.field.complex?.downPaymentFixed > 0 && (
                                                             <div
-                                                                className="absolute h-full w-0.5 bg-yellow-500/50 z-10"
+                                                                className={`absolute h-full w-0.5 z-10 shadow-[0_0_5px_rgba(0,0,0,0.5)] ${booking.calculatedPaidAmount >= booking.field.complex.downPaymentFixed ? 'bg-emerald-400 opacity-20' : 'bg-amber-400'}`}
                                                                 style={{ left: `${(booking.field.complex.downPaymentFixed / booking.totalPrice) * 100}%` }}
                                                                 title={`Meta Seña: $${booking.field.complex.downPaymentFixed}`}
                                                             />
@@ -363,7 +363,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                         <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden relative">
                                             {booking.field.complex?.downPaymentEnabled && booking.field.complex?.downPaymentFixed > 0 && (
                                                 <div
-                                                    className="absolute h-full w-0.5 bg-yellow-500/50 z-10"
+                                                    className={`absolute h-full w-0.5 z-10 shadow-[0_0_5px_rgba(0,0,0,0.5)] ${booking.calculatedPaidAmount >= booking.field.complex.downPaymentFixed ? 'bg-emerald-400 opacity-20' : 'bg-amber-400'}`}
                                                     style={{ left: `${(booking.field.complex.downPaymentFixed / booking.totalPrice) * 100}%` }}
                                                 />
                                             )}

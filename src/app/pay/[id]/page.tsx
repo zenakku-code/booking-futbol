@@ -18,28 +18,35 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
     if (!booking) return notFound()
 
     // Calcular totales
-    const totalPaid = booking.payments
-        .filter(p => p.status === 'approved')
-        .reduce((sum, p) => sum + p.amount, 0)
+    const totalPaid = (booking as any).payments
+        .filter((p: any) => p.status === 'approved')
+        .reduce((sum: number, p: any) => sum + p.amount, 0)
 
     // Sumar también si paidAmount tiene algo (migración legacy o carga manual)
-    const grandTotalPaid = totalPaid + (booking.paidAmount || 0)
+    const grandTotalPaid = totalPaid + ((booking as any).paidAmount || 0)
 
     const remaining = Math.max(0, booking.totalPrice - grandTotalPaid)
     const progress = Math.min(100, (grandTotalPaid / booking.totalPrice) * 100)
 
-    // Consideramos completado si falta poco dinero O si el estado ya está confirmado (manual por admin)
-    const isCompleted = remaining <= 10 || booking.status === 'confirmed' || booking.status === 'approved'
+    // Consideramos "Reservado" si se alcanzó la seña. "Completado" si falta poco dinero.
+    const hasDeposit = (booking as any).field.complex?.downPaymentEnabled && (booking as any).field.complex?.downPaymentFixed > 0
+    const depositGoal = hasDeposit ? (booking as any).field.complex.downPaymentFixed : 0
+    const depositReached = hasDeposit && grandTotalPaid >= depositGoal
+
+    // El estado de completado ahora es flexible: total pagado O seña alcanzada
+    const isCompleted = remaining <= 10 || booking.status === 'confirmed' || booking.status === 'approved' || (hasDeposit && depositReached)
+
+    const isFullPaid = remaining <= 10 || booking.status === 'confirmed' || booking.status === 'approved'
 
     return (
         <div className="min-h-screen bg-slate-950 text-white pb-20 font-sans selection:bg-primary/30">
             {/* Header Hero */}
             <div className="relative h-64 md:h-72 overflow-hidden">
                 {/* Background Image Logic would go here */}
-                {booking.field.imageUrl && (
+                {(booking as any).field.imageUrl && (
                     <div
                         className="absolute inset-0 bg-cover bg-center opacity-30 blur-sm"
-                        style={{ backgroundImage: `url(${booking.field.imageUrl})` }}
+                        style={{ backgroundImage: `url(${(booking as any).field.imageUrl})` }}
                     ></div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/80 to-slate-950 z-10"></div>
@@ -47,13 +54,13 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 <div className="absolute bottom-16 left-0 w-full text-center z-20 px-4">
                     <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1 rounded-full mb-4 backdrop-blur-md">
                         <span className="text-xl">⚽</span>
-                        <span className="text-xs font-bold uppercase tracking-wider">{booking.field.name}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider">{(booking as any).field.name}</span>
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter mb-2 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">
                         La Vaquita 🐄
                     </h1>
                     <p className="text-gray-400 font-medium max-w-sm mx-auto">
-                        Ayudá a completar el pago para el partido del {new Date(booking.date).toLocaleDateString()}
+                        Ayudá a completar el pago para el partido del {new Date((booking as any).date).toLocaleDateString()}
                     </p>
                 </div>
             </div>
@@ -81,7 +88,35 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                             {/* Shine effect */}
                             <div className="absolute top-0 right-0 bottom-0 w-1 bg-white/50 blur-[2px]"></div>
                         </div>
+
+                        {/* Marcador de Seña en la barra */}
+                        {hasDeposit && depositGoal < booking.totalPrice && (
+                            <div
+                                className={`absolute top-0 h-full w-1 z-20 shadow-[0_0_5px_rgba(0,0,0,0.5)] transition-all duration-500 ${depositReached ? 'bg-emerald-400 opacity-20' : 'bg-amber-400'}`}
+                                style={{ left: `${(depositGoal / booking.totalPrice) * 100}%` }}
+                            >
+                                <div className="absolute -top-1 -left-1 w-3 h-3 bg-amber-400 rounded-full blur-[2px] opacity-50"></div>
+                                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[8px] font-black text-amber-500 uppercase tracking-tighter">Meta Seña</div>
+                            </div>
+                        )}
                     </div>
+
+                    {hasDeposit && !depositReached && (
+                        <div className="mb-4 p-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+                            <p className="text-[10px] text-amber-500 font-bold uppercase tracking-tight">
+                                Objetivo: Llegar a <span className="text-white">${depositGoal}</span> para asegurar la reserva 💰
+                            </p>
+                        </div>
+                    )}
+
+                    {depositReached && !isFullPaid && (
+                        <div className="mb-4 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center animate-pulse">
+                            <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-tight">
+                                ✅ SEÑA ALCANZADA - Cancha Reservada
+                            </p>
+                            <p className="text-[9px] text-emerald-500/60 font-medium">Sigan pagando para completar el total</p>
+                        </div>
+                    )}
 
                     <div className="flex justify-between items-center text-sm font-bold bg-slate-900/50 p-3 rounded-xl border border-white/5">
                         <div className="flex flex-col">
@@ -100,15 +135,17 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
                 <SplitPaymentForm
                     booking={booking}
                     remaining={remaining}
-                    isCompleted={isCompleted}
+                    isCompleted={isFullPaid}
+                    depositGoal={depositGoal}
+                    depositReached={depositReached}
                 />
 
                 {/* Lista de Pagos Recientes */}
-                {booking.payments.length > 0 && (
+                {(booking as any).payments.length > 0 && (
                     <div className="mt-8">
                         <h3 className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-4 pl-2">Últimos Pagos</h3>
                         <div className="space-y-3">
-                            {booking.payments.map((p) => (
+                            {(booking as any).payments.map((p: any) => (
                                 <div key={p.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-900/30 border border-white/5 hover:bg-slate-900/50 transition-colors">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${p.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'}`}>
