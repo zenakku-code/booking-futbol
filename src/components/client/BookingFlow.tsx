@@ -43,14 +43,27 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
     const [takenSlots, setTakenSlots] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    const hasDeposit = field.complex?.downPaymentEnabled && field.complex?.downPaymentFixed > 0 && field.complex?.downPaymentFixed < field.price
+    const price = Number(field.price || 0)
+    const depositFixed = Number(field.complex?.downPaymentFixed || 0)
+    const hasDeposit = field.complex?.downPaymentEnabled && depositFixed > 0 && depositFixed < price
     const [paymentType, setPaymentType] = useState(hasDeposit ? 'DEPOSIT' : 'FULL')
 
     useEffect(() => {
+        // Debug: Por qué no aparece la seña?
+        if (!hasDeposit && field.complex?.downPaymentEnabled) {
+            console.log('Seña deshabilitada por lógica:', {
+                enabled: field.complex.downPaymentEnabled,
+                fixed: depositFixed,
+                fieldPrice: price,
+                conditionFixedPositive: depositFixed > 0,
+                conditionFixedLessPrice: depositFixed < price
+            })
+        }
+
         if (hasDeposit && paymentType === 'FULL') {
             setPaymentType('DEPOSIT')
         }
-    }, [hasDeposit])
+    }, [hasDeposit, field.complex, depositFixed, price])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
