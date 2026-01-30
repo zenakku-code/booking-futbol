@@ -191,7 +191,7 @@ export async function POST(request: Request) {
             // Generar link interno para la página de pago dividido
             paymentUrl = `${baseUrl}/pay/${booking.id}`
         } else {
-            // Mercado Pago Integration FULL PAYMENT
+            // Mercado Pago Integration (FULL or DEPOSIT)
             const account = await prisma.account.findFirst({
                 where: { complexId: (field as any).complexId } as any
             })
@@ -201,25 +201,48 @@ export async function POST(request: Request) {
                     const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
 
                     // Build MP items array
-                    const mpItems = [{
-                        title: `Reserva Cancha - ${date}`,
-                        quantity: 1,
-                        currency_id: 'ARS',
-                        unit_price: field.price
-                    }]
+                    let mpItems = []
+                    let amountToPay = 0
 
-                    // Add inventory items to MP
-                    for (const item of items) {
-                        const invItem = await (prisma as any).inventoryItem.findUnique({ where: { id: item.id } })
-                        if (invItem && item.quantity > 0) {
-                            mpItems.push({
-                                title: invItem.name,
-                                quantity: item.quantity,
-                                currency_id: 'ARS',
-                                unit_price: invItem.price
-                            })
+                    if (paymentType === 'DEPOSIT' && (field as any).complex?.downPaymentEnabled) {
+                        amountToPay = (field as any).complex.downPaymentFixed
+                        mpItems.push({
+                            title: `Seña Reserva - ${field.name} (${date})`,
+                            quantity: 1,
+                            currency_id: 'ARS',
+                            unit_price: amountToPay
+                        })
+                    } else {
+                        amountToPay = booking.totalPrice
+                        mpItems.push({
+                            title: `Reserva Cancha - ${date}`,
+                            quantity: 1,
+                            currency_id: 'ARS',
+                            unit_price: field.price
+                        })
+
+                        // Add inventory items to MP only for FULL PAYMENT
+                        for (const item of items) {
+                            const invItem = await (prisma as any).inventoryItem.findUnique({ where: { id: item.id } })
+                            if (invItem && item.quantity > 0) {
+                                mpItems.push({
+                                    title: invItem.name,
+                                    quantity: item.quantity,
+                                    currency_id: 'ARS',
+                                    unit_price: invItem.price
+                                })
+                            }
                         }
                     }
+
+                    // 1. Create Internal Payment Intent (MANDATORY for Webhook to work)
+                    const paymentIntent = await (prisma as any).payment.create({
+                        data: {
+                            bookingId: booking.id,
+                            amount: amountToPay,
+                            status: 'pending'
+                        }
+                    })
 
                     const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
                         method: 'POST',
@@ -235,7 +258,7 @@ export async function POST(request: Request) {
                                 pending: `${baseUrl}${returnPath}?status=pending&booking_id=${booking.id}`
                             },
                             auto_return: 'approved',
-                            external_reference: booking.id,
+                            external_reference: paymentIntent.id, // Using PaymentIntent ID, NOT Booking ID
                             notification_url: `${baseUrl}/api/webhooks/mercadopago?complexId=${(field as any).complexId}`
                         })
                     })

@@ -82,26 +82,41 @@ export async function POST(request: Request) {
 
             const booking = await prisma.booking.findUnique({
                 where: { id: bookingId },
-                include: { payments: true } // Traer todos los pagos
+                include: {
+                    payments: true,
+                    field: { include: { complex: true } }
+                } as any
             })
 
             if (booking) {
+                const payments = (booking as any).payments
                 // Sumar todos los pagos aprobados
-                const totalPaid = booking.payments
+                const totalPaid = payments
                     .filter((p: any) => p.status === 'approved')
                     .reduce((sum: number, p: any) => sum + p.amount, 0)
 
                 // Sumar pagos legacy/manuales
-                const grandTotal = totalPaid + (booking.paidAmount || 0)
-                const remaining = booking.totalPrice - grandTotal
+                const grandTotal = totalPaid + ((booking.paidAmount as number) || 0)
+                const remaining = (booking.totalPrice as number) - grandTotal
 
-                // Si falta muy poco (margen $10 por si acaso), confirmar
+                const complex = (booking.field as any).complex
+
+                // LOGICA DE CONFIRMACIÓN
+                // 1. Pago Total (o casi total)
                 if (remaining <= 10) {
                     await prisma.booking.update({
                         where: { id: bookingId },
                         data: { status: 'confirmed' }
                     })
                     console.log(`Booking ${bookingId} FULLY PAID and CONFIRMED via Webhook! 🐄✅`)
+                }
+                // 2. Pago de Seña (Si está habilitada y se alcanzó el monto)
+                else if (complex?.downPaymentEnabled && grandTotal >= complex.downPaymentFixed) {
+                    await prisma.booking.update({
+                        where: { id: bookingId },
+                        data: { status: 'confirmed' } // Confirmamos porque ya pagó lo mínimo requerido
+                    })
+                    console.log(`Booking ${bookingId} CONFIRMED via SEÑA (Deposit reached)! 💰✅`)
                 }
             }
         }

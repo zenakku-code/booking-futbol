@@ -18,6 +18,10 @@ model Complex {
   address     String?
   logoUrl     String?
   
+  // Payment Config
+  downPaymentFixed   Float    @default(0)
+  downPaymentEnabled Boolean  @default(false)
+  
   // Subscription status
   subscriptionActive Boolean @default(false)
   subscriptionDate   DateTime?
@@ -77,10 +81,10 @@ model Booking {
   clientName  String
   clientPhone String?
   totalPrice  Float
-  status      String   @default("pending") // pending, confirmed, cancelled, collecting
+  status      String   @default("pending") // pending, confirmed, confirmed_partial, cancelled, collecting
   
   // Payment Upgrade Phase 3
-  paymentType String   @default("FULL") // FULL, SPLIT
+  paymentType String   @default("FULL") // FULL, SPLIT, DEPOSIT
   paidAmount  Float    @default(0)
   
   items       BookingItem[]

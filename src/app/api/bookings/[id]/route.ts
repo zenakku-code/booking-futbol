@@ -39,3 +39,38 @@ export async function PUT(
         return NextResponse.json({ error: 'Error updating booking' }, { status: 500 })
     }
 }
+
+export async function DELETE(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const complexId = await getComplexId()
+        if (!complexId) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        }
+
+        const { id } = await params
+
+        // Verificar ownership
+        const booking = await prisma.booking.findFirst({
+            where: {
+                id,
+                field: { complexId }
+            }
+        })
+
+        if (!booking) {
+            return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 })
+        }
+
+        await prisma.booking.delete({
+            where: { id }
+        })
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('Error deleting booking:', error)
+        return NextResponse.json({ error: 'Error deleting booking' }, { status: 500 })
+    }
+}

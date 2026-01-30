@@ -14,7 +14,7 @@ export default async function BookingsPage() {
             field: { complexId }
         },
         include: {
-            field: true,
+            field: { include: { complex: true } },
             items: { include: { inventoryItem: true } },
             payments: true
         },

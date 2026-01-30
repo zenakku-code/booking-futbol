@@ -25,6 +25,10 @@ type Booking = {
     field: {
         name: string
         type: string
+        complex?: {
+            downPaymentEnabled: boolean
+            downPaymentFixed: number
+        }
     }
     paymentType?: string
     calculatedPaidAmount?: number
@@ -50,6 +54,19 @@ export default function BookingManagement({ initialBookings }: { initialBookings
     }
 
     const handleStatusChange = async (id: string, newStatus: string) => {
+        if (newStatus === 'DELETE') {
+            if (!confirm('¿Eliminar reserva definitivamente y liberar el horario?')) return
+            try {
+                const res = await fetch(`/api/bookings/${id}`, { method: 'DELETE' })
+                if (!res.ok) throw new Error('Failed to delete')
+                setBookings(bookings.filter(b => b.id !== id))
+                router.refresh()
+                return
+            } catch (err) {
+                alert('Error eliminando reserva')
+            }
+        }
+
         if (!confirm(`¿Cambiar estado a ${newStatus}?`)) return
         try {
             const res = await fetch(`/api/bookings/${id}`, {
@@ -181,15 +198,23 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                             <div className="text-primary font-bold text-lg">
                                                 ${booking.totalPrice}
                                             </div>
-                                            {booking.paymentType === 'SPLIT' && booking.calculatedPaidAmount !== undefined && (
+                                            {(booking.paymentType === 'SPLIT' || booking.paymentType === 'DEPOSIT') && booking.calculatedPaidAmount !== undefined && (
                                                 <div className="mt-2 w-32 bg-slate-800/50 p-2 rounded-lg border border-white/5">
                                                     <div className="flex justify-between text-[10px] text-gray-400 mb-1 font-medium">
-                                                        <span className={booking.calculatedPaidAmount >= booking.totalPrice ? 'text-emerald-400' : 'text-blue-400'}>
+                                                        <span className={booking.calculatedPaidAmount >= (booking.field.complex?.downPaymentFixed || booking.totalPrice) ? 'text-emerald-400' : 'text-blue-400'}>
                                                             {Math.min(100, Math.round((booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100))}%
                                                         </span>
                                                         <span>${booking.calculatedPaidAmount}</span>
                                                     </div>
-                                                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden mb-1">
+                                                    <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden mb-1 relative">
+                                                        {/* Seña Marker */}
+                                                        {booking.field.complex?.downPaymentEnabled && booking.field.complex?.downPaymentFixed > 0 && (
+                                                            <div
+                                                                className="absolute h-full w-0.5 bg-yellow-500/50 z-10"
+                                                                style={{ left: `${(booking.field.complex.downPaymentFixed / booking.totalPrice) * 100}%` }}
+                                                                title={`Meta Seña: $${booking.field.complex.downPaymentFixed}`}
+                                                            />
+                                                        )}
                                                         <div
                                                             className={`h-full transition-all duration-500 ${booking.calculatedPaidAmount >= booking.totalPrice ? 'bg-emerald-500' : 'bg-blue-500'}`}
                                                             style={{ width: `${Math.min(100, (booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100)}%` }}
@@ -197,8 +222,8 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                     </div>
                                                     <div className="flex items-center justify-between mt-1">
                                                         <div className="flex items-center gap-1 text-[9px] text-blue-400 font-bold uppercase tracking-wide">
-                                                            <span>🐄 Vaquita</span>
-                                                            {booking.calculatedPaidAmount >= booking.totalPrice && <span className="text-emerald-500">✓</span>}
+                                                            <span>{booking.paymentType === 'DEPOSIT' ? '💰 Seña' : '🐄 Vaquita'}</span>
+                                                            {booking.calculatedPaidAmount >= (booking.field.complex?.downPaymentFixed || booking.totalPrice) && <span className="text-emerald-500">✓</span>}
                                                         </div>
                                                         <a
                                                             href={`/pay/${booking.id}`}
@@ -232,7 +257,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                                         Aprobar
                                                     </button>
                                                     <button
-                                                        onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                                                        onClick={() => handleStatusChange(booking.id, 'DELETE')}
                                                         className="text-red-400 hover:text-red-300 font-medium text-xs border border-red-500/30 hover:bg-red-500/10 px-3 py-1.5 rounded-lg transition-all"
                                                     >
                                                         Liberar
@@ -342,7 +367,7 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                         Aprobar
                                     </button>
                                     <button
-                                        onClick={() => handleStatusChange(booking.id, 'cancelled')}
+                                        onClick={() => handleStatusChange(booking.id, 'DELETE')}
                                         className="bg-red-500/10 text-red-400 border border-red-500/30 py-2 rounded-lg font-bold text-xs"
                                     >
                                         Liberar

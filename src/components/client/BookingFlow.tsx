@@ -17,6 +17,11 @@ type Field = {
     availableDays?: string
     openTime?: string
     closeTime?: string
+    complex?: {
+        name: string
+        downPaymentEnabled: boolean
+        downPaymentFixed: number
+    }
 }
 
 const DAYS_MAP: { [key: number]: string } = {
@@ -40,6 +45,8 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState(false)
     const [paymentType, setPaymentType] = useState('FULL')
+
+    const hasDeposit = field.complex?.downPaymentEnabled && field.complex?.downPaymentFixed > 0 && field.complex?.downPaymentFixed < field.price
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
@@ -84,7 +91,7 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
         const now = new Date()
         // Ajuste zona horaria local simple
         const todayStr = now.toLocaleDateString('en-CA') // YYYY-MM-DD local
-        const isToday = date === todayStr || date === now.toISOString().split('T')[0]
+        const isToday = date === todayStr
         const currentHour = now.getHours()
 
         for (let i = start; i < end; i++) {
@@ -174,6 +181,13 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
             </div>
         )
     }
+
+    const currentTotal = field.price + Object.entries(selectedItems).reduce((acc, [id, qty]) => {
+        const itm = inventory.find(i => i.id === id)
+        return acc + (itm?.price || 0) * qty
+    }, 0)
+
+    const depositAmount = field.complex?.downPaymentFixed || 0
 
     return (
         <div className="glass-card w-full p-4 sm:p-6 md:p-8 max-w-2xl mx-auto transform transition-all duration-500 relative bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
@@ -341,12 +355,16 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                                 })}
 
                                 <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-slate-900">
-                                    <span className="text-xl font-black text-slate-900 tracking-tighter">TOTAL</span>
-                                    <span className="text-3xl font-black text-slate-900 tracking-tighter">${field.price + Object.entries(selectedItems).reduce((acc, [id, qty]) => {
-                                        const itm = inventory.find(i => i.id === id)
-                                        return acc + (itm?.price || 0) * qty
-                                    }, 0)}</span>
+                                    <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">Total</span>
+                                    <span className="text-3xl font-black text-slate-900 tracking-tighter">${currentTotal}</span>
                                 </div>
+
+                                {hasDeposit && (
+                                    <div className="pt-2 flex justify-between items-center bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/10">
+                                        <span className="text-xs font-bold text-emerald-700 uppercase">Reserva con Seña</span>
+                                        <span className="text-xl font-black text-emerald-600">${depositAmount}</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -385,21 +403,33 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                     {/* Payment Method */}
                     <div>
                         <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 pl-1">Método de Pago</h3>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className={`grid gap-4 ${hasDeposit ? 'grid-cols-3' : 'grid-cols-2'}`}>
                             <button
                                 onClick={() => setPaymentType('FULL')}
                                 className={`group p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all duration-300 relative overflow-hidden ${paymentType === 'FULL' ? 'bg-slate-800 border-primary text-white shadow-lg shadow-primary/10' : 'bg-transparent border-white/10 text-gray-500 hover:border-white/30'}`}
                             >
-                                <span className="text-3xl group-hover:scale-110 transition-transform mb-1">💳</span>
-                                <span className={`text-sm font-bold ${paymentType === 'FULL' ? 'text-primary' : ''}`}>Pago Total</span>
+                                <span className="text-2xl group-hover:scale-110 transition-transform mb-1">💳</span>
+                                <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${paymentType === 'FULL' ? 'text-primary' : ''}`}>PAGO<br />TOTAL</span>
                                 {paymentType === 'FULL' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--primary)]"></div>}
                             </button>
+
+                            {hasDeposit && (
+                                <button
+                                    onClick={() => setPaymentType('DEPOSIT')}
+                                    className={`group p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all duration-300 relative overflow-hidden ${paymentType === 'DEPOSIT' ? 'bg-slate-800 border-emerald-500 text-white shadow-lg shadow-emerald-500/10' : 'bg-transparent border-white/10 text-gray-500 hover:border-white/30'}`}
+                                >
+                                    <span className="text-2xl group-hover:scale-110 transition-transform mb-1">💰</span>
+                                    <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${paymentType === 'DEPOSIT' ? 'text-emerald-500' : ''}`}>PAGAR<br />SEÑA</span>
+                                    {paymentType === 'DEPOSIT' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_var(--emerald-500)]"></div>}
+                                </button>
+                            )}
+
                             <button
                                 onClick={() => setPaymentType('SPLIT')}
                                 className={`group p-4 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all duration-300 relative overflow-hidden ${paymentType === 'SPLIT' ? 'bg-slate-800 border-accent text-white shadow-lg shadow-accent/10' : 'bg-transparent border-white/10 text-gray-500 hover:border-white/30'}`}
                             >
-                                <span className="text-3xl group-hover:scale-110 transition-transform mb-1">🐄</span>
-                                <span className={`text-sm font-bold ${paymentType === 'SPLIT' ? 'text-accent' : ''}`}>Hacer Vaquita</span>
+                                <span className="text-2xl group-hover:scale-110 transition-transform mb-1">🐄</span>
+                                <span className={`text-[10px] sm:text-xs font-bold text-center leading-tight ${paymentType === 'SPLIT' ? 'text-accent' : ''}`}>HACER<br />VAQUITA</span>
                                 {paymentType === 'SPLIT' && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-accent animate-pulse shadow-[0_0_10px_var(--accent)]"></div>}
                             </button>
                         </div>
@@ -443,7 +473,9 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                                     <span className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></span>
                                     Enviando...
                                 </span>
-                            ) : 'CONFIRMAR RESERVA'}
+                            ) : (
+                                <span>{paymentType === 'FULL' ? 'PAGAR TOTAL' : paymentType === 'DEPOSIT' ? 'PAGAR SEÑA' : 'INICIAR VAQUITA'}</span>
+                            )}
                         </button>
                     </div>
                 </div>
