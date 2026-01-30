@@ -17,7 +17,7 @@ export async function POST(request: Request) {
         const notificationType = body?.type || topic || body?.topic
 
         // MP sometimes sends 'data.id' or jus 'id' in resource
-        let mpPaymentId = body?.data?.id || body?.id
+        const mpPaymentId = body?.data?.id || body?.id
 
         // Si no es un payment, ignoramos (ej: subscription notification, test)
         if (notificationType !== 'payment') {
