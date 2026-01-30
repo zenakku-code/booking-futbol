@@ -43,9 +43,14 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
     const [takenSlots, setTakenSlots] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    const [paymentType, setPaymentType] = useState('FULL')
-
     const hasDeposit = field.complex?.downPaymentEnabled && field.complex?.downPaymentFixed > 0 && field.complex?.downPaymentFixed < field.price
+    const [paymentType, setPaymentType] = useState(hasDeposit ? 'DEPOSIT' : 'FULL')
+
+    useEffect(() => {
+        if (hasDeposit && paymentType === 'FULL') {
+            setPaymentType('DEPOSIT')
+        }
+    }, [hasDeposit])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
@@ -487,7 +492,7 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                                     Enviando...
                                 </span>
                             ) : (
-                                <span>{paymentType === 'FULL' ? 'PAGAR TOTAL' : paymentType === 'DEPOSIT' ? 'PAGAR SEÑA' : 'INICIAR VAQUITA'}</span>
+                                <span>{paymentType === 'FULL' ? 'PAGAR TOTAL' : paymentType === 'DEPOSIT' ? 'IR A PAGAR SEÑA' : 'INICIAR VAQUITA'}</span>
                             )}
                         </button>
                     </div>
