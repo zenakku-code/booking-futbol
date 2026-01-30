@@ -354,16 +354,30 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                                 })}
 
                                 <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-slate-900">
-                                    <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">Total</span>
+                                    <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">Total Cancha</span>
                                     <span className="text-3xl font-black text-slate-900 tracking-tighter">${currentTotal}</span>
                                 </div>
 
                                 {hasDeposit && (
-                                    <div className="pt-2 flex justify-between items-center bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/10">
-                                        <span className="text-xs font-bold text-emerald-700 uppercase">Reserva con Seña</span>
-                                        <span className="text-xl font-black text-emerald-600">${depositAmount}</span>
+                                    <div className={`mt-4 rounded-2xl p-4 border-2 transition-all duration-300 ${paymentType === 'DEPOSIT' ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-200 border-slate-300'}`}>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${paymentType === 'DEPOSIT' ? 'text-emerald-600' : 'text-slate-500'}`}>Seña Obligatoria</span>
+                                            <span className={`text-2xl font-black ${paymentType === 'DEPOSIT' ? 'text-emerald-600' : 'text-slate-800'}`}>${depositAmount}</span>
+                                        </div>
+                                        <p className={`text-[9px] font-bold uppercase tracking-tight ${paymentType === 'DEPOSIT' ? 'text-emerald-700/70' : 'text-slate-500'}`}>
+                                            Monto mínimo para bloquear el turno
+                                        </p>
                                     </div>
                                 )}
+
+                                <div className="mt-4 pt-4 border-t border-dashed border-gray-400/30">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total a Pagar Ahora</span>
+                                        <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                                            ${paymentType === 'DEPOSIT' ? depositAmount : currentTotal}
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

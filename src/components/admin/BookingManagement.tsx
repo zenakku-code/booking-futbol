@@ -351,8 +351,36 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                                     <span className="text-gray-500">Cliente</span>
                                     <span className="text-white font-medium">{booking.clientName}</span>
                                 </div>
+
+                                {(booking.paymentType === 'SPLIT' || booking.paymentType === 'DEPOSIT') && booking.calculatedPaidAmount !== undefined && (
+                                    <div className="mt-3 pt-3 border-t border-white/5">
+                                        <div className="flex justify-between text-[10px] text-gray-400 mb-1 font-medium">
+                                            <span className={booking.calculatedPaidAmount >= (booking.field.complex?.downPaymentFixed || booking.totalPrice) ? 'text-emerald-400' : 'text-blue-400'}>
+                                                Progreso: {Math.min(100, Math.round((booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100))}%
+                                            </span>
+                                            <span>${booking.calculatedPaidAmount} de ${booking.totalPrice}</span>
+                                        </div>
+                                        <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden relative">
+                                            {booking.field.complex?.downPaymentEnabled && booking.field.complex?.downPaymentFixed > 0 && (
+                                                <div
+                                                    className="absolute h-full w-0.5 bg-yellow-500/50 z-10"
+                                                    style={{ left: `${(booking.field.complex.downPaymentFixed / booking.totalPrice) * 100}%` }}
+                                                />
+                                            )}
+                                            <div
+                                                className={`h-full transition-all duration-500 ${booking.calculatedPaidAmount >= booking.totalPrice ? 'bg-emerald-500' : 'bg-blue-500'}`}
+                                                style={{ width: `${Math.min(100, (booking.calculatedPaidAmount / (booking.totalPrice || 1)) * 100)}%` }}
+                                            ></div>
+                                        </div>
+                                        <div className="flex items-center gap-1 mt-1 text-[9px] text-blue-400 font-bold uppercase tracking-wide">
+                                            <span>{booking.paymentType === 'DEPOSIT' ? '💰 Seña' : '🐄 Vaquita'}</span>
+                                            {booking.calculatedPaidAmount >= (booking.field.complex?.downPaymentFixed || booking.totalPrice) && <span className="text-emerald-500">✓</span>}
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between items-center pt-2 border-t border-white/5 mt-2">
-                                    <span className="text-gray-500 font-bold">Total</span>
+                                    <span className="text-gray-500 font-bold">Importe</span>
                                     <span className="text-primary font-bold text-lg">${booking.totalPrice}</span>
                                 </div>
                             </div>
