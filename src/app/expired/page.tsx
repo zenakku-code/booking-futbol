@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 export default function ExpiredSubscriptionPage() {
     return (
         <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 text-center">
@@ -20,12 +22,12 @@ export default function ExpiredSubscriptionPage() {
                         >
                             Contactar Soporte
                         </a>
-                        <a
+                        <Link
                             href="/admin/login"
                             className="block w-full py-3 bg-white/5 border border-white/10 rounded-xl font-medium text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
                         >
                             Volver al Login
-                        </a>
+                        </Link>
                     </div>
                 </div>
             </div>

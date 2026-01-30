@@ -1,4 +1,5 @@
 import React from 'react'
+import Link from 'next/link'
 
 export default function SuperAdminLayout({
     children,
@@ -17,9 +18,9 @@ export default function SuperAdminLayout({
                         <h1 className="font-bold text-lg tracking-tight">SaaS Control Center</h1>
                     </div>
                     <div className="flex items-center gap-4">
-                        <a href="/admin/dashboard" className="text-sm text-gray-400 hover:text-white transition-colors">
+                        <Link href="/admin/dashboard" className="text-sm text-gray-400 hover:text-white transition-colors">
                             Ir a Mi Panel
-                        </a>
+                        </Link>
                         <div className="h-4 w-px bg-white/10"></div>
                         <span className="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-full border border-indigo-500/20 font-mono">
                             SUPER ADMIN
