@@ -2,22 +2,41 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET(request: Request) {
+    console.log(`🔥 [MP Callback] Request URL: ${request.url}`)
     const { searchParams } = new URL(request.url)
     const code = searchParams.get('code')
     const state = searchParams.get('state') // Aquí viaja el complexId
     const error = searchParams.get('error')
+    const errorDescription = searchParams.get('error_description')
+
+    console.log(`🔍 [MP Callback] Params: Code=${code ? 'OK' : 'MISSING'}, State=${state}, Error=${error}`)
 
     if (error) {
-        return NextResponse.json({ error: 'El usuario denegó el acceso', details: error }, { status: 400 })
+        console.error(`❌ [MP Callback] Mercado Pago devolvió error: ${error} - ${errorDescription}`)
+        return NextResponse.json({ error: 'El usuario denegó el acceso', details: error, description: errorDescription }, { status: 400 })
     }
 
     if (!code || !state) {
+        console.error('❌ [MP Callback] Faltan parámetros requeridos (code/state)')
         return NextResponse.json({ error: 'Faltan parámetros requeridos (code/state)' }, { status: 400 })
     }
 
     const complexId = state
 
     try {
+        console.log('🚀 [MP Callback] Solicitando Tokens a MP...')
+        const payload = {
+            client_secret: process.env.MP_PLATFORM_CLIENT_SECRET,
+            client_id: process.env.MP_PLATFORM_APP_ID,
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/mercadopago/callback`
+        }
+
+        // Ocultar secreto en logs
+        const logPayload = { ...payload, client_secret: '***HIDDEN***' }
+        console.log('📦 [MP Callback] Payload enviado:', JSON.stringify(logPayload))
+
         // Intercambiar Code por Tokens (Server-to-Server)
         const tokenRes = await fetch('https://api.mercadopago.com/oauth/token', {
             method: 'POST',
@@ -25,21 +44,18 @@ export async function GET(request: Request) {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                client_secret: process.env.MP_PLATFORM_CLIENT_SECRET, // Credenciales de TU Plataforma
-                client_id: process.env.MP_PLATFORM_APP_ID,
-                grant_type: 'authorization_code',
-                code: code,
-                redirect_uri: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/auth/mercadopago/callback`
-            })
+            body: JSON.stringify(payload)
         })
 
         const data = await tokenRes.json()
+        console.log(`📬 [MP Callback] Respuesta MP Status: ${tokenRes.status}`)
 
         if (!tokenRes.ok) {
-            console.error('Mercado Pago Token Error:', data)
-            throw new Error(data.message || 'Error al obtener tokens de MP')
+            console.error('❌ [MP Callback] Error Token Body:', JSON.stringify(data, null, 2))
+            throw new Error(data.message || data.error_description || 'Error al obtener tokens de MP')
         }
+
+        console.log('✅ [MP Callback] Tokens obtenidos. Guardando en DB...')
 
         // data contiene: access_token, refresh_token, user_id, public_key, etc.
 

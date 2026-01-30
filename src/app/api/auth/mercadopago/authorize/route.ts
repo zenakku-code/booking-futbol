@@ -21,5 +21,9 @@ export async function GET(request: Request) {
     // Usamos el global auth.mercadopago.com.ar por defecto para Argentina.
     const authUrl = `https://auth.mercadopago.com.ar/authorization?client_id=${appId}&response_type=code&platform_id=mp&state=${state}&redirect_uri=${redirectUri}`
 
+    console.log(`🚀 [MP Authorize] Iniciando flujo OAuth.`)
+    console.log(`ℹ️ [MP Authorize] AppID: ${appId}, RedirectURI: ${redirectUri}, State: ${state}`)
+    console.log(`🔗 [MP Authorize] Auth URL: ${authUrl}`)
+
     return NextResponse.redirect(authUrl)
 }
