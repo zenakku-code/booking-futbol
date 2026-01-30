@@ -74,6 +74,10 @@ export default async function FieldDetailPage({
                                 closeTime: field.closeTime || undefined
                             }}
                             inventory={inventory}
+                            paymentSettings={{
+                                downPaymentEnabled: (field as any).complex?.downPaymentEnabled || false,
+                                downPaymentFixed: (field as any).complex?.downPaymentFixed || 0
+                            }}
                         />
                     </div>
                 </div>

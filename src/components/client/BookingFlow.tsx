@@ -33,7 +33,11 @@ const DAYS_MAP: { [key: number]: string } = {
     6: "Sábado"
 }
 
-export default function BookingFlow({ field, inventory = [] }: { field: Field, inventory?: InventoryItem[] }) {
+export default function BookingFlow({ field, inventory = [], paymentSettings }: {
+    field: Field,
+    inventory?: InventoryItem[],
+    paymentSettings?: { downPaymentEnabled: boolean, downPaymentFixed: number }
+}) {
     const [step, setStep] = useState(1)
     const [date, setDate] = useState('')
     const [selectedTime, setSelectedTime] = useState('')
@@ -43,27 +47,21 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
     const [takenSlots, setTakenSlots] = useState<string[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const [success, setSuccess] = useState(false)
+
+    // Logic extraction for robustness
     const price = Number(field.price || 0)
-    const depositFixed = Number(field.complex?.downPaymentFixed || 0)
-    const hasDeposit = field.complex?.downPaymentEnabled && depositFixed > 0 && depositFixed < price
+    // Use explicit settings if available, fallback to nested object if legacy usage
+    const depositEnabled = paymentSettings ? paymentSettings.downPaymentEnabled : field.complex?.downPaymentEnabled
+    const depositFixed = paymentSettings ? Number(paymentSettings.downPaymentFixed) : Number(field.complex?.downPaymentFixed || 0)
+
+    const hasDeposit = depositEnabled && depositFixed > 0 && depositFixed < price
     const [paymentType, setPaymentType] = useState(hasDeposit ? 'DEPOSIT' : 'FULL')
 
     useEffect(() => {
-        // Debug: Por qué no aparece la seña?
-        if (!hasDeposit && field.complex?.downPaymentEnabled) {
-            console.log('Seña deshabilitada por lógica:', {
-                enabled: field.complex.downPaymentEnabled,
-                fixed: depositFixed,
-                fieldPrice: price,
-                conditionFixedPositive: depositFixed > 0,
-                conditionFixedLessPrice: depositFixed < price
-            })
-        }
-
         if (hasDeposit && paymentType === 'FULL') {
             setPaymentType('DEPOSIT')
         }
-    }, [hasDeposit, field.complex, depositFixed, price])
+    }, [hasDeposit, depositFixed, price, depositEnabled])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
@@ -465,17 +463,9 @@ export default function BookingFlow({ field, inventory = [] }: { field: Field, i
                             </button>
                         </div>
 
-                        {/* DEBUG INFO - REMOVE IN PRODUCTION */}
-                        {!hasDeposit && field.complex?.downPaymentEnabled && (
-                            <div className="mt-4 p-2 bg-red-500/20 text-red-300 text-[10px] font-mono border border-red-500/30 rounded">
-                                [DEBUG] Seña Oculta:
-                                <br />Price: {price}
-                                <br />Deposit: {depositFixed}
-                                <br />Enabled: {String(field.complex.downPaymentEnabled)}
-                                <br />Condition: {depositFixed} &lt; {price} ? {String(depositFixed < price)}
-                            </div>
-                        )}
                     </div>
+
+                    {/* Client Data Form */}
 
                     {/* Client Data Form */}
                     <div className="space-y-4 pt-6 border-t border-white/5">
