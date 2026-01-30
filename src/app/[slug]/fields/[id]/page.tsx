@@ -68,15 +68,19 @@ export default async function FieldDetailPage({
                     <div className="mt-8 lg:mt-0 w-full overflow-hidden">
                         <BookingFlow
                             field={{
-                                ...(field as any),
+                                ...field,
+                                price: Number(field.price),
+                                complexId: (field as any).complexId,
+                                // complex: undefined, // Removed entirely to clean up object
                                 availableDays: field.availableDays || undefined,
                                 openTime: field.openTime || undefined,
                                 closeTime: field.closeTime || undefined
-                            }}
-                            inventory={inventory}
+                            } as any}
+                            // Clean inventory prices too
+                            inventory={inventory.map((i: any) => ({ ...i, price: Number(i.price) }))}
                             paymentSettings={{
-                                downPaymentEnabled: (field as any).complex?.downPaymentEnabled || false,
-                                downPaymentFixed: (field as any).complex?.downPaymentFixed || 0
+                                downPaymentEnabled: !!(field as any).complex?.downPaymentEnabled,
+                                downPaymentFixed: Number((field as any).complex?.downPaymentFixed || 0)
                             }}
                         />
                     </div>

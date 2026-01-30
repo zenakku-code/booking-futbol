@@ -51,17 +51,26 @@ export default function BookingFlow({ field, inventory = [], paymentSettings }: 
     // Logic extraction for robustness
     const price = Number(field.price || 0)
     // Use explicit settings if available, fallback to nested object if legacy usage
-    const depositEnabled = paymentSettings ? paymentSettings.downPaymentEnabled : field.complex?.downPaymentEnabled
+    const depositEnabled = paymentSettings ? !!paymentSettings.downPaymentEnabled : !!field.complex?.downPaymentEnabled
     const depositFixed = paymentSettings ? Number(paymentSettings.downPaymentFixed) : Number(field.complex?.downPaymentFixed || 0)
 
-    const hasDeposit = depositEnabled && depositFixed > 0 && depositFixed < price
-    const [paymentType, setPaymentType] = useState(hasDeposit ? 'DEPOSIT' : 'FULL')
+    // STRICT check: Enabled AND Greater than 0 AND Less than Full Price
+    const hasDeposit = Boolean(depositEnabled && depositFixed > 0 && depositFixed < price)
+
+    // Initialize with lazy state
+    const [paymentType, setPaymentType] = useState(() => hasDeposit ? 'DEPOSIT' : 'FULL')
 
     useEffect(() => {
-        if (hasDeposit && paymentType === 'FULL') {
-            setPaymentType('DEPOSIT')
+        // Auto-correct payment type if deposit status changes
+        if (hasDeposit && (paymentType === 'FULL' || paymentType !== 'DEPOSIT')) {
+            // Default to deposit if available and we are currently asking for full
+            // But don't override SPLIT if user selected it? 
+            // Better to default to DEPOSIT initially.
+            if (paymentType === 'FULL') setPaymentType('DEPOSIT')
+        } else if (!hasDeposit && paymentType === 'DEPOSIT') {
+            setPaymentType('FULL')
         }
-    }, [hasDeposit, depositFixed, price, depositEnabled])
+    }, [hasDeposit, depositFixed, price, depositEnabled, paymentType])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
