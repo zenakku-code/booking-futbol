@@ -204,14 +204,19 @@ export async function POST(request: Request) {
                     const mpItems = []
                     let amountToPay = 0
 
-                    if (paymentType === 'DEPOSIT' && (field as any).complex?.downPaymentEnabled) {
-                        amountToPay = (field as any).complex.downPaymentFixed
-                        mpItems.push({
-                            title: `Seña Reserva - ${field.name} (${date})`,
-                            quantity: 1,
-                            currency_id: 'ARS',
-                            unit_price: amountToPay
-                        })
+                    if (paymentType === 'DEPOSIT') {
+                        if ((field as any).complex?.downPaymentEnabled && (field as any).complex?.downPaymentFixed > 0) {
+                            amountToPay = (field as any).complex.downPaymentFixed
+                            mpItems.push({
+                                title: `Seña Reserva - ${field.name} (${date})`,
+                                quantity: 1,
+                                currency_id: 'ARS',
+                                unit_price: amountToPay
+                            })
+                        } else {
+                            // ERROR: User requested DEPOSIT but it's not valid/enabled
+                            return NextResponse.json({ error: 'La seña no está habilitada o configurada correctamente para esta cancha.' }, { status: 400 })
+                        }
                     } else {
                         amountToPay = booking.totalPrice
                         mpItems.push({

@@ -155,7 +155,7 @@ export default function BookingFlow({ field, inventory = [], paymentSettings }: 
                     clientPhone,
                     totalPrice: field.price + itemsTotal,
                     items: itemsPayload,
-                    paymentType
+                    paymentType // 'DEPOSIT', 'FULL', or 'SPLIT'
                 })
             })
 
@@ -190,7 +190,10 @@ export default function BookingFlow({ field, inventory = [], paymentSettings }: 
                     <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Tu Código</div>
                     <div className="font-mono text-xl text-primary font-bold tracking-[0.2em] select-all">#{Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
                 </div>
-                <button onClick={() => window.location.href = '/'} className="btn btn-primary shadow-lg shadow-primary/20">
+                <button
+                    onClick={() => window.location.reload()}
+                    className="btn btn-primary shadow-lg shadow-primary/20"
+                >
                     Volver al Inicio
                 </button>
             </div>
