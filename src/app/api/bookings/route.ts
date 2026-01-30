@@ -77,7 +77,9 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json()
-        let { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice, items = [], paymentType = 'FULL' } = body
+        const { fieldId, date, startTime, endTime, totalPrice, items = [], paymentType = 'FULL' } = body
+        // Mutable variables for sanitization
+        let { clientName, clientPhone } = body
 
         if (!fieldId || !date || !startTime || !endTime || !clientName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -129,7 +131,7 @@ export async function POST(request: Request) {
                     totalPrice: parseFloat(totalPrice),
                     status: 'pending',
                     paymentType // Guardo el tipo de pago
-                }
+                } as any
             })
 
             // Create BookingItems and Update Stock
