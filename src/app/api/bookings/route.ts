@@ -111,10 +111,13 @@ export async function POST(request: Request) {
         clientPhone = clientPhone && typeof clientPhone === 'string' ? clientPhone.replace(/[^\d\+\-\s]/g, '').slice(0, 20) : null
 
         // Validate overlap
+        // FIX: Force Noon UTC to avoid timezone shifts
+        const bookingDate = new Date(date + "T12:00:00Z");
+
         const overlappingBooking = await prisma.booking.findFirst({
             where: {
                 fieldId,
-                date: new Date(date),
+                date: bookingDate,
                 status: { not: 'cancelled' },
                 OR: [
                     { startTime: { lte: startTime }, endTime: { gt: startTime } },
@@ -144,7 +147,7 @@ export async function POST(request: Request) {
             const b = await tx.booking.create({
                 data: {
                     fieldId,
-                    date: new Date(date),
+                    date: bookingDate, // FIX: Use forced Noon UTC date
                     startTime,
                     endTime,
                     clientName,
