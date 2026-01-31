@@ -25,6 +25,17 @@ export async function POST() {
             return NextResponse.json({ error: 'Complex not found' }, { status: 404 })
         }
 
+        // STRICT TRIAL Logic: 
+        // If trialEndsAt is set (even if null or expired in the past, but Prisma returns null if never set?)
+        // Actually, if it was never set, it is null. If it was set, it's a date.
+        // We want to prevent re-activation if it has EVER been used.
+
+        if (complex.trialEndsAt) {
+            return NextResponse.json({
+                error: 'El periodo de prueba ya fue utilizado anteriormente.'
+            }, { status: 400 })
+        }
+
         // Check if already has paid subscription
         if (complex.subscriptionDate) {
             return NextResponse.json({
@@ -32,17 +43,7 @@ export async function POST() {
             }, { status: 400 })
         }
 
-        // Check if trial is currently active (not expired)
-        const now = new Date()
-        const hasActiveTrial = complex.trialEndsAt && new Date(complex.trialEndsAt) > now
-
-        if (hasActiveTrial) {
-            return NextResponse.json({
-                error: 'Ya tienes un trial activo'
-            }, { status: 400 })
-        }
-
-        // Activate 7-day trial (or reactivate if expired/disabled)
+        // Activate 7-day trial
         const trialEndDate = new Date()
         trialEndDate.setDate(trialEndDate.getDate() + 7)
 

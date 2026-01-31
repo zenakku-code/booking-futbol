@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
-export async function POST() {
+export async function POST(request: Request) {
     try {
         const session = await getSession()
 
@@ -30,22 +30,53 @@ export async function POST() {
             }, { status: 400 })
         }
 
-        // TODO: Integrate with payment provider (Stripe, MercadoPago, etc.)
-        // For now, we'll just mark as subscribed (MVP)
+        const { planType } = await request.json()
 
+        if (!['MONTHLY', 'QUARTERLY'].includes(planType)) {
+            return NextResponse.json({ error: 'Plan inválido' }, { status: 400 })
+        }
+
+        // Pricing logic (can be moved to config)
+        const amount = planType === 'QUARTERLY' ? 27000 : 10000
+        const days = planType === 'QUARTERLY' ? 90 : 30
+
+        const now = new Date()
+        // Calculate new expiration date
+        // If already has active subscription, add to existing end date
+        let newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
+            ? new Date(complex.subscriptionEndsAt)
+            : new Date()
+
+        newEndsAt.setDate(newEndsAt.getDate() + days)
+
+        // 1. Create Payment Record
+        const payment = await prisma.subscriptionPayment.create({
+            data: {
+                complexId: session.complexId,
+                amount: amount,
+                planType: planType,
+                status: 'approved', // Auto-approve for now (MVP)
+                externalId: `manual_${Date.now()}`
+            }
+        })
+
+        // 2. Update Complex
         await prisma.complex.update({
             where: { id: session.complexId },
             data: {
                 subscriptionActive: true,
-                subscriptionDate: new Date(),
-                trialEndsAt: null  // Remove trial limitation
+                subscriptionDate: complex.subscriptionDate || new Date(), // Keep original date if exists
+                subscriptionEndsAt: newEndsAt,
+                planType: planType,
+                trialEndsAt: null // Remove trial limitation
             }
         })
 
         return NextResponse.json({
             success: true,
-            message: 'Suscripción activada correctamente',
-            subscriptionDate: new Date()
+            message: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} activada`,
+            subscriptionEndsAt: newEndsAt,
+            planType: planType
         })
 
     } catch (error) {

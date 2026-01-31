@@ -16,7 +16,9 @@ export async function GET() {
                 isActive: true,
                 subscriptionActive: true,
                 trialEndsAt: true,
-                subscriptionDate: true
+                subscriptionDate: true,
+                subscriptionEndsAt: true,
+                planType: true
             }
         })
 
@@ -26,25 +28,31 @@ export async function GET() {
 
         const now = new Date()
         const isTrial = !!complex.trialEndsAt
-        const trialExpired = isTrial && complex.trialEndsAt && new Date(complex.trialEndsAt) < now
-        const hasPaidSubscription = !!complex.subscriptionDate
 
-        // Access logic:
-        // 1. If manually banned (isActive = false) -> No access
-        // 2. If has paid subscription -> Access granted
-        // 3. If on trial and not expired -> Access granted
-        // 4. Otherwise -> No access
-        const hasAccess = complex.isActive && (
-            hasPaidSubscription ||
-            (isTrial && !trialExpired)
-        )
+        // Trial logic: Active if trialEndsAt is in future
+        // If strict mode, we might want to ensure they haven't "used up" the trial, but trialEndsAt check covers expiry.
+        const trialActive = isTrial && complex.trialEndsAt && new Date(complex.trialEndsAt) > now
+
+        // Subscription logic: Valid if subscriptionEndsAt is in future
+        const subscriptionActive = !!complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
+
+        // Fallback for legacy (if subscriptionDate exists but no end date, assume active for now or migrate)
+        // STRICT MODE REQUESTED: "Expires blocks all functions". So we enforce checking.
+        // But for transition, if they paid before this update? 
+        // We will assume legacy users need to be migrated or granted a default period.
+        // For now, strict check:
+        const hasPaidSubscription = subscriptionActive
+
+        const hasAccess = complex.isActive && (hasPaidSubscription || trialActive)
 
         return NextResponse.json({
             hasAccess,
             isActive: complex.isActive,
-            trialExpired: trialExpired || false,
+            trialExpired: isTrial && !trialActive,
             trialEndsAt: complex.trialEndsAt,
-            subscriptionDate: complex.subscriptionDate
+            subscriptionDate: complex.subscriptionDate,
+            subscriptionEndsAt: complex.subscriptionEndsAt,
+            planType: complex.planType
         })
 
     } catch (e) {

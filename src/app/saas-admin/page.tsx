@@ -22,11 +22,28 @@ type Complex = {
 export default function SuperAdminDashboard() {
     const [complexes, setComplexes] = useState<Complex[]>([])
     const [loading, setLoading] = useState(true)
+    const [stats, setStats] = useState({
+        revenue: 0,
+        subscriptions: { monthly: 0, quarterly: 0, total: 0 }
+    })
     const router = useRouter()
 
     useEffect(() => {
         fetchData()
+        fetchStats()
     }, [])
+
+    const fetchStats = async () => {
+        try {
+            const res = await fetch('/api/saas/stats')
+            if (res.ok) {
+                const data = await res.json()
+                setStats(data)
+            }
+        } catch (e) {
+            console.error('Failed to fetch stats', e)
+        }
+    }
 
     const fetchData = async () => {
         try {
@@ -80,27 +97,49 @@ export default function SuperAdminDashboard() {
 
     if (loading) return <div className="text-center p-20 text-gray-500">Cargando datos del imperio...</div>
 
-    const totalRevenue = complexes.reduce((acc, c) => acc + (c.stats?.revenue || 0), 0)
+    const complexRevenue = complexes.reduce((acc, c) => acc + (c.stats?.revenue || 0), 0)
     const totalBookings = complexes.reduce((acc, c) => acc + (c.stats?.bookings || 0), 0)
 
     return (
         <div className="space-y-8 animate-fade-in">
             {/* Stats Overview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900 to-indigo-900/20">
-                    <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Ingresos Totales (Global)</div>
-                    <div className="text-4xl font-bold text-white">${totalRevenue.toLocaleString()}</div>
-                    <div className="text-indigo-400 text-sm mt-1">Todas las canchas</div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Ganancia SaaS (Real Revenue) */}
+                <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-indigo-900 to-slate-900 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <span className="text-6xl">💰</span>
+                    </div>
+                    <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Ganancia Total (SaaS)</div>
+                    <div className="text-4xl font-black text-white">${stats.revenue.toLocaleString()}</div>
+                    <div className="text-indigo-300 text-sm mt-1">Ingresos por suscripciones</div>
                 </div>
+
+                {/* Subscripciones */}
+                <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-blue-900 to-slate-900">
+                    <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Suscripciones Activas</div>
+                    <div className="text-4xl font-bold text-white mb-2">{stats.subscriptions.total}</div>
+                    <div className="flex gap-2 text-xs">
+                        <span className="px-2 py-1 bg-white/10 rounded-full text-blue-200">
+                            Mensual: <b>{stats.subscriptions.monthly}</b>
+                        </span>
+                        <span className="px-2 py-1 bg-white/10 rounded-full text-purple-200">
+                            Trimestral: <b>{stats.subscriptions.quarterly}</b>
+                        </span>
+                    </div>
+                </div>
+
+                {/* Complejos Activos */}
                 <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900 to-emerald-900/20">
                     <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Complejos Activos</div>
                     <div className="text-4xl font-bold text-white">{complexes.filter(c => c.isActive).length}</div>
                     <div className="text-emerald-400 text-sm mt-1">De {complexes.length} registrados</div>
                 </div>
+
+                {/* Reservas Totales (Platform usage) */}
                 <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900 to-amber-900/20">
-                    <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Reservas Totales</div>
+                    <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Reservas Plataforma</div>
                     <div className="text-4xl font-bold text-white">{totalBookings}</div>
-                    <div className="text-amber-400 text-sm mt-1">Procesadas en la plataforma</div>
+                    <div className="text-amber-400 text-sm mt-1">Total Complejos</div>
                 </div>
             </div>
 

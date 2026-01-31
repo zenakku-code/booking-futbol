@@ -13,12 +13,9 @@ export async function middleware(request: NextRequest) {
 
     // Protect /saas-admin routes
     if (pathname.startsWith('/saas-admin') || pathname.startsWith('/api/saas')) {
-        console.log(`[MIDDLEWARE] Protecting ${pathname}`)
         const token = request.cookies.get('auth_token')?.value
-        console.log(`[MIDDLEWARE] Token exists: ${!!token}`)
 
         if (!token) {
-            console.log(`[MIDDLEWARE] No token found, redirecting to /admin/login`)
             if (pathname.startsWith('/api/')) {
                 return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
             }
@@ -27,17 +24,14 @@ export async function middleware(request: NextRequest) {
 
         try {
             const { payload } = await jwtVerify(token, SECRET)
-            console.log(`[MIDDLEWARE] Token verified. Role: ${payload.role}`)
 
             if (payload.role !== 'SUPERADMIN') {
-                console.log(`[MIDDLEWARE] User is not SUPERADMIN, redirecting to /admin`)
                 if (pathname.startsWith('/api/')) {
                     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
                 }
                 // Redirect unauthorized users to their own dashboard
                 return NextResponse.redirect(new URL('/admin', request.url))
             }
-            console.log(`[MIDDLEWARE] Access granted to ${pathname}`)
 
             // Add user context to request headers for API routes
             const requestHeaders = new Headers(request.headers)
