@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
                 const days = payRecord.planType === 'QUARTERLY' ? 90 : 30
 
-                let newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
+                const newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
                     ? new Date(complex.subscriptionEndsAt)
                     : new Date()
 

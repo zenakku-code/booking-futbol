@@ -63,7 +63,7 @@ export async function POST(request: Request) {
         const now = new Date()
         // Calculate new expiration date
         // If already has active subscription, add to existing end date
-        let newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
+        const newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
             ? new Date(complex.subscriptionEndsAt)
             : new Date()
 
@@ -84,6 +84,9 @@ export async function POST(request: Request) {
         // Import preference from lib/mercadopago (Need to import it at top)
         const { preference } = await import('@/lib/mercadopago')
 
+        // Ensure we have a valid base URL for redirects
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000'
+
         const mpPreference = await preference.create({
             body: {
                 items: [
@@ -97,12 +100,12 @@ export async function POST(request: Request) {
                 ],
                 external_reference: paymentRecord.id, // Link to our DB record
                 back_urls: {
-                    success: `${request.headers.get('origin')}/admin/subscription?status=success`,
-                    failure: `${request.headers.get('origin')}/admin/subscription?status=failure`,
-                    pending: `${request.headers.get('origin')}/admin/subscription?status=pending`
+                    success: `${baseUrl}/admin/subscription?status=success`,
+                    failure: `${baseUrl}/admin/subscription?status=failure`,
+                    pending: `${baseUrl}/admin/subscription?status=pending`
                 },
                 auto_return: 'approved',
-                notification_url: `${process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin')}/api/webhooks/mercadopago`
+                notification_url: `${baseUrl}/api/webhooks/mercadopago`
             }
         })
 
