@@ -195,3 +195,10 @@ model ApiKey {
 
   @@index([complexId])
 }
+
+model SystemConfig {
+  id             String   @id @default(uuid())
+  monthlyPrice   Float    @default(10000)
+  quarterlyPrice Float    @default(27000)
+  updatedAt      DateTime @updatedAt
+}

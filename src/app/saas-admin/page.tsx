@@ -28,10 +28,53 @@ export default function SuperAdminDashboard() {
     })
     const router = useRouter()
 
+    // Pricing Config State
+    const [prices, setPrices] = useState({ monthly: 10000, quarterly: 27000 })
+    const [savingPrices, setSavingPrices] = useState(false)
+
     useEffect(() => {
         fetchData()
         fetchStats()
+        fetchSettings()
     }, [])
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch('/api/saas/settings')
+            if (res.ok) {
+                const data = await res.json()
+                setPrices({
+                    monthly: data.monthlyPrice || 10000,
+                    quarterly: data.quarterlyPrice || 27000
+                })
+            }
+        } catch (e) {
+            console.error('Failed to fetch settings', e)
+        }
+    }
+
+    const handleSavePrices = async () => {
+        setSavingPrices(true)
+        try {
+            const res = await fetch('/api/saas/settings', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    monthlyPrice: prices.monthly,
+                    quarterlyPrice: prices.quarterly
+                })
+            })
+            if (res.ok) {
+                alert('Precios actualizados correctamente')
+            } else {
+                alert('Error al actualizar precios')
+            }
+        } catch (e) {
+            alert('Error de conexión')
+        } finally {
+            setSavingPrices(false)
+        }
+    }
 
     const fetchStats = async () => {
         try {
@@ -135,11 +178,50 @@ export default function SuperAdminDashboard() {
                     <div className="text-emerald-400 text-sm mt-1">De {complexes.length} registrados</div>
                 </div>
 
-                {/* Reservas Totales (Platform usage) */}
-                <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900 to-amber-900/20">
-                    <div className="text-gray-400 text-xs uppercase tracking-widest font-bold mb-2">Reservas Plataforma</div>
-                    <div className="text-4xl font-bold text-white">{totalBookings}</div>
-                    <div className="text-amber-400 text-sm mt-1">Total Complejos</div>
+                {/* Configuración de Precios */}
+                <div className="glass p-6 rounded-2xl border border-white/5 bg-gradient-to-br from-slate-900 to-amber-900/10 backdrop-blur-sm">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="text-gray-400 text-xs uppercase tracking-widest font-bold">Precios de Suscripción</div>
+                        <button
+                            onClick={handleSavePrices}
+                            disabled={savingPrices}
+                            className="bg-primary/20 text-primary hover:bg-primary/30 text-xs px-3 py-1 rounded transition-colors"
+                        >
+                            {savingPrices ? 'Guardando...' : 'Guardar'}
+                        </button>
+                    </div>
+                    <div className="space-y-3">
+                        <div>
+                            <label className="text-xs text-gray-500 block mb-1">Mensual</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                <input
+                                    type="number"
+                                    value={prices.monthly}
+                                    onChange={(e) => {
+                                        const monthly = Number(e.target.value)
+                                        setPrices({
+                                            monthly,
+                                            quarterly: Math.floor((monthly * 3) * 0.9) // Auto-recommend 10% off
+                                        })
+                                    }}
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg py-1.5 pl-7 pr-3 text-white text-sm focus:border-primary focus:outline-none"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500 block mb-1">Trimestral (Recomendado: 10% off)</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                <input
+                                    type="number"
+                                    value={prices.quarterly}
+                                    onChange={(e) => setPrices({ ...prices, quarterly: Number(e.target.value) })}
+                                    className="w-full bg-black/40 border border-white/10 rounded-lg py-1.5 pl-7 pr-3 text-white text-sm focus:border-primary focus:outline-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

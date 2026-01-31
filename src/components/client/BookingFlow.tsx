@@ -78,20 +78,11 @@ export default function BookingFlow({
 
     useEffect(() => {
         // Auto-correct payment type if deposit status changes
-        if (hasDeposit) {
-            // If deposit is available, strictly prefer it unless user explicitly chose FULL or SPLIT
-            // But if we are in a "stuck" state where the button was hidden, we must force it back.
-            // Let's force DEPOSIT if it was previously FULL or INVALID
-            if (paymentType === 'FULL') {
-                setPaymentType('DEPOSIT')
-            }
-        } else {
-            // If deposit is NOT available, forbid DEPOSIT type
-            if (paymentType === 'DEPOSIT') {
-                setPaymentType('FULL')
-            }
+        if (!hasDeposit && paymentType === 'DEPOSIT') {
+            // If deposit is NO LONGER available, but was selected, switch to FULL
+            setPaymentType('FULL')
         }
-    }, [hasDeposit, paymentType, serverHasDeposit])
+    }, [hasDeposit, paymentType])
 
     // Generate valid dates (next 14 days)
     const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])

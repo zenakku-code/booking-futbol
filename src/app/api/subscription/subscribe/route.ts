@@ -11,11 +11,13 @@ export async function POST(request: Request) {
         }
 
         // Get current complex
+        // Get current complex
         const complex = await prisma.complex.findUnique({
             where: { id: session.complexId },
             select: {
                 id: true,
-                subscriptionDate: true
+                subscriptionDate: true,
+                subscriptionEndsAt: true
             }
         })
 
@@ -36,8 +38,23 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Plan inválido' }, { status: 400 })
         }
 
-        // Pricing logic (can be moved to config)
-        const amount = planType === 'QUARTERLY' ? 27000 : 10000
+        // Pricing logic - Fetch from SystemConfig
+        let monthlyPrice = 10000
+        let quarterlyPrice = 27000
+
+        try {
+            const config = await prisma.systemConfig.findFirst({
+                orderBy: { updatedAt: 'desc' }
+            })
+            if (config) {
+                monthlyPrice = config.monthlyPrice
+                quarterlyPrice = config.quarterlyPrice
+            }
+        } catch (e) {
+            console.error('Failed to fetch pricing config, using defaults', e)
+        }
+
+        const amount = planType === 'QUARTERLY' ? quarterlyPrice : monthlyPrice
         const days = planType === 'QUARTERLY' ? 90 : 30
 
         const now = new Date()
@@ -49,40 +66,59 @@ export async function POST(request: Request) {
 
         newEndsAt.setDate(newEndsAt.getDate() + days)
 
-        // 1. Create Payment Record
-        const payment = await prisma.subscriptionPayment.create({
+        // 1. Create Pending Payment Record
+        const paymentRecord = await prisma.subscriptionPayment.create({
             data: {
                 complexId: session.complexId,
                 amount: amount,
                 planType: planType,
-                status: 'approved', // Auto-approve for now (MVP)
-                externalId: `manual_${Date.now()}`
+                status: 'pending', // Pending payment
+                externalId: null // Will update with MP Preference ID? Or just link via external_reference
             }
         })
 
-        // 2. Update Complex
-        await prisma.complex.update({
-            where: { id: session.complexId },
-            data: {
-                subscriptionActive: true,
-                subscriptionDate: complex.subscriptionDate || new Date(), // Keep original date if exists
-                subscriptionEndsAt: newEndsAt,
-                planType: planType,
-                trialEndsAt: null // Remove trial limitation
+        // 2. Create MP Preference
+        // Import preference from lib/mercadopago (Need to import it at top)
+        const { preference } = await import('@/lib/mercadopago')
+
+        const mpPreference = await preference.create({
+            body: {
+                items: [
+                    {
+                        id: planType,
+                        title: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} - Booking Futbol`,
+                        quantity: 1,
+                        unit_price: amount,
+                        currency_id: 'ARS'
+                    }
+                ],
+                external_reference: paymentRecord.id, // Link to our DB record
+                back_urls: {
+                    success: `${request.headers.get('origin')}/admin/subscription?status=success`,
+                    failure: `${request.headers.get('origin')}/admin/subscription?status=failure`,
+                    pending: `${request.headers.get('origin')}/admin/subscription?status=pending`
+                },
+                auto_return: 'approved',
+                notification_url: `${process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin')}/api/webhooks/mercadopago`
             }
+        })
+
+        // Update record with preference ID (optional, or just rely on external_reference)
+        await prisma.subscriptionPayment.update({
+            where: { id: paymentRecord.id },
+            data: { externalId: mpPreference.id }
         })
 
         return NextResponse.json({
             success: true,
-            message: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} activada`,
-            subscriptionEndsAt: newEndsAt,
-            planType: planType
+            init_point: mpPreference.init_point, // Redirect URL
+            sandbox_init_point: mpPreference.sandbox_init_point
         })
 
     } catch (error) {
         console.error('Subscription error:', error)
         return NextResponse.json({
-            error: 'Error al activar la suscripción',
+            error: 'Error al generar el pago',
             details: error instanceof Error ? error.message : String(error)
         }, { status: 500 })
     }

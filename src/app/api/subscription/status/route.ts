@@ -1,3 +1,4 @@
+
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -29,18 +30,11 @@ export async function GET() {
         const now = new Date()
         const isTrial = !!complex.trialEndsAt
 
-        // Trial logic: Active if trialEndsAt is in future
-        // If strict mode, we might want to ensure they haven't "used up" the trial, but trialEndsAt check covers expiry.
+        // Trial logic
         const trialActive = isTrial && complex.trialEndsAt && new Date(complex.trialEndsAt) > now
 
-        // Subscription logic: Valid if subscriptionEndsAt is in future
+        // Subscription logic
         const subscriptionActive = !!complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
-
-        // Fallback for legacy (if subscriptionDate exists but no end date, assume active for now or migrate)
-        // STRICT MODE REQUESTED: "Expires blocks all functions". So we enforce checking.
-        // But for transition, if they paid before this update? 
-        // We will assume legacy users need to be migrated or granted a default period.
-        // For now, strict check:
         const hasPaidSubscription = subscriptionActive
 
         const hasAccess = complex.isActive && (hasPaidSubscription || trialActive)

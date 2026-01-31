@@ -1,130 +1,90 @@
+
 import { NextResponse } from 'next/server'
+import { payment } from '@/lib/mercadopago'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: Request) {
     try {
         const url = new URL(request.url)
-        console.log(`Webhook received at: ${url.toString()}`)
+        console.log('[WEBHOOK] Received MP notification')
 
-        // Params de URL
-        const complexId = url.searchParams.get('complexId')
-        const topic = url.searchParams.get('topic') || url.searchParams.get('type')
+        // MP sends notification details in query params or body depending on version
+        // Usually topic=payment&id=123 or type=payment&data.id=123
+        const searchParams = url.searchParams
+        const type = searchParams.get('type') || (await request.json()).type
 
-        // Body (MP manda JSON)
-        const body = await request.json().catch(() => ({}))
-        console.log('Webhook Payload:', JSON.stringify(body, null, 2))
-
-        const notificationType = body?.type || topic || body?.topic
-
-        // MP sometimes sends 'data.id' or jus 'id' in resource
-        const mpPaymentId = body?.data?.id || body?.id
-
-        // Si no es un payment, ignoramos (ej: subscription notification, test)
-        if (notificationType !== 'payment') {
-            console.log(`Ignored type: ${notificationType}`)
-            return NextResponse.json({ status: 'ignored' })
+        let paymentId = searchParams.get('data.id')
+        if (!paymentId) {
+            // Try body
+            const body = await request.clone().json().catch(() => ({}))
+            paymentId = body.data?.id
         }
 
-        if (!mpPaymentId || !complexId) {
-            console.error('Missing payment data or complexId')
-            return NextResponse.json({ error: 'Missing data' }, { status: 400 })
-        }
+        console.log(`[WEBHOOK] Type: ${type}, ID: ${paymentId}`)
 
-        // 1. Obtener credenciales del complejo para validar
-        const account = await prisma.account.findFirst({
-            where: { complexId: complexId } as any
-        })
+        if (type === 'payment' && paymentId) {
+            // Fetch payment status from MP
+            const paymentData = await payment.get({ id: paymentId })
 
-        if (!account?.accessToken) {
-            console.error(`No credentials for complex ${complexId}`)
-            return NextResponse.json({ error: 'Complex credentials not found' }, { status: 500 })
-        }
+            console.log(`[WEBHOOK] Payment Status: ${paymentData.status} | External ref: ${paymentData.external_reference}`)
 
-        // 2. Verificar estado real en MP (Anti-Fraude)
-        const mpRes = await fetch(`https://api.mercadopago.com/v1/payments/${mpPaymentId}`, {
-            headers: {
-                'Authorization': `Bearer ${account.accessToken}`
-            }
-        })
+            if (paymentData.status === 'approved') {
+                const subscriptionPaymentId = paymentData.external_reference
 
-        if (!mpRes.ok) {
-            console.error('Error fetching payment from MP', await mpRes.text())
-            // Puede ser que el ID sea inválido o el token expiró.
-            return NextResponse.json({ error: 'MP API Error' }, { status: 502 })
-        }
-
-        const paymentData = await mpRes.json()
-        const status = paymentData.status // approved, rejected, pending, in_process
-        console.log(`Payment ${mpPaymentId} status is: ${status}`)
-
-        // 3. Buscar referencia interna
-        // Usamos external_reference como link directo a nuestro Payment ID
-        const internalPaymentId = paymentData.external_reference || paymentData.metadata?.payment_id
-
-        if (!internalPaymentId) {
-            console.warn('Payment without internal reference', mpPaymentId)
-            // Si no tiene referencia nuestra, no podemos asociarlo.
-            return NextResponse.json({ status: 'ok', msg: 'No internal reference' })
-        }
-
-        // 4. Actualizar Payment en DB local
-        const updatedPayment = await (prisma as any).payment.update({
-            where: { id: internalPaymentId },
-            data: {
-                status: status
-            }
-        })
-        console.log(`Updated internal payment ${internalPaymentId} to ${status}`)
-
-        // 5. Verificar si la reserva se completa (Booking Logic)
-        if (status === 'approved') {
-            const bookingId = updatedPayment.bookingId
-
-            const booking = await prisma.booking.findUnique({
-                where: { id: bookingId },
-                include: {
-                    payments: true,
-                    field: { include: { complex: true } }
-                } as any
-            })
-
-            if (booking) {
-                const payments = (booking as any).payments
-                // Sumar todos los pagos aprobados
-                const totalPaid = payments
-                    .filter((p: any) => p.status === 'approved')
-                    .reduce((sum: number, p: any) => sum + p.amount, 0)
-
-                // Sumar pagos legacy/manuales
-                const grandTotal = totalPaid + ((booking.paidAmount as number) || 0)
-                const remaining = (booking.totalPrice as number) - grandTotal
-
-                const complex = (booking.field as any).complex
-
-                // LOGICA DE CONFIRMACIÓN
-                // 1. Pago Total (o casi total)
-                if (remaining <= 10) {
-                    await prisma.booking.update({
-                        where: { id: bookingId },
-                        data: { status: 'confirmed' }
-                    })
-                    console.log(`Booking ${bookingId} FULLY PAID and CONFIRMED via Webhook! 🐄✅`)
+                if (!subscriptionPaymentId) {
+                    console.error('[WEBHOOK] Missing external_reference')
+                    return NextResponse.json({ status: 'ok' })
                 }
-                // 2. Pago de Seña (Si está habilitada y se alcanzó el monto)
-                else if (complex?.downPaymentEnabled && grandTotal >= complex.downPaymentFixed) {
-                    await prisma.booking.update({
-                        where: { id: bookingId },
-                        data: { status: 'confirmed' } // Confirmamos porque ya pagó lo mínimo requerido
-                    })
-                    console.log(`Booking ${bookingId} CONFIRMED via SEÑA (Deposit reached)! 💰✅`)
-                }
+
+                // 1. Update Payment Record
+                const payRecord = await prisma.subscriptionPayment.update({
+                    where: { id: subscriptionPaymentId },
+                    data: {
+                        status: 'approved',
+                        externalId: String(paymentData.id)
+                    },
+                    include: { complex: true }
+                })
+
+                // Avoid double processing
+                // We check if we already updated the complex expectation? 
+                // Better to just update it idempotently.
+
+                const complex = payRecord.complex
+                const now = new Date()
+
+                // Calculate new end date based on Plan Type
+                // This logic duplicates logic in subscribe endpoint somewhat, 
+                // but crucially we deferred the complex update to HERE.
+
+                const days = payRecord.planType === 'QUARTERLY' ? 90 : 30
+
+                let newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
+                    ? new Date(complex.subscriptionEndsAt)
+                    : new Date()
+
+                newEndsAt.setDate(newEndsAt.getDate() + days)
+
+                // 2. Activate Subscription
+                await prisma.complex.update({
+                    where: { id: complex.id },
+                    data: {
+                        subscriptionActive: true,
+                        subscriptionDate: complex.subscriptionDate || new Date(),
+                        subscriptionEndsAt: newEndsAt,
+                        planType: payRecord.planType,
+                        trialEndsAt: null
+                    }
+                })
+
+                console.log(`[WEBHOOK] Activated subscription for complex ${complex.id}`)
             }
         }
 
         return NextResponse.json({ status: 'ok' })
 
     } catch (error) {
-        console.error('Webhook Critical Error:', error)
+        console.error('[WEBHOOK] Error:', error)
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
     }
 }

@@ -20,13 +20,31 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
     const [actionLoading, setActionLoading] = useState(false)
     const [error, setError] = useState('')
 
+    const [prices, setPrices] = useState({ monthly: 10000, quarterly: 27000 })
+
     useEffect(() => {
         fetchStatus()
+        fetchPrices()
     }, [])
+
+    const fetchPrices = async () => {
+        try {
+            const res = await fetch('/api/saas/settings')
+            if (res.ok) {
+                const data = await res.json()
+                setPrices({
+                    monthly: data.monthlyPrice || 10000,
+                    quarterly: data.quarterlyPrice || 27000
+                })
+            }
+        } catch (e) {
+            console.error('Failed to fetch prices', e)
+        }
+    }
 
     const fetchStatus = async () => {
         try {
-            const res = await fetch('/api/saas/status')
+            const res = await fetch('/api/subscription/status')
 
             if (res.ok) {
                 const data = await res.json()
@@ -80,15 +98,15 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
 
             const data = await res.json()
 
-            if (res.ok) {
-                router.refresh()
-                fetchStatus()
+            if (res.ok && data.init_point) {
+                // Redirect to MercadoPago
+                window.location.href = data.init_point
             } else {
-                setError(data.error || 'Error al activar la suscripción')
+                setError(data.error || 'Error al iniciar el pago')
+                setActionLoading(false) // Only stop loading if we didn't redirect
             }
         } catch (e) {
             setError('Error de conexión')
-        } finally {
             setActionLoading(false)
         }
     }
@@ -100,19 +118,15 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
     const now = new Date()
     const trialExpired = trialEndsAt ? new Date(trialEndsAt) < now : false
     const isOnTrial = trialEndsAt && !trialExpired
-
-    // Valid subscription if endsAt is in future OR (legacy) subscriptionDate exists but no endsAt logic yet (assume migrated users have infinite or strict?)
-    // Requirement says "block all functions if ends". So strictly check end date.
-    // However, if we just migrated legacy users, they might be blocked.
-    // For this MVP, we rely on subscriptionEndsAt.
     const hasActiveSubscription = !!subscriptionEndsAt && new Date(subscriptionEndsAt) > now
-
     const needsActivation = !trialEndsAt && !hasActiveSubscription
-    const showPricing = !hasActiveSubscription // Show pricing if trial or expired
+    const showPricing = !hasActiveSubscription
 
     const daysRemaining = trialEndsAt
         ? Math.max(0, Math.ceil((new Date(trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))
         : null
+
+    const monthlySavings = (prices.monthly * 3) - prices.quarterly
 
     return (
         <div className="space-y-8 animate-fade-in pb-20">
@@ -132,7 +146,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Estado del Software */}
+                {/* State Card */}
                 <div className="lg:col-span-2 glass-card p-8 border-2 border-primary/20">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="p-3 bg-primary/20 rounded-xl">
@@ -194,9 +208,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
 
                 {!loading && (
                     <>
-                        {/* Trial Activation - Only if NEVER used before */}
-                        {/* We check if trialEndsAt is completely null. If it has a date (even past), it was used. */}
-                        {/* Backend sends trialEndsAt: null only if never touched. */}
+                        {/* Trial Activation */}
                         {!trialEndsAt && needsActivation && (
                             <div className="lg:col-span-2 glass-card p-8 border-2 border-blue-500/20 bg-blue-500/5">
                                 <div className="flex flex-col md:flex-row items-center gap-6">
@@ -230,7 +242,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                                     <div className="relative z-10 flex flex-col h-full">
                                         <h3 className="text-lg font-medium text-gray-400 uppercase tracking-wider mb-2">Mensual</h3>
                                         <div className="flex items-baseline gap-1 mb-6">
-                                            <span className="text-4xl font-black text-white">$10.000</span>
+                                            <span className="text-4xl font-black text-white">${prices.monthly.toLocaleString()}</span>
                                             <span className="text-gray-500">/mes</span>
                                         </div>
 
@@ -259,12 +271,12 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                                 {/* Quarterly Plan - Featured */}
                                 <div className="glass-card p-8 border-2 border-primary/50 relative overflow-hidden shadow-lg shadow-primary/10">
                                     <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl z-20">
-                                        AHORRA 10%
+                                        AHORRA {(monthlySavings / (prices.monthly * 3) * 100).toFixed(0)}%
                                     </div>
                                     <div className="relative z-10 flex flex-col h-full">
                                         <h3 className="text-lg font-medium text-primary uppercase tracking-wider mb-2">Trimestral</h3>
                                         <div className="flex items-baseline gap-1 mb-6">
-                                            <span className="text-4xl font-black text-white">$27.000</span>
+                                            <span className="text-4xl font-black text-white">${prices.quarterly.toLocaleString()}</span>
                                             <span className="text-gray-500">/3 meses</span>
                                         </div>
 
@@ -273,7 +285,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                                                 <span className="text-green-400">✓</span> Todo lo del plan mensual
                                             </li>
                                             <li className="flex items-center gap-3 text-sm text-gray-300">
-                                                <span className="text-green-400">✓</span> <span className="text-white font-bold">Ahorras $3.000</span>
+                                                <span className="text-green-400">✓</span> <span className="text-white font-bold">Ahorras ${monthlySavings.toLocaleString()}</span>
                                             </li>
                                             <li className="flex items-center gap-3 text-sm text-gray-300">
                                                 <span className="text-green-400">✓</span> Insignia de Club Verificado

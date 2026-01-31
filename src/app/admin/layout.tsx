@@ -27,6 +27,8 @@ export default function AdminLayout({
         }
     }
 
+    const [hasAccess, setHasAccess] = useState(true)
+
     useEffect(() => {
         fetch('/api/auth/me')
             .then(res => res.json())
@@ -39,29 +41,21 @@ export default function AdminLayout({
                 }
             })
             .catch(err => console.error('Failed to fetch role', err))
+
+        // Check subscription access for UI blocking
+        const checkAccess = async () => {
+            try {
+                const res = await fetch('/api/subscription/status')
+                const data = await res.json()
+                // Default to true if api fails to avoid accidental lockout, unless explicit false
+                setHasAccess(data.hasAccess !== false)
+            } catch (e) {
+                console.error('Failed to check access', e)
+            }
+        }
+        checkAccess()
     }, [])
 
-    // OPTIONAL: Subscription enforcement (currently disabled)
-    // Uncomment this block if you want to FORCE users to activate trial or subscribe
-    /*
-    useEffect(() => {
-        const currentPath = window.location.pathname
-        const isSubscriptionPage = currentPath === '/admin/subscription'
-
-        // Don't check on login or subscription pages
-        if (isLoginPage || isSubscriptionPage) return
-
-        fetch('/api/saas/status')
-            .then(res => res.json())
-            .then(data => {
-                if (!data.hasAccess) {
-                    console.log('No access - redirecting to subscription page')
-                    router.push('/admin/subscription')
-                }
-            })
-            .catch(err => console.error('Failed to fetch subscription status', err))
-    }, [isLoginPage, router])
-    */
 
     if (isLoginPage) {
         return <>{children}</>
@@ -111,15 +105,27 @@ export default function AdminLayout({
                             </NavLink>
                         </div>
                     )}
-                    <NavLink href="/admin" icon="📊" onClick={() => setSidebarOpen(false)}>Dashboard</NavLink>
-                    <NavLink href="/admin/bookings" icon="📅" onClick={() => setSidebarOpen(false)}>Reservas</NavLink>
-                    <NavLink href="/admin/reports" icon="📈" onClick={() => setSidebarOpen(false)}>Reportes</NavLink>
-                    <NavLink href="/admin/fields" icon="🏟️" onClick={() => setSidebarOpen(false)}>Canchas</NavLink>
-                    <NavLink href="/admin/inventory" icon="🎒" onClick={() => setSidebarOpen(false)}>Inventario</NavLink>
-                    <NavLink href="/admin/settings" icon="⚙️" onClick={() => setSidebarOpen(false)}>Configuración</NavLink>
 
-                    {/* Subscription Section */}
-                    <div className="mt-2 pt-2 border-t border-white/5">
+                    {/* Main Navigation - Conditional Access */}
+                    <div className={`space-y-2 transition-opacity duration-300 ${!hasAccess ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
+                        <NavLink href="/admin" icon="📊" onClick={() => setSidebarOpen(false)}>Dashboard</NavLink>
+                        <NavLink href="/admin/bookings" icon="📅" onClick={() => setSidebarOpen(false)}>Reservas</NavLink>
+                        <NavLink href="/admin/reports" icon="📈" onClick={() => setSidebarOpen(false)}>Reportes</NavLink>
+                        <NavLink href="/admin/fields" icon="🏟️" onClick={() => setSidebarOpen(false)}>Canchas</NavLink>
+                        <NavLink href="/admin/inventory" icon="🎒" onClick={() => setSidebarOpen(false)}>Inventario</NavLink>
+                        <NavLink href="/admin/settings" icon="⚙️" onClick={() => setSidebarOpen(false)}>Configuración</NavLink>
+                    </div>
+
+                    {!hasAccess && (
+                        <div className="mt-2 px-4 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-center relative">
+                            <span className="absolute right-2 top-2 w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
+                            <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">ACCESO RESTRINGIDO</p>
+                            <p className="text-[10px] text-gray-400">Tu suscripción ha vencido. Renueva para gestionar tu complejo.</p>
+                        </div>
+                    )}
+
+                    {/* Subscription Section - ALWAYS ACTIVE */}
+                    <div className="mt-2 pt-2 border-t border-white/5 relative">
                         <NavLink href="/admin/subscription" icon="💳" onClick={() => setSidebarOpen(false)}>
                             <span className="text-primary font-semibold">Suscripción</span>
                         </NavLink>
@@ -150,7 +156,7 @@ export default function AdminLayout({
                     {children}
                 </div>
             </main>
-        </div>
+        </div >
     )
 }
 
