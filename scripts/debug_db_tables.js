@@ -14,6 +14,14 @@ async function main() {
 
         console.log('📂 Tables found:', tables);
 
+        if (tables.includes('Complex')) {
+            console.log('✅ Complex table EXISTS! (Connected to Production)');
+            const count = await client.execute("SELECT count(*) as c FROM Complex");
+            console.log('   Complex Count:', count.rows[0]);
+        } else {
+            console.error('❌ Complex table MISSING! (Connected to EMPTY/WRONG DB)');
+        }
+
         if (tables.includes('SystemConfig')) {
             console.log('✅ SystemConfig table EXISTS!');
 

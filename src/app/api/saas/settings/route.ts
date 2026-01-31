@@ -4,25 +4,20 @@ import { getSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
 // GET: Fetch current prices
+export const dynamic = 'force-dynamic'
 export async function GET() {
     try {
         const session = await getSession()
-        // Allow Super Admin AND regular users (to display prices in subscription cards)
-        // But maybe restrictive? No, subscription page needs to see global prices.
-        // Actually, for SaaS Settings (Admin Panel), strict check.
-        // For public prices, maybe a separate logic or allow all authenticated.
-        // Let's allow all authenticated for GET, but restrict validation in PUT.
 
         if (!session) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
         const config = await prisma.systemConfig.findFirst({
-            orderBy: { updatedAt: 'desc' } // Should only be one, but just in case
+            orderBy: { updatedAt: 'desc' }
         })
 
         if (!config) {
-            // Fallback if DB empty (though migration should have handled it)
             return NextResponse.json({
                 monthlyPrice: 10000,
                 quarterlyPrice: 27000
@@ -36,7 +31,7 @@ export async function GET() {
         })
 
     } catch (e) {
-        return NextResponse.json({ error: 'Database error' }, { status: 500 })
+        return NextResponse.json({ error: 'Database error', details: String(e) }, { status: 500 })
     }
 }
 

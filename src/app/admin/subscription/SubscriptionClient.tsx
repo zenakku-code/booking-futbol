@@ -29,7 +29,8 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
 
     const fetchPrices = async () => {
         try {
-            const res = await fetch('/api/saas/settings')
+            const res = await fetch('/api/saas/settings', { cache: 'no-store' })
+
             if (res.ok) {
                 const data = await res.json()
                 setPrices({

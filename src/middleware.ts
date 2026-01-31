@@ -26,11 +26,15 @@ export async function middleware(request: NextRequest) {
             const { payload } = await jwtVerify(token, SECRET)
 
             if (payload.role !== 'SUPERADMIN') {
-                if (pathname.startsWith('/api/')) {
+                // Allow GET /api/saas/settings for everyone (pricing fetch)
+                if (pathname === '/api/saas/settings' && request.method === 'GET') {
+                    // Allow
+                } else if (pathname.startsWith('/api/')) {
                     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+                } else {
+                    // Redirect unauthorized users to their own dashboard
+                    return NextResponse.redirect(new URL('/admin', request.url))
                 }
-                // Redirect unauthorized users to their own dashboard
-                return NextResponse.redirect(new URL('/admin', request.url))
             }
 
             // Add user context to request headers for API routes
