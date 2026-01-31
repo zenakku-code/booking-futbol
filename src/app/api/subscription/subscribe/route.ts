@@ -87,27 +87,31 @@ export async function POST(request: Request) {
         // Ensure we have a valid base URL for redirects
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get('origin') || 'http://localhost:3000'
 
-        const mpPreference = await preference.create({
-            body: {
-                items: [
-                    {
-                        id: planType,
-                        title: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} - Booking Futbol`,
-                        quantity: 1,
-                        unit_price: amount,
-                        currency_id: 'ARS'
-                    }
-                ],
-                external_reference: paymentRecord.id, // Link to our DB record
-                back_urls: {
-                    success: `${baseUrl}/admin/subscription?status=success`,
-                    failure: `${baseUrl}/admin/subscription?status=failure`,
-                    pending: `${baseUrl}/admin/subscription?status=pending`
-                },
-                auto_return: 'approved',
-                notification_url: `${baseUrl}/api/webhooks/mercadopago`
-            }
-        })
+        console.log('[SUBSCRIBE] BaseURL resolved to:', baseUrl)
+
+        const preferenceBody = {
+            items: [
+                {
+                    id: planType,
+                    title: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} - Booking Futbol`,
+                    quantity: 1,
+                    unit_price: amount,
+                    currency_id: 'ARS'
+                }
+            ],
+            external_reference: paymentRecord.id, // Link to our DB record
+            back_urls: {
+                success: `${baseUrl}/admin/subscription?status=success`,
+                failure: `${baseUrl}/admin/subscription?status=failure`,
+                pending: `${baseUrl}/admin/subscription?status=pending`
+            },
+            auto_return: 'approved',
+            notification_url: `${baseUrl}/api/webhooks/mercadopago`
+        }
+
+        console.log('[SUBSCRIBE] Creating preference with back_urls:', preferenceBody.back_urls)
+
+        const mpPreference = await preference.create({ body: preferenceBody })
 
         // Update record with preference ID (optional, or just rely on external_reference)
         await prisma.subscriptionPayment.update({

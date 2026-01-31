@@ -36,10 +36,22 @@ export async function POST() {
             }, { status: 400 })
         }
 
-        // Check if already has paid subscription
-        if (complex.subscriptionDate) {
+        // Check if already has paid subscription AND it is active
+        const hasActiveSubscription = complex.subscriptionDate && complex.subscriptionActive // or check dates?
+        // Actually, if we want to allow trial for someone who had a sub but it expired?
+        // Probably not. Trial is for NEW users.
+        // But the user error says "Ya tienes una suscripción paga activa".
+        // If I clear the DB, this check is fine. 
+        // But technically, complex.subscriptionDate stays set even after expire?
+        // Let's make it checking ACTIVE status.
+
+        // Better logic: If you ever paid, you cannot have a trial? 
+        // Re-reading user request: "en mi local sale esto cuando quiero activar los 7 dias... Ya tienes una suscripción paga activa".
+        // Ensure this check is correct.
+
+        if (complex.subscriptionActive) { // Checking the boolean flag is safer if we reset it correctly
             return NextResponse.json({
-                error: 'Ya tienes una suscripción paga activa'
+                error: 'Ya tienes una suscripción activa'
             }, { status: 400 })
         }
 

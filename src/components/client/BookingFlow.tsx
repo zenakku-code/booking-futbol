@@ -231,7 +231,7 @@ export default function BookingFlow({
     const depositAmount = field.complex?.downPaymentFixed || 0
 
     return (
-        <div className="glass-card w-full p-4 sm:p-6 md:p-8 max-w-2xl mx-auto transform transition-all duration-500 relative bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 shadow-2xl">
+        <div className="glass-card w-full p-4 sm:p-6 md:p-8 max-w-2xl mx-auto transform transition-all duration-500 relative bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
             {/* Background Glows */}
             <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
             <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>

@@ -202,7 +202,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
 
                 {/* Loading State */}
                 {loading && (
-                    <div className="lg:col-span-2 glass-card p-12 text-center text-white">
+                    <div className="lg:col-span-2 glass-card p-6 md:p-12 text-center text-white">
                         Cargando opciones...
                     </div>
                 )}
@@ -211,7 +211,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                     <>
                         {/* Trial Activation */}
                         {!trialEndsAt && needsActivation && (
-                            <div className="lg:col-span-2 glass-card p-8 border-2 border-blue-500/20 bg-blue-500/5">
+                            <div className="lg:col-span-2 glass-card p-6 md:p-8 border-2 border-blue-500/20 bg-blue-500/5">
                                 <div className="flex flex-col md:flex-row items-center gap-6">
                                     <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center flex-shrink-0">
                                         <span className="text-3xl">🎁</span>

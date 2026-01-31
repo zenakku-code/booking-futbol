@@ -10,7 +10,7 @@ export default async function HomePage() {
     })
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white selection:bg-primary/30">
+        <div className="min-h-screen bg-slate-950 text-white selection:bg-primary/30 overflow-x-hidden">
             {/* Hero Section - SaaS Landing */}
             <div className="relative overflow-hidden pt-20 pb-32">
                 <Image
@@ -31,26 +31,26 @@ export default async function HomePage() {
                         <span className="text-gray-400 text-sm">Plataforma Multi-complejo ya disponible</span>
                     </div>
 
-                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter mb-8 leading-tight">
+                    <h1 className="text-4xl xs:text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1.1]">
                         Gestiona tu complejo <br />
                         <span className="text-gradient italic">como un profesional.</span>
                     </h1>
 
-                    <p className="text-xl md:text-2xl text-gray-400 max-w-2xl mx-auto mb-12">
+                    <p className="text-lg md:text-2xl text-gray-400 max-w-2xl mx-auto mb-12 px-4">
                         La plataforma definitiva para reservas de canchas.
                         Digitaliza tu negocio y aumenta tus ingresos hoy.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mt-8 pb-10">
-                        <div className="relative">
-                            <Link href="/register" className="btn btn-primary px-12 py-5 text-xl font-black rounded-2xl shadow-[0_20px_40px_-15px_rgba(74,222,128,0.5)] block">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-8 pb-10 w-full px-4 sm:px-0">
+                        <div className="relative w-full sm:w-auto">
+                            <Link href="/register" className="btn btn-primary w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-black rounded-2xl shadow-[0_20px_40px_-15px_rgba(74,222,128,0.5)] block text-center">
                                 Registrar mi Complejo
                             </Link>
                             <span className="absolute -bottom-8 left-0 w-full text-center text-gray-500 text-xs font-medium whitespace-nowrap">
                                 Software Fee: <span className="text-white font-bold">$15.000 ARS</span> (pago único)
                             </span>
                         </div>
-                        <Link href="#explorar" className="px-12 py-5 text-xl font-bold border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-gray-300">
+                        <Link href="#explorar" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-gray-300 text-center">
                             Explorar Canchas
                         </Link>
                     </div>
