@@ -26,9 +26,12 @@ export async function POST(request: Request) {
         }
 
         // Check if already subscribed
-        if (complex.subscriptionDate) {
+        // Check if already subscribed AND active
+        const hasActiveSubscription = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > new Date()
+
+        if (hasActiveSubscription) {
             return NextResponse.json({
-                error: 'Ya tienes una suscripción activa'
+                error: 'Ya tienes una suscripción activa. Espera a que venza para renovar.'
             }, { status: 400 })
         }
 
