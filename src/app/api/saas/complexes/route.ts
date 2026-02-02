@@ -107,22 +107,37 @@ export async function PATCH(request: Request) {
                 break
             case 'DELETE_COMPLEX':
                 await prisma.$transaction(async (tx) => {
-                    // 1. Delete Users
-                    await tx.user.deleteMany({ where: { complexId } })
+                    // 1. Delete Dependencies first (Leaf nodes in dependency graph)
+                    await tx.apiKey.deleteMany({ where: { complexId } })
 
-                    // 2. Delete fields (and bookings via manual check if no cascade)
+                    await tx.subscriptionPayment.deleteMany({ where: { complexId } })
+
+                    // 2. Clear Bookings (Critical for Inventory/Fields)
+                    // First get all fields to find bookings
                     const fields = await tx.field.findMany({ where: { complexId }, select: { id: true } })
                     const fieldIds = fields.map(f => f.id)
 
                     if (fieldIds.length > 0) {
+                        // Delete Bookings -> Cascades to BookingItems and Payments (if configured in schema)
+                        // Schema says: Booking -> Payment (Cascade), Booking -> BookingItem (Cascade)
                         await tx.booking.deleteMany({ where: { fieldId: { in: fieldIds } } })
+                    }
+
+                    // 3. Now safe to delete Inventory items (BookingItems are gone)
+                    await tx.inventoryItem.deleteMany({ where: { complexId } })
+
+                    // 4. Delete Fields
+                    if (fieldIds.length > 0) {
                         await tx.field.deleteMany({ where: { complexId } })
                     }
 
-                    // 3. Delete Accounts and other related tables if any
+                    // 5. Delete Accounts
                     await tx.account.deleteMany({ where: { complexId } })
 
-                    // 4. Delete Complex
+                    // 6. Delete Users
+                    await tx.user.deleteMany({ where: { complexId } })
+
+                    // 7. Finally, Delete Complex
                     await tx.complex.delete({ where: { id: complexId } })
                 })
                 return NextResponse.json({ success: true, deleted: true })
