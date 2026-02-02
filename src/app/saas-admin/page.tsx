@@ -29,7 +29,7 @@ export default function SuperAdminDashboard() {
     const router = useRouter()
 
     // Pricing Config State
-    const [prices, setPrices] = useState({ monthly: 10000, quarterly: 27000 })
+    const [prices, setPrices] = useState<{ monthly: number | string, quarterly: number | string }>({ monthly: 10000, quarterly: 27000 })
     const [savingPrices, setSavingPrices] = useState(false)
 
     useEffect(() => {
@@ -60,8 +60,8 @@ export default function SuperAdminDashboard() {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    monthlyPrice: prices.monthly,
-                    quarterlyPrice: prices.quarterly
+                    monthlyPrice: Number(prices.monthly) || 0,
+                    quarterlyPrice: Number(prices.quarterly) || 0
                 })
             })
             if (res.ok) {
@@ -198,7 +198,14 @@ export default function SuperAdminDashboard() {
                                 <input
                                     type="number"
                                     value={prices.monthly}
-                                    onChange={e => setPrices({ ...prices, monthly: parseFloat(e.target.value) || 0 })}
+                                    onChange={e => {
+                                        const val = e.target.value
+                                        const num = parseFloat(val)
+                                        setPrices({
+                                            monthly: val === '' ? '' : num,
+                                            quarterly: val === '' ? '' : num * 3
+                                        })
+                                    }}
                                     className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:border-primary outline-none transition-all"
                                 />
                             </div>
@@ -210,9 +217,28 @@ export default function SuperAdminDashboard() {
                                 <input
                                     type="number"
                                     value={prices.quarterly}
-                                    onChange={e => setPrices({ ...prices, quarterly: parseFloat(e.target.value) || 0 })}
+                                    onChange={e => setPrices({ ...prices, quarterly: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                                     className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:border-primary outline-none transition-all"
                                 />
+                                <div className="flex gap-2 mt-2 justify-end">
+                                    {[10, 20, 30].map(percent => (
+                                        <button
+                                            key={percent}
+                                            onClick={() => {
+                                                const monthly = Number(prices.monthly) || 0
+                                                if (monthly > 0) {
+                                                    const total = monthly * 3
+                                                    const discounted = total * (1 - percent / 100)
+                                                    setPrices(prev => ({ ...prev, quarterly: Math.round(discounted) }))
+                                                }
+                                            }}
+                                            className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                                            title={`Aplicar ${percent}% de descuento sobre el total (Mensual x 3)`}
+                                        >
+                                            -{percent}%
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
