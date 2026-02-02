@@ -11,6 +11,16 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
         }
 
+        // 0. Rate Limit (Global protection for registry)
+        const { headers } = await import('next/headers')
+        const { rateLimit } = await import('@/lib/rate-limit')
+        const headersList = await headers()
+        const ip = headersList.get('x-forwarded-for') || 'unknown'
+
+        if (!rateLimit(ip, 3, 3600000)) { // 3 attempts per hour per IP
+            return NextResponse.json({ error: 'Too many registration attempts. Try again later.' }, { status: 429 })
+        }
+
         // 1. Generate Slug
         const slug = complexName
             .toLowerCase()

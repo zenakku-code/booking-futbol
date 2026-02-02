@@ -192,32 +192,26 @@ export default function SuperAdminDashboard() {
                     </div>
                     <div className="space-y-3">
                         <div>
-                            <label className="text-xs text-gray-500 block mb-1">Mensual</label>
+                            <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Plan Mensual</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                                 <input
                                     type="number"
                                     value={prices.monthly}
-                                    onChange={(e) => {
-                                        const monthly = Number(e.target.value)
-                                        setPrices({
-                                            monthly,
-                                            quarterly: Math.floor((monthly * 3) * 0.9) // Auto-recommend 10% off
-                                        })
-                                    }}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg py-1.5 pl-7 pr-3 text-white text-sm focus:border-primary focus:outline-none"
+                                    onChange={e => setPrices({ ...prices, monthly: parseFloat(e.target.value) || 0 })}
+                                    className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:border-primary outline-none transition-all"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="text-xs text-gray-500 block mb-1">Trimestral (Recomendado: 10% off)</label>
+                            <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Plan Trimestral</label>
                             <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                                 <input
                                     type="number"
                                     value={prices.quarterly}
-                                    onChange={(e) => setPrices({ ...prices, quarterly: Number(e.target.value) })}
-                                    className="w-full bg-black/40 border border-white/10 rounded-lg py-1.5 pl-7 pr-3 text-white text-sm focus:border-primary focus:outline-none"
+                                    onChange={e => setPrices({ ...prices, quarterly: parseFloat(e.target.value) || 0 })}
+                                    className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:border-primary outline-none transition-all"
                                 />
                             </div>
                         </div>

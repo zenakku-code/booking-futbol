@@ -142,6 +142,22 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'El horario seleccionado está fuera de rango de apertura de la cancha' }, { status: 400 })
         }
 
+        // 3. Security: Calculate Price on Server Side (Ignore client totalPrice)
+        let calculatedTotal = field.price // Base price
+
+        // Calculate items total
+        const validItemsPayload = []
+        for (const item of items) {
+            const invItem = await prisma.inventoryItem.findUnique({ where: { id: item.id } })
+            if (invItem) {
+                calculatedTotal += invItem.price * item.quantity
+                validItemsPayload.push({
+                    ...item,
+                    priceAtBooking: invItem.price // Store for record
+                })
+            }
+        }
+
         // Use transaction for Booking, BookingItems, and Stock update
         const booking = await prisma.$transaction(async (tx) => {
             const b = await tx.booking.create({
@@ -152,7 +168,7 @@ export async function POST(request: Request) {
                     endTime,
                     clientName,
                     clientPhone,
-                    totalPrice: parseFloat(totalPrice),
+                    totalPrice: calculatedTotal, // TRUSTED SERVER PRICE
                     status: 'pending',
                     paymentType // Guardo el tipo de pago
                 } as any

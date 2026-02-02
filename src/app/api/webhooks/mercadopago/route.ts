@@ -29,55 +29,74 @@ export async function POST(request: Request) {
             console.log(`[WEBHOOK] Payment Status: ${paymentData.status} | External ref: ${paymentData.external_reference}`)
 
             if (paymentData.status === 'approved') {
-                const subscriptionPaymentId = paymentData.external_reference
+                const externalRef = paymentData.external_reference
+                const metadata = paymentData.metadata || {}
 
-                if (!subscriptionPaymentId) {
-                    console.error('[WEBHOOK] Missing external_reference')
-                    return NextResponse.json({ status: 'ok' })
+                console.log(`[WEBHOOK] Metadata:`, metadata)
+
+                // CASE 1: Booking Payment (Split or Full)
+                if (metadata.type === 'split_payment' || metadata.booking_id) {
+                    console.log('[WEBHOOK] Processing Booking Payment...')
+                    // 1. Update Payment Record
+                    await prisma.payment.update({
+                        where: { id: externalRef },
+                        data: { status: 'approved', externalId: String(paymentData.id) }
+                    })
+
+                    // 2. Update Booking Status (Simple logic: Mark approved)
+                    // In a real split system, we would sum all payments. For now, we assume 1 payment = confirm.
+                    await prisma.booking.update({
+                        where: { id: metadata.booking_id },
+                        data: { status: 'confirmed' }
+                    })
+
+                    console.log(`[WEBHOOK] Booking ${metadata.booking_id} confirmed!`)
+
                 }
-
-                // 1. Update Payment Record
-                const payRecord = await prisma.subscriptionPayment.update({
-                    where: { id: subscriptionPaymentId },
-                    data: {
-                        status: 'approved',
-                        externalId: String(paymentData.id)
-                    },
-                    include: { complex: true }
-                })
-
-                // Avoid double processing
-                // We check if we already updated the complex expectation? 
-                // Better to just update it idempotently.
-
-                const complex = payRecord.complex
-                const now = new Date()
-
-                // Calculate new end date based on Plan Type
-                // This logic duplicates logic in subscribe endpoint somewhat, 
-                // but crucially we deferred the complex update to HERE.
-
-                const days = payRecord.planType === 'QUARTERLY' ? 90 : 30
-
-                const newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
-                    ? new Date(complex.subscriptionEndsAt)
-                    : new Date()
-
-                newEndsAt.setDate(newEndsAt.getDate() + days)
-
-                // 2. Activate Subscription
-                await prisma.complex.update({
-                    where: { id: complex.id },
-                    data: {
-                        subscriptionActive: true,
-                        subscriptionDate: complex.subscriptionDate || new Date(),
-                        subscriptionEndsAt: newEndsAt,
-                        planType: payRecord.planType,
-                        trialEndsAt: null
+                // CASE 2: Subscription Payment (Default fallback)
+                else {
+                    const subscriptionPaymentId = externalRef
+                    if (!subscriptionPaymentId) {
+                        console.error('[WEBHOOK] Missing external_reference')
+                        return NextResponse.json({ status: 'ok' })
                     }
-                })
 
-                console.log(`[WEBHOOK] Activated subscription for complex ${complex.id}`)
+                    // 1. Update Payment Record
+                    const payRecord = await prisma.subscriptionPayment.update({
+                        where: { id: subscriptionPaymentId },
+                        data: {
+                            status: 'approved',
+                            externalId: String(paymentData.id)
+                        },
+                        include: { complex: true }
+                    })
+
+                    const complex = payRecord.complex
+                    const now = new Date()
+
+                    // Calculate new end date based on Plan Type
+                    const days = payRecord.planType === 'QUARTERLY' ? 90 : 30
+
+                    const newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
+                        ? new Date(complex.subscriptionEndsAt)
+                        : new Date()
+
+                    newEndsAt.setDate(newEndsAt.getDate() + days)
+
+                    // 2. Activate Subscription
+                    await prisma.complex.update({
+                        where: { id: complex.id },
+                        data: {
+                            subscriptionActive: true,
+                            subscriptionDate: complex.subscriptionDate || new Date(),
+                            subscriptionEndsAt: newEndsAt,
+                            planType: payRecord.planType,
+                            trialEndsAt: null
+                        }
+                    })
+
+                    console.log(`[WEBHOOK] Activated subscription for complex ${complex.id}`)
+                }
             }
         }
 

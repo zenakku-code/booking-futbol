@@ -83,7 +83,7 @@ export default function AdminLayout({
 
             {/* Sidebar */}
             <aside className={`
-                fixed md:sticky top-0 h-screen w-72 glass border-r border-white/5 p-6 flex flex-col gap-8 z-50 transition-transform duration-300 ease-in-out
+                fixed md:sticky top-0 h-screen w-72 glass border-r border-white/5 p-6 flex flex-col gap-8 z-50 transition-transform duration-300 ease-in-out overflow-y-auto custom-scrollbar
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
                 bg-[#0f172a]/95 md:bg-transparent
             `}>
