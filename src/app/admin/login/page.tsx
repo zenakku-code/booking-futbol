@@ -117,7 +117,7 @@ function LoginContent() {
             </div>
 
             <p className="text-center mt-8 text-gray-600 text-xs">
-                © 2026 Booking Futbol - Admin Access Only
+                © 2026 TikiTaka - Admin Access Only
             </p>
         </div>
     )

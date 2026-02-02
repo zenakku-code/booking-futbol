@@ -138,7 +138,7 @@ export default async function ComplexPage({
                 </section>
 
                 <footer className="py-10 border-t border-slate-800 text-center text-gray-600 text-sm">
-                    <p>© 2026 Booking Futbol - {currentComplex.name}</p>
+                    <p>© 2026 TikiTaka - {currentComplex.name}</p>
                 </footer>
             </div>
         </div>

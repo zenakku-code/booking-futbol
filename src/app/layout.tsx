@@ -8,7 +8,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Booking Futbol | Reserva tu Cancha",
+  title: "TikiTaka | Reserva tu Cancha",
   description: "La mejor experiencia para reservar canchas de fútbol.",
 };
 

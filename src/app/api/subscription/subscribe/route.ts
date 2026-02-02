@@ -93,7 +93,7 @@ export async function POST(request: Request) {
             items: [
                 {
                     id: planType,
-                    title: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} - Booking Futbol`,
+                    title: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} - TikiTaka`,
                     quantity: 1,
                     unit_price: amount,
                     currency_id: 'ARS'
