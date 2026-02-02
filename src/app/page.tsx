@@ -27,18 +27,18 @@ export default async function HomePage() {
 
                 <div className="container relative z-10 text-center px-4">
                     <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
-                        <span className="text-primary font-bold">New</span>
+                        <span className="text-primary font-bold">Nuevo</span>
                         <span className="text-gray-400 text-sm">Plataforma Multi-complejo ya disponible</span>
                     </div>
 
                     <h1 className="text-4xl xs:text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1.1]">
-                        Gestiona tu complejo <br />
-                        <span className="text-gradient italic">como un profesional.</span>
+                        TIKI<br />
+                        <span className="text-gradient italic">TAKA</span>
                     </h1>
 
                     <p className="text-lg md:text-2xl text-gray-400 max-w-2xl mx-auto mb-12 px-4">
                         La plataforma definitiva para reservas de canchas.
-                        Digitaliza tu negocio y aumenta tus ingresos hoy.
+                        Reservar ahora es en un toque.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-8 pb-10 w-full px-4 sm:px-0">
@@ -131,7 +131,7 @@ export default async function HomePage() {
 
             <footer className="py-20 border-t border-white/5 text-center text-gray-600">
                 <div className="container">
-                    <p className="text-lg font-bold text-white/50 mb-4 tracking-tighter italic">Booking Futbol SaaS</p>
+                    <p className="text-lg font-bold text-white/50 mb-4 tracking-tighter italic">TikiTaka App</p>
                     <p className="text-sm">© 2026 Plataforma Multi-tenencia. Todos los derechos reservados.</p>
                 </div>
             </footer>
