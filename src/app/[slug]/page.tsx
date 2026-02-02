@@ -50,7 +50,7 @@ export default async function ComplexPage({
                 <header className="absolute top-0 w-full p-6 z-50">
                     <div className="container flex justify-between items-center">
                         <Link href="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                            Booking Futbol
+                            TikiTaka App
                         </Link>
                         <Link href="/" className="text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest border border-white/5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10">
                             ← Plataforma

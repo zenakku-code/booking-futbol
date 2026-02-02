@@ -92,7 +92,7 @@ export default function AdminLayout({
                         <span className="text-xl">⚽</span>
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight">Booking Futbol</h1>
+                        <h1 className="text-xl font-bold text-white tracking-tight">TikiTaka App</h1>
                         <span className="text-xs text-primary font-bold tracking-widest uppercase">Admin Pro</span>
                     </div>
                 </div>
