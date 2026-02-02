@@ -20,7 +20,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
     const [actionLoading, setActionLoading] = useState(false)
     const [error, setError] = useState('')
 
-    const [prices, setPrices] = useState({ monthly: 10000, quarterly: 27000 })
+    const [prices, setPrices] = useState({ monthly: 10000, quarterly: 27000, annual: 100000 })
 
     useEffect(() => {
         fetchStatus()
@@ -35,7 +35,8 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                 const data = await res.json()
                 setPrices({
                     monthly: data.monthlyPrice || 10000,
-                    quarterly: data.quarterlyPrice || 27000
+                    quarterly: data.quarterlyPrice || 27000,
+                    annual: data.annualPrice || 100000
                 })
             }
         } catch (e) {
@@ -86,7 +87,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
         }
     }
 
-    const subscribe = async (planType: 'MONTHLY' | 'QUARTERLY') => {
+    const subscribe = async (planType: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL') => {
         setActionLoading(true)
         setError('')
 
@@ -128,6 +129,7 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
         : null
 
     const monthlySavings = (prices.monthly * 3) - prices.quarterly
+    const annualSavings = (prices.monthly * 12) - prices.annual
 
     return (
         <div className="space-y-8 animate-fade-in pb-20">
@@ -168,7 +170,9 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                                         Suscripción Activa
                                     </p>
                                     <p className="text-sm text-gray-300 mt-1">
-                                        Plan <span className="font-bold text-white">{planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'}</span>
+                                        Plan <span className="font-bold text-white">
+                                            {planType === 'ANNUAL' ? 'Anual' : planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'}
+                                        </span>
                                     </p>
                                     <p className="text-xs text-gray-500">
                                         Vence el {new Date(subscriptionEndsAt!).toLocaleDateString('es-AR', { dateStyle: 'long' })}
@@ -237,9 +241,9 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
 
                         {/* Pricing Plans */}
                         {showPricing && (
-                            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                            <div className="lg:col-span-2 grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
                                 {/* Monthly Plan */}
-                                <div className="glass-card p-8 border border-white/10 hover:border-primary/50 transition-all group relative overflow-hidden">
+                                <div className="glass-card p-8 border border-white/10 hover:border-primary/50 transition-all group relative overflow-hidden flex flex-col h-full">
                                     <div className="relative z-10 flex flex-col h-full">
                                         <h3 className="text-lg font-medium text-gray-400 uppercase tracking-wider mb-2">Mensual</h3>
                                         <div className="flex items-baseline gap-1 mb-6">
@@ -262,20 +266,20 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                                         <button
                                             onClick={() => subscribe('MONTHLY')}
                                             disabled={actionLoading}
-                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-white transition-all group-hover:bg-primary group-hover:border-primary"
+                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-white transition-all group-hover:bg-primary group-hover:border-primary mt-auto"
                                         >
                                             {actionLoading ? 'Procesando...' : 'Elegir Mensual'}
                                         </button>
                                     </div>
                                 </div>
 
-                                {/* Quarterly Plan - Featured */}
-                                <div className="glass-card p-8 border-2 border-primary/50 relative overflow-hidden shadow-lg shadow-primary/10">
-                                    <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-xl z-20">
+                                {/* Quarterly Plan */}
+                                <div className="glass-card p-8 border border-white/10 hover:border-primary/50 transition-all group relative overflow-hidden flex flex-col h-full">
+                                    <div className="absolute top-0 right-0 bg-blue-500/20 text-blue-300 text-[10px] font-bold px-2 py-1 rounded-bl-lg z-20">
                                         AHORRA {(monthlySavings / (prices.monthly * 3) * 100).toFixed(0)}%
                                     </div>
                                     <div className="relative z-10 flex flex-col h-full">
-                                        <h3 className="text-lg font-medium text-primary uppercase tracking-wider mb-2">Trimestral</h3>
+                                        <h3 className="text-lg font-medium text-blue-400 uppercase tracking-wider mb-2">Trimestral</h3>
                                         <div className="flex items-baseline gap-1 mb-6">
                                             <span className="text-4xl font-black text-white">${prices.quarterly.toLocaleString()}</span>
                                             <span className="text-gray-500">/3 meses</span>
@@ -288,17 +292,54 @@ export default function SubscriptionClient({ complex }: { complex: any }) {
                                             <li className="flex items-center gap-3 text-sm text-gray-300">
                                                 <span className="text-green-400">✓</span> <span className="text-white font-bold">Ahorras ${monthlySavings.toLocaleString()}</span>
                                             </li>
-                                            <li className="flex items-center gap-3 text-sm text-gray-300">
-                                                <span className="text-green-400">✓</span> Insignia de Club Verificado
-                                            </li>
                                         </ul>
 
                                         <button
                                             onClick={() => subscribe('QUARTERLY')}
                                             disabled={actionLoading}
-                                            className="w-full py-4 bg-gradient-to-r from-primary to-accent rounded-xl font-bold text-white shadow-lg shadow-primary/20 hover:shadow-primary/40 hover:scale-[1.02] transition-all"
+                                            className="w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl font-bold text-white transition-all group-hover:bg-primary/20 group-hover:border-primary/50 mt-auto"
                                         >
                                             {actionLoading ? 'Procesando...' : 'Elegir Trimestral'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Annual Plan - Featured */}
+                                <div className="glass-card p-8 border-2 border-primary/50 relative overflow-hidden shadow-lg shadow-primary/10 bg-gradient-to-b from-primary/10 to-transparent flex flex-col h-full">
+                                    <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-xs font-bold px-3 py-1 rounded-bl-xl z-20 shadow-lg">
+                                        MEJOR VALOR 🔥
+                                    </div>
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        <h3 className="text-xl font-black text-amber-400 uppercase tracking-wider mb-2">Anual</h3>
+                                        <div className="flex items-baseline gap-1 mb-2">
+                                            <span className="text-4xl lg:text-5xl font-black text-white">${prices.annual.toLocaleString()}</span>
+                                            <span className="text-gray-500">/año</span>
+                                        </div>
+                                        <p className="text-sm text-gray-400 mb-6">
+                                            Equivale a <span className="text-white font-bold">${Math.round(prices.annual / 12).toLocaleString()}/mes</span>
+                                        </p>
+
+                                        <ul className="space-y-4 mb-8 flex-1">
+                                            <li className="flex items-center gap-3 text-sm text-gray-200">
+                                                <span className="text-green-400">✓</span>
+                                                <span>Ahorro total de <strong className="text-white">${annualSavings.toLocaleString()}</strong></span>
+                                            </li>
+                                            <li className="flex items-center gap-3 text-sm text-gray-200">
+                                                <span className="text-green-400">✓</span>
+                                                <span>Precio congelado por 12 meses</span>
+                                            </li>
+                                            <li className="flex items-center gap-3 text-sm text-gray-200">
+                                                <span className="text-green-400">✓</span>
+                                                <span>Soporte VIP Preferencial</span>
+                                            </li>
+                                        </ul>
+
+                                        <button
+                                            onClick={() => subscribe('ANNUAL')}
+                                            disabled={actionLoading}
+                                            className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl font-bold text-white shadow-lg shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-[1.02] transition-all text-lg mt-auto"
+                                        >
+                                            {actionLoading ? 'Procesando...' : 'Elegir Plan Anual'}
                                         </button>
                                     </div>
                                 </div>

@@ -75,7 +75,7 @@ export async function POST(request: Request) {
                     const now = new Date()
 
                     // Calculate new end date based on Plan Type
-                    const days = payRecord.planType === 'QUARTERLY' ? 90 : 30
+                    const days = payRecord.planType === 'ANNUAL' ? 365 : (payRecord.planType === 'QUARTERLY' ? 90 : 30)
 
                     const newEndsAt = complex.subscriptionEndsAt && new Date(complex.subscriptionEndsAt) > now
                         ? new Date(complex.subscriptionEndsAt)

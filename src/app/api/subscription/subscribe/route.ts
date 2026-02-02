@@ -37,13 +37,14 @@ export async function POST(request: Request) {
 
         const { planType } = await request.json()
 
-        if (!['MONTHLY', 'QUARTERLY'].includes(planType)) {
+        if (!['MONTHLY', 'QUARTERLY', 'ANNUAL'].includes(planType)) {
             return NextResponse.json({ error: 'Plan inválido' }, { status: 400 })
         }
 
         // Pricing logic - Fetch from SystemConfig
         let monthlyPrice = 10000
         let quarterlyPrice = 27000
+        let annualPrice = 100000
 
         try {
             const config = await prisma.systemConfig.findFirst({
@@ -52,13 +53,14 @@ export async function POST(request: Request) {
             if (config) {
                 monthlyPrice = config.monthlyPrice
                 quarterlyPrice = config.quarterlyPrice
+                annualPrice = config.annualPrice
             }
         } catch (e) {
             console.error('Failed to fetch pricing config, using defaults', e)
         }
 
-        const amount = planType === 'QUARTERLY' ? quarterlyPrice : monthlyPrice
-        const days = planType === 'QUARTERLY' ? 90 : 30
+        const amount = planType === 'ANNUAL' ? annualPrice : (planType === 'QUARTERLY' ? quarterlyPrice : monthlyPrice)
+        const days = planType === 'ANNUAL' ? 365 : (planType === 'QUARTERLY' ? 90 : 30)
 
         const now = new Date()
         // Calculate new expiration date
@@ -93,7 +95,7 @@ export async function POST(request: Request) {
             items: [
                 {
                     id: planType,
-                    title: `Suscripción ${planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual'} - TikiTaka`,
+                    title: `Suscripción ${planType === 'ANNUAL' ? 'Anual' : (planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual')} - TikiTaka`,
                     quantity: 1,
                     unit_price: amount,
                     currency_id: 'ARS'

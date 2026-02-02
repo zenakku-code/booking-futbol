@@ -20,14 +20,16 @@ export async function GET() {
         if (!config) {
             return NextResponse.json({
                 monthlyPrice: 10000,
-                quarterlyPrice: 27000
+                quarterlyPrice: 27000,
+                annualPrice: 100000
             })
         }
 
         return NextResponse.json({
             id: config.id,
             monthlyPrice: config.monthlyPrice,
-            quarterlyPrice: config.quarterlyPrice
+            quarterlyPrice: config.quarterlyPrice,
+            annualPrice: config.annualPrice || 100000
         })
 
     } catch (e) {
@@ -47,9 +49,9 @@ export async function PUT(request: Request) {
         }
 
         const body = await request.json()
-        const { monthlyPrice, quarterlyPrice } = body
+        const { monthlyPrice, quarterlyPrice, annualPrice } = body
 
-        if (!monthlyPrice || !quarterlyPrice) {
+        if (!monthlyPrice || !quarterlyPrice || !annualPrice) {
             return NextResponse.json({ error: 'Missing values' }, { status: 400 })
         }
 
@@ -64,14 +66,16 @@ export async function PUT(request: Request) {
                 where: { id: existing.id },
                 data: {
                     monthlyPrice: parseFloat(monthlyPrice),
-                    quarterlyPrice: parseFloat(quarterlyPrice)
+                    quarterlyPrice: parseFloat(quarterlyPrice),
+                    annualPrice: parseFloat(annualPrice)
                 }
             })
         } else {
             config = await prisma.systemConfig.create({
                 data: {
                     monthlyPrice: parseFloat(monthlyPrice),
-                    quarterlyPrice: parseFloat(quarterlyPrice)
+                    quarterlyPrice: parseFloat(quarterlyPrice),
+                    annualPrice: parseFloat(annualPrice)
                 }
             })
         }

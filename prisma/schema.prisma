@@ -200,5 +200,6 @@ model SystemConfig {
   id             String   @id @default(uuid())
   monthlyPrice   Float    @default(10000)
   quarterlyPrice Float    @default(27000)
+  annualPrice    Float    @default(100000)
   updatedAt      DateTime @updatedAt
 }

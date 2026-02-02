@@ -29,7 +29,7 @@ export default function SuperAdminDashboard() {
     const router = useRouter()
 
     // Pricing Config State
-    const [prices, setPrices] = useState<{ monthly: number | string, quarterly: number | string }>({ monthly: 10000, quarterly: 27000 })
+    const [prices, setPrices] = useState<{ monthly: number | string, quarterly: number | string, annual: number | string }>({ monthly: 10000, quarterly: 27000, annual: 100000 })
     const [savingPrices, setSavingPrices] = useState(false)
 
     useEffect(() => {
@@ -45,7 +45,8 @@ export default function SuperAdminDashboard() {
                 const data = await res.json()
                 setPrices({
                     monthly: data.monthlyPrice || 10000,
-                    quarterly: data.quarterlyPrice || 27000
+                    quarterly: data.quarterlyPrice || 27000,
+                    annual: data.annualPrice || 100000
                 })
             }
         } catch (e) {
@@ -61,7 +62,8 @@ export default function SuperAdminDashboard() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     monthlyPrice: Number(prices.monthly) || 0,
-                    quarterlyPrice: Number(prices.quarterly) || 0
+                    quarterlyPrice: Number(prices.quarterly) || 0,
+                    annualPrice: Number(prices.annual) || 0
                 })
             })
             if (res.ok) {
@@ -203,7 +205,8 @@ export default function SuperAdminDashboard() {
                                         const num = parseFloat(val)
                                         setPrices({
                                             monthly: val === '' ? '' : num,
-                                            quarterly: val === '' ? '' : num * 3
+                                            quarterly: val === '' ? '' : num * 3,
+                                            annual: val === '' ? '' : num * 12
                                         })
                                     }}
                                     className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:border-primary outline-none transition-all"
@@ -234,6 +237,37 @@ export default function SuperAdminDashboard() {
                                             }}
                                             className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
                                             title={`Aplicar ${percent}% de descuento sobre el total (Mensual x 3)`}
+                                        >
+                                            -{percent}%
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Plan Anual (12 Meses)</label>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                <input
+                                    type="number"
+                                    value={prices.annual}
+                                    onChange={e => setPrices({ ...prices, annual: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                                    className="w-full bg-slate-800 border border-white/10 rounded-xl py-3 pl-8 pr-4 text-white focus:border-primary outline-none transition-all"
+                                />
+                                <div className="flex gap-2 mt-2 justify-end">
+                                    {[10, 20, 30].map(percent => (
+                                        <button
+                                            key={percent}
+                                            onClick={() => {
+                                                const monthly = Number(prices.monthly) || 0
+                                                if (monthly > 0) {
+                                                    const total = monthly * 12
+                                                    const discounted = total * (1 - percent / 100)
+                                                    setPrices(prev => ({ ...prev, annual: Math.round(discounted) }))
+                                                }
+                                            }}
+                                            className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                                            title={`Aplicar ${percent}% de descuento sobre el total (Mensual x 12)`}
                                         >
                                             -{percent}%
                                         </button>
