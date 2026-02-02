@@ -48,11 +48,7 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
             <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in">
                 <div className="flex items-center gap-4">
                     <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-2">
-                        {/* Logo MP Placeholder Seguro */}
-                        <svg viewBox="0 0 24 24" fill="#009EE3" className="w-10 h-10">
-                            <path d="M14.6 12.8c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5-1.5.7-1.5 1.5.7 1.5 1.5 1.5zm-5.2 0c.8 0 1.5-.7 1.5-1.5s-.7-1.5-1.5-1.5-1.5.7-1.5 1.5.7 1.5 1.5 1.5z" />
-                            <path d="M21 11c0-5.5-4.5-10-10-10S1 5.5 1 11c0 4.1 2.5 7.6 6 9.2V22l4-2 4 2v-1.8c3.5-1.6 6-5.1 6-9.2zM8 11.3c0-1.5 1.2-2.7 2.7-2.7s2.7 1.2 2.7 2.7-1.2 2.7-2.7 2.7-2.7-1.2-2.7-2.7zm9.3 2.7c-1.1 0-2 .9-2 2v2c0 .6-.4 1-1 1H9.7c-.6 0-1-.4-1-1v-2c0-1.1-.9-2-2-2-.6 0-1 .4-1 1v2c0 1.7 1.3 3 3 3h4.6c1.7 0 3-1.3 3-3v-2c0-.6-.4-1-1-1z" />
-                        </svg>
+                        <img src="/mercadopago.png" alt="Mercado Pago" className="w-full h-full object-contain" />
                     </div>
                     <div className="text-center md:text-left">
                         <h3 className="text-emerald-400 font-bold text-lg">Mercado Pago Conectado</h3>
@@ -80,8 +76,8 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
         <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-6 group hover:border-blue-500/30 transition-all">
             <div className="flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
-                        <span className="text-2xl">🤝</span>
+                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-2 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+                        <img src="/mercadopago.png" alt="Conectar Mercado Pago" className="w-full h-full object-contain" />
                     </div>
                     <div className="text-center md:text-left">
                         <h3 className="text-white font-bold text-lg group-hover:text-[#009EE3] transition-colors">Conectar Mercado Pago</h3>

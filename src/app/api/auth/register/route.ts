@@ -67,6 +67,13 @@ export async function POST(request: Request) {
             return { newComplex, newUser }
         })
 
+        // 5. Notify Admin via Telegram (Async - don't block response)
+        const { sendTelegramNotification } = await import('@/lib/telegram')
+        const notificationMsg = `🚀 <b>Nuevo Complejo Registrado</b>\n\n⚽ <b>Complejo:</b> ${complexName}\n📧 <b>Email:</b> ${email}\n🔗 <b>Slug:</b> ${result.newComplex.slug}`
+
+        // Fire and forget (don't await to speed up response)
+        sendTelegramNotification(notificationMsg).catch(console.error)
+
         return NextResponse.json({
             success: true,
             message: 'Complejo registrado correctamente',

@@ -32,7 +32,7 @@ export default function AccountSettings({ initialAccount }: { initialAccount: an
         <div className="glass p-8 rounded-2xl max-w-2xl">
             <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 bg-blue-500/20 rounded-xl">
-                    <img src="https://http2.mlstatic.com/frontend-assets/mp-web-navigation/ui-navigation/5.104.0/mercadopago/logo__small.png" alt="MP" className="w-8 h-8" />
+                    <img src="/mercadopago.png" alt="MP" className="w-8 h-8 object-contain" />
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-white">Mercado Pago</h3>
