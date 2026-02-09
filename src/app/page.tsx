@@ -131,7 +131,7 @@ export default async function HomePage() {
 
             <footer className="py-20 border-t border-white/5 text-center text-gray-600">
                 <div className="container">
-                    <p className="text-lg font-bold text-white/50 mb-4 tracking-tighter italic">TikiTaka App</p>
+                    <p className="text-lg font-bold text-white/50 mb-4 tracking-tighter italic">Tiki Taka App</p>
                     <p className="text-sm">© 2026 Plataforma Multi-tenencia. Todos los derechos reservados.</p>
                 </div>
             </footer>
