@@ -12,45 +12,35 @@ export default async function HomePage() {
     return (
         <div className="min-h-screen bg-slate-950 text-white selection:bg-primary/30 overflow-x-hidden">
             {/* Hero Section - SaaS Landing */}
-            <div className="relative overflow-hidden pt-20 pb-32">
-                <Image
-                    src="/bg-hero.jpg"
-                    alt="Background"
-                    fill
-                    priority
-                    className="object-cover opacity-10 grayscale pointer-events-none"
-                    sizes="100vw"
-                />
+            <div className="relative overflow-hidden pt-24 pb-32">
+                {/* Dynamic Backgrounds */}
+                <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-[80vw] h-[80vw] sm:w-[50vw] sm:h-[50vw] bg-primary/20 rounded-full blur-[100px] md:blur-[120px] opacity-40 translate-x-1/3 -translate-y-1/3 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-[60vw] h-[60vw] sm:w-[40vw] sm:h-[40vw] bg-blue-500/10 rounded-full blur-[80px] md:blur-[100px] opacity-30 -translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
 
-                {/* Optimización Mobile: Ocultar efectos pesados de blur en pantallas pequeñas */}
-                <div className="hidden md:block absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
-
-                <div className="container relative z-10 text-center px-4">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8">
-                        <span className="text-primary font-bold">Nuevo</span>
-                        <span className="text-gray-400 text-sm">Plataforma Multi-complejo ya disponible</span>
+                <div className="container relative z-10 text-center px-4 md:px-6 max-w-5xl mx-auto flex flex-col items-center justify-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-10 shadow-xl">
+                        <span className="text-primary font-bold text-xs sm:text-sm uppercase tracking-wider">Nuevo</span>
+                        <span className="text-gray-300 text-xs sm:text-sm font-medium">Plataforma Multi-complejo disponible</span>
                     </div>
 
-                    <h1 className="text-4xl xs:text-5xl md:text-8xl font-black tracking-tighter mb-8 leading-[1.1]">
-                        TIKI<br />
+                    <h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight mb-8 flex flex-row items-center justify-center gap-3 md:gap-4 drop-shadow-2xl">
+                        <span className="text-white">TIKI</span>
                         <span className="text-gradient italic">TAKA</span>
                     </h1>
 
-                    <p className="text-lg md:text-2xl text-gray-400 max-w-2xl mx-auto mb-12 px-4">
-                        La plataforma definitiva para reservas de canchas.
+                    <p className="text-base sm:text-lg md:text-2xl text-gray-400 max-w-2xl mx-auto mb-10 px-2 sm:px-6 font-medium leading-relaxed">
+                        La plataforma definitiva para reservas de canchas. <br className="hidden sm:block" />
                         Reservar ahora es en un toque.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mt-8 pb-10 w-full px-4 sm:px-0">
-                        <div className="relative w-full sm:w-auto">
-                            <Link href="/register" className="btn btn-primary w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-black rounded-2xl shadow-[0_20px_40px_-15px_rgba(74,222,128,0.5)] block text-center">
-                                Registrar mi Complejo
-                            </Link>
-                            <span className="absolute -bottom-8 left-0 w-full text-center text-gray-500 text-xs font-medium whitespace-nowrap">
-                                Software Fee: <span className="text-white font-bold">$15.000 ARS</span> (pago único)
-                            </span>
-                        </div>
-                        <Link href="#explorar" className="w-full sm:w-auto px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold border border-white/10 rounded-2xl hover:bg-white/5 transition-all text-gray-300 text-center">
+                    <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-stretch w-full max-w-xs sm:max-w-xl mx-auto">
+                        <Link href="/register" className="group relative w-full sm:flex-1 py-4 px-6 sm:px-8 bg-primary hover:bg-primary/90 text-slate-950 text-base md:text-lg font-black rounded-2xl shadow-[0_0_40px_-10px_rgba(74,222,128,0.5)] hover:shadow-[0_0_60px_-15px_rgba(74,222,128,0.7)] hover:-translate-y-1 transition-all overflow-hidden flex items-center justify-center">
+                            <span className="relative z-10">Registrar mi Complejo</span>
+                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+                        </Link>
+
+                        <Link href="#explorar" className="w-full sm:flex-1 py-4 px-6 sm:px-8 text-base md:text-lg font-bold border-2 border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all text-white text-center backdrop-blur-sm bg-white/5 flex items-center justify-center">
                             Explorar Canchas
                         </Link>
                     </div>

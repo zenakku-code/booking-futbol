@@ -4,15 +4,15 @@ import { prisma } from '@/lib/prisma'
 export async function POST(request: Request) {
     try {
         const body = await request.json()
-        const { bookingId, amount } = body
+        const { bookingId } = body
 
-        if (!bookingId || !amount) {
-            return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
+        if (!bookingId) {
+            return NextResponse.json({ error: 'Datos incompletos: falta bookingId' }, { status: 400 })
         }
 
         const booking = await prisma.booking.findUnique({
             where: { id: bookingId },
-            include: { field: true }
+            include: { field: { include: { complex: true } } }
         })
 
         if (!booking) {
@@ -23,17 +23,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Esta reserva ya está confirmada o finalizada.' }, { status: 400 })
         }
 
-        // Crear Payment (casting a any por si types no refrescaron)
+        // SECURITY FIX: Calculate expected amount on the server
+        const complexConfig = booking.field.complex;
+        let amountToCharge = booking.totalPrice;
+
+        if (complexConfig && complexConfig.downPaymentEnabled && complexConfig.downPaymentFixed > 0) {
+            amountToCharge = Math.min(complexConfig.downPaymentFixed, booking.totalPrice);
+        }
+
+        // Check if a pending payment already exists and reuse it to avoid spamming the DB?
+        // To be safe, let's allow creating a new one or you could reuse logic here.
         const payment = await (prisma as any).payment.create({
             data: {
-                amount: parseFloat(amount),
+                amount: amountToCharge,
                 bookingId,
                 status: 'pending'
             }
         })
 
         // Buscar cuenta de Mercado Pago del complejo
-        const complexId = (booking.field as any).complexId;
+        const complexId = booking.field.complexId;
         const account = await prisma.account.findFirst({
             where: { complexId } as any
         })
@@ -62,10 +71,10 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
                 items: [{
-                    title: `Pago parcial - ${booking.field.name}`,
+                    title: `Reserva - ${booking.field.name} (${booking.date.toISOString().split('T')[0]})`,
                     quantity: 1,
                     currency_id: 'ARS',
-                    unit_price: parseFloat(amount)
+                    unit_price: amountToCharge
                 }],
                 payer: {
                     email: 'test_user_123456@testuser.com' // Placeholder required by some MP integrations
