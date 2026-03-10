@@ -1,0 +1,58 @@
+version: "2"
+type: backend
+tech_stack:
+  - typescript
+  - nextjs
+  - prisma
+  - sqlite
+features:
+  - name: Authentication API
+    description: User authentication and session management
+    files:
+      - src/app/api/auth/login/route.ts
+      - src/app/api/auth/register/route.ts
+      - src/app/api/auth/me/route.ts
+    endpoints:
+      - method: POST
+        path: /api/auth/login
+        description: Authenticate a user
+        auth_required: false
+      - method: POST
+        path: /api/auth/register
+        description: Register a new user
+        auth_required: false
+      - method: GET
+        path: /api/auth/me
+        description: Get current user session
+        auth_required: true
+
+  - name: Fields API
+    description: Management of football fields/courts
+    files:
+      - src/app/api/fields/route.ts
+    endpoints:
+      - method: GET
+        path: /api/fields
+        description: List fields for complex
+        auth_required: true
+      - method: POST
+        path: /api/fields
+        description: Create a field
+        auth_required: true
+
+  - name: Payments API
+    description: MercadoPago checkout integrations and webhooks
+    files:
+      - src/app/api/payments/create/route.ts
+      - src/app/api/webhooks/mercadopago/route.ts
+    endpoints:
+      - method: POST
+        path: /api/payments/create
+        description: Generate a MercadoPago preference
+        auth_required: false
+      - method: POST
+        path: /api/webhooks/mercadopago
+        description: Webhook for MercadoPago payment updates
+        auth_required: false
+
+known_limitations: []

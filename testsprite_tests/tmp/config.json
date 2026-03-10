@@ -1,0 +1,19 @@
+{
+  "status": "commited",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "booking-futbol",
+    "projectPath": "/Users/ezequielzamorano/booking-futbol",
+    "testIds": [],
+    "additionalInstruction": "Please use the credentials and guidelines from /Users/ezequielzamorano/Desktop/test_sprite_backend_security.md to perform specific security, auth and RBAC tests on the API.",
+    "serverMode": "development",
+    "envs": {
+      "API_KEY": "sk-user-uiONzLlfye27DhGe0XD8b50_qfHnmHyT-kzya_ptM0ib1MuPFvYGXmaFDERZRwNtK_vrvhSOG0x5XUY1RX14k2qxJN-QTcsl1jObkTuMRaYjSB9ML8Szsh2gY1joPsPxszM"
+    }
+  },
+  "serverPort": 57358,
+  "proxy": "http://ec1bf595-01d5-4600-9171-998ba834368e:a7YbEFla4T3zWiLop54Jk7RXn71hoDFk@tun.testsprite.com:8080"
+}

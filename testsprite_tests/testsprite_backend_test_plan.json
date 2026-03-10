@@ -1,0 +1,27 @@
+[
+  {
+    "id": "TC001",
+    "title": "verify_secure_authentication_and_session_handling",
+    "description": "Test the POST /api/auth/login endpoint to ensure it returns a 200 status with an httpOnly JWT cookie for valid credentials and 401 for invalid credentials. Also, test GET /api/auth/me to verify it returns the authenticated user profile with correct role and requires authentication."
+  },
+  {
+    "id": "TC002",
+    "title": "enforce_tenant_isolation_and_admin_only_field_creation",
+    "description": "Test POST /api/fields to ensure only SUPERADMIN users can create fields and that the created fields are tied to the authenticated user's complex. Test GET /api/fields to verify it returns only fields belonging to the authenticated tenant and returns 401 if unauthenticated."
+  },
+  {
+    "id": "TC003",
+    "title": "validate_server_side_price_calculation_in_payments_create",
+    "description": "Test POST /api/payments/create to verify that the server calculates the price ignoring any client-supplied amount, returns a MercadoPago preference URL, and returns 400 Bad Request if bookingId is missing."
+  },
+  {
+    "id": "TC004",
+    "title": "verify_mercadopago_webhook_authenticity_and_sandbox_exception",
+    "description": "Test POST /api/webhooks/mercadopago to ensure it validates the HMAC-SHA256 signature in the x-signature header for authenticity, allows sandbox payloads without signature, and returns 403 Forbidden for invalid or missing signatures on live payloads."
+  },
+  {
+    "id": "TC005",
+    "title": "enforce_rbac_and_tenant_data_isolation_for_admin_and_saas_endpoints",
+    "description": "Test admin and saas endpoints such as POST /api/saas/complexes to ensure only SUPERADMIN users can perform admin operations and that tenant-scoped endpoints return data only for the authenticated tenant, preventing data leakage."
+  }
+]

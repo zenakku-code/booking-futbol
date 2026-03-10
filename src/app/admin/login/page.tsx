@@ -2,6 +2,7 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { signIn } from '@/lib/auth-client'
 
 function LoginContent() {
     const [email, setEmail] = useState('')
@@ -14,28 +15,27 @@ function LoginContent() {
 
     const isRegistered = searchParams.get('registered') === 'success'
 
+    // ... (Inside LoginContent function)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
         setError('')
 
         try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+            const res = await signIn.email({
+                email,
+                password,
             })
 
-            const data = await res.json()
-
-            if (res.ok) {
-                if (data.role === 'SUPERADMIN') {
+            if (res.error) {
+                setError(res.error.message || 'Credenciales incorrectas')
+            } else if (res.data) {
+                const user = res.data.user as any
+                if (user.role === 'SUPERADMIN') {
                     router.push('/saas-admin')
                 } else {
                     router.push('/admin')
                 }
-            } else {
-                setError(data.details || data.error || 'Credenciales incorrectas')
             }
         } catch (err) {
             setError('Error de conexión')

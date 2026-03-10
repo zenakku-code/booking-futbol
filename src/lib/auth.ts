@@ -1,36 +1,57 @@
-import { SignJWT, jwtVerify } from 'jose'
-import { cookies } from 'next/headers'
+import { betterAuth } from "better-auth";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { prisma } from "./prisma";
+import bcrypt from "bcryptjs";
 
-if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET is not defined in environment variables')
-}
-const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
-
-export async function createToken(payload: any) {
-    return await new SignJWT(payload)
-        .setProtectedHeader({ alg: 'HS256' })
-        .setIssuedAt()
-        .setExpirationTime('24h')
-        .sign(SECRET)
-}
-
-export async function verifyToken(token: string) {
-    try {
-        const { payload } = await jwtVerify(token, SECRET)
-        return payload
-    } catch (error) {
-        return null
+export const auth = betterAuth({
+    secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-for-dev",
+    baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+    database: prismaAdapter(prisma, {
+        provider: "sqlite",
+    }),
+    account: {
+        modelName: "authAccount",
+    },
+    emailAndPassword: {
+        enabled: true,
+        password: {
+            hash: async (password) => {
+                return await bcrypt.hash(password, 10);
+            },
+            verify: async ({ password, hash }) => {
+                return await bcrypt.compare(password, hash);
+            }
+        }
+    },
+    user: {
+        additionalFields: {
+            role: {
+                type: "string",
+                defaultValue: "USER",
+            },
+            complexId: {
+                type: "string",
+                required: false,
+            }
+        }
     }
-}
+});
 
+// Wrapper for backwards compatibility across the old Next.js App Router codebase
 export async function getSession() {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('auth_token')?.value
-    if (!token) return null
-    return await verifyToken(token) as any
+    const { headers } = await import("next/headers");
+    const requestHeaders = await headers();
+    const sessionData = await auth.api.getSession({ headers: requestHeaders });
+    if (!sessionData) return null;
+    return {
+        id: sessionData.user.id,
+        email: sessionData.user.email,
+        role: sessionData.user.role,
+        complexId: sessionData.user.complexId,
+    };
 }
 
 export async function getComplexId() {
-    const session = await getSession()
-    return session?.complexId as string | null
+    const session = await getSession();
+    return session?.complexId as string | null;
 }

@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   description: "La mejor experiencia para reservar canchas de fútbol.",
 };
 
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,6 +24,8 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={outfit.className}>
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

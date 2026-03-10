@@ -4,6 +4,8 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import SubscriptionCheck from '@/components/admin/SubscriptionCheck'
 
+import { signOut, useSession } from '@/lib/auth-client'
+
 export default function AdminLayout({
     children,
 }: {
@@ -16,12 +18,18 @@ export default function AdminLayout({
     const isLoginPage = pathname === '/admin/login'
 
     const [userRole, setUserRole] = useState('')
+    const { data: sessionData } = useSession()
 
     const handleLogout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' })
-            router.push('/admin/login')
-            router.refresh()
+            await signOut({
+                fetchOptions: {
+                    onSuccess: () => {
+                        router.push('/admin/login')
+                        router.refresh()
+                    }
+                }
+            })
         } catch (error) {
             console.error('Logout error:', error)
         }
@@ -30,17 +38,9 @@ export default function AdminLayout({
     const [hasAccess, setHasAccess] = useState(true)
 
     useEffect(() => {
-        fetch('/api/auth/me')
-            .then(res => res.json())
-            .then(data => {
-                if (data.tokenRefreshed) {
-                    console.log('Token was auto-refreshed due to role change. Reloading page...')
-                    window.location.reload()
-                } else {
-                    setUserRole(data.role)
-                }
-            })
-            .catch(err => console.error('Failed to fetch role', err))
+        if (sessionData?.user) {
+            setUserRole((sessionData.user as any).role)
+        }
 
         // Check subscription access for UI blocking
         const checkAccess = async () => {
