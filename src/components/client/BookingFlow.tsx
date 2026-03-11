@@ -205,17 +205,20 @@ export default function BookingFlow({
     if (success) {
         return (
             <div className="glass p-8 rounded-2xl text-center animate-fade-in relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-blue-500/10"></div>
-                <div className="text-6xl mb-4 animate-bounce">🎉</div>
-                <h2 className="text-3xl font-bold text-white mb-4">¡Reserva Confirmada!</h2>
-                <p className="text-gray-300 mb-6">Te esperamos el {date} a las {selectedTime}hs.</p>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 mb-6 max-w-xs mx-auto">
-                    <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Tu Código</div>
-                    <div className="font-mono text-xl text-primary font-bold tracking-[0.2em] select-all">#{Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
+                <div className="absolute inset-0 bg-gradient-to-br from-[#050505] to-[#111] opacity-90"></div>
+                <div className="text-6xl mb-4 animate-bounce relative z-10">⚽</div>
+                <h2 className="text-3xl font-black text-white mb-2 relative z-10 tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                    TIKI<span className="text-primary italic">TAKA</span>
+                </h2>
+                <h3 className="text-xl font-bold text-primary mb-4 relative z-10">¡Reserva Confirmada!</h3>
+                <p className="text-gray-300 mb-6 relative z-10 font-medium">Te esperamos el {date} a las {selectedTime}hs.</p>
+                <div className="p-4 bg-[#0A0A0A] rounded-xl border border-white/10 mb-6 max-w-xs mx-auto relative z-10 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)]">
+                    <div className="text-xs text-gray-500 uppercase tracking-widest mb-1 font-bold">Tu Código</div>
+                    <div className="font-mono text-2xl text-primary font-black tracking-[0.2em] select-all">#{Math.random().toString(36).substr(2, 6).toUpperCase()}</div>
                 </div>
                 <button
                     onClick={() => window.location.reload()}
-                    className="btn btn-primary shadow-lg shadow-primary/20"
+                    className="btn btn-primary shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_50px_rgba(16,185,129,0.5)] relative z-10 w-full sm:w-auto"
                 >
                     Volver al Inicio
                 </button>
@@ -237,11 +240,11 @@ export default function BookingFlow({
             <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent/20 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
 
             <div className="mb-8 relative z-10">
-                <div className="flex items-center justify-between mb-3 px-1">
-                    <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Reserva tu cancha</span>
-                    <span className="text-[10px] font-bold text-gray-500 bg-white/5 px-2 py-1 rounded-full">PASO {step} / 2</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 px-1 gap-2 sm:gap-0">
+                    <span className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-primary">Reserva tu cancha</span>
+                    <span className="text-[10px] font-bold text-gray-500 bg-white/5 px-3 py-1.5 rounded-full w-fit">PASO {step} / 2</span>
                 </div>
-                <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden p-[2px]">
+                <div className="h-1.5 sm:h-2 w-full bg-slate-800 rounded-full overflow-hidden p-[2px]">
                     <div
                         className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] shadow-[0_0_15px_rgba(34,197,94,0.5)]"
                         style={{ width: step === 1 ? '50%' : '100%' }}
@@ -290,7 +293,7 @@ export default function BookingFlow({
                         </div>
 
                         {slots.length > 0 ? (
-                            <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 sm:gap-3">
                                 {slots.map(slot => {
                                     const isTaken = takenSlots.includes(slot)
                                     const isSelected = selectedTime === slot

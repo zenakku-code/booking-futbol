@@ -1,0 +1,148 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "libsql://book-futbol-zenaku.aws-us-east-1.turso.io?authToken=eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3Njk2NjE5NTMsImlkIjoiNmQ5ZDBmZjEtMWM0Mi00YTlmLWI2YmEtNDZlMTg3MDhkMWM0IiwicmlkIjoiZmUyMGQ4YjQtOTc2My00NTRhLTg4NzQtMmRlZmQyODg4ZmQzIn0.eKckgVvaeeRv22XcgEsGVRnlOTmXCdje8FP1hbe2NRIzgUQBu4vEjpgxGOSmOAYFbiqVGZcP4rAHrpXdLbIZDw"
+}
+
+model Complex {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  description String?
+  location    String?
+  phone       String?
+  features    String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  fields      Field[]
+  users       User[]
+}
+
+model Field {
+  id        String    @id @default(uuid())
+  complexId String
+  name      String
+  type      String
+  capacity  Int       @default(10)
+  price     Float
+  isIndoor  Boolean   @default(false)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  complex   Complex   @relation(fields: [complexId], references: [id])
+  bookings  Booking[]
+}
+
+model Booking {
+  id           String        @id @default(uuid())
+  fieldId      String
+  userEmail    String
+  userName     String
+  userPhone    String
+  date         DateTime
+  startTime    String
+  endTime      String
+  status       String        @default("PENDING")
+  totalPrice   Float
+  mpPreference String?
+  mpPaymentId  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  field        Field         @relation(fields: [fieldId], references: [id])
+  BookingItem  BookingItem[]
+}
+
+model BookingItem {
+  id         String   @id @default(uuid())
+  bookingId  String
+  type       String
+  quantity   Int
+  unitPrice  Float
+  totalPrice Float
+  booking    Booking  @relation(fields: [bookingId], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model InventoryItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  category    String
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StoreSettings {
+  id           String   @id @default(uuid())
+  key          String   @unique
+  value        String
+  description  String?
+  isPublic     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          String?   @default("USER")
+  complexId     String?
+  password      String?
+  Session       Session[]
+  Account       Account[]
+  Complex       Complex?  @relation(fields: [complexId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  User                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+}

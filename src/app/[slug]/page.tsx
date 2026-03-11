@@ -49,8 +49,9 @@ export default async function ComplexPage({
                 {/* Header */}
                 <header className="absolute top-0 w-full p-6 z-50">
                     <div className="container flex justify-between items-center">
-                        <Link href="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                            TikiTaka App
+                        <Link href="/" className="text-2xl font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                            TIKI
+                            <span className="text-primary italic">TAKA</span>
                         </Link>
                         <Link href="/" className="text-xs font-bold text-gray-400 hover:text-white transition-colors uppercase tracking-widest border border-white/5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10">
                             ← Plataforma
@@ -95,7 +96,7 @@ export default async function ComplexPage({
                             <span className="text-gray-300 text-sm font-medium">Disponible para Reserva</span>
                         </div>
 
-                        <h2 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl font-black text-white tracking-tighter mb-6 md:mb-8 leading-[1.1] drop-shadow-2xl">
+                        <h2 className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter mb-4 sm:mb-6 leading-[1.1] drop-shadow-2xl px-2">
                             {currentComplex.name}
                         </h2>
 

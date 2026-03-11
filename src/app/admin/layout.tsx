@@ -67,7 +67,11 @@ export default function AdminLayout({
             <SubscriptionCheck />
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 w-full z-50 glass rounded-none border-x-0 border-t-0 border-b border-white/5 px-6 py-4 flex items-center justify-between">
-                <span className="font-bold text-white text-lg tracking-tight">Admin <span className="text-primary italic">Pro</span></span>
+                <span className="font-black text-white text-xl tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                    TIKI
+                    <span className="text-primary italic">TAKA</span>
+                    <span className="text-[10px] ml-2 text-primary/80 font-bold tracking-[0.2em] uppercase align-middle">Admin</span>
+                </span>
                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="text-white p-2">
                     ☰
                 </button>
@@ -91,8 +95,8 @@ export default function AdminLayout({
                         <span className="text-xl">⚽</span>
                     </div>
                     <div>
-                        <h1 className="text-xl font-black text-white tracking-tighter">TIKI<span className="italic">TAKA</span></h1>
-                        <span className="text-[10px] text-primary font-bold tracking-[0.2em] uppercase">Admin Pro</span>
+                        <h1 className="text-2xl font-black text-white tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">TIKI<span className="text-primary italic">TAKA</span></h1>
+                        <span className="text-[10px] text-gray-400 font-bold tracking-[0.2em] uppercase">Admin Pro</span>
                     </div>
                 </div>
 
@@ -150,8 +154,8 @@ export default function AdminLayout({
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 w-full overflow-x-hidden md:ml-0 pt-20 md:pt-0">
-                <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen">
+            <main className="flex-1 w-full overflow-x-hidden md:ml-0 pt-24 md:pt-0">
+                <div className="p-4 sm:p-6 md:p-10 max-w-7xl mx-auto min-h-screen">
                     {children}
                 </div>
             </main>

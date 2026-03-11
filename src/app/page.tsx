@@ -14,18 +14,18 @@ export default async function HomePage() {
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 overflow-x-hidden font-sans">
             {/* Global Navbar */}
-            <nav className="fixed top-0 left-0 right-0 z-50 glass border-b-0 rounded-none py-4 px-6 md:px-12 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <span className="text-2xl font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+            <nav className="fixed top-0 left-0 right-0 z-50 glass border-b-0 rounded-none py-3 sm:py-4 px-4 sm:px-6 md:px-12 flex items-center justify-between">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <span className="text-xl sm:text-2xl font-black tracking-tighter text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                         TIKI
                         <span className="text-primary italic">TAKA</span>
                     </span>
                 </div>
-                <div className="flex items-center gap-4">
-                    <Link href="/admin/login" className="text-sm font-semibold text-gray-400 hover:text-white transition-colors">
+                <div className="flex items-center gap-3 sm:gap-4">
+                    <Link href="/admin/login" className="text-xs sm:text-sm font-semibold text-gray-400 hover:text-white transition-colors">
                         Iniciar Sesión
                     </Link>
-                    <Link href="/register" className="btn btn-primary text-sm px-6 py-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <Link href="/register" className="btn btn-primary text-xs sm:text-sm px-4 sm:px-6 py-1.5 sm:py-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
                         Únete Ahora
                     </Link>
                 </div>
@@ -46,21 +46,21 @@ export default async function HomePage() {
                 <div className="container relative text-center max-w-5xl mx-auto flex flex-col items-center justify-center animate-fade-in">
 
                     {/* Badge */}
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-8 hover:bg-white/10 transition-colors shadow-[0_0_20px_rgba(0,0,0,0.5)] cursor-default">
-                        <span className="text-primary font-bold text-xs uppercase tracking-widest flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span> NUEVA PLATAFORMA
+                    <div className="inline-flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-[2rem] sm:rounded-full border border-white/10 bg-white/5 backdrop-blur-md mb-6 sm:mb-8 hover:bg-white/10 transition-colors shadow-[0_0_20px_rgba(0,0,0,0.5)] cursor-default text-center">
+                        <span className="text-primary font-bold text-[10px] sm:text-xs uppercase tracking-widest flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary animate-pulse"></span> NUEVA PLATAFORMA
                         </span>
-                        <span className="w-px h-3 bg-white/20"></span>
-                        <span className="text-gray-300 text-xs font-medium">Gestión integral para complejos deportivos</span>
+                        <span className="hidden sm:block w-px h-3 bg-white/20"></span>
+                        <span className="text-gray-300 text-[10px] sm:text-xs font-medium">Gestión integral para complejos deportivos</span>
                     </div>
 
-                    <h1 className="text-5xl xs:text-6xl sm:text-7xl md:text-8xl font-black tracking-tighter mb-6 mx-auto drop-shadow-2xl leading-[1.1]">
-                        <span className="text-white">
+                    <h1 className="text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-4 sm:mb-6 mx-auto drop-shadow-2xl leading-[1.1] sm:leading-[1.1]">
+                        <span className="text-white block sm:inline">
                             <span className="inline-block pr-2" style={{ transform: 'skewX(-12deg)' }}>RESERVAR</span>
                             NUNCA FUE
                         </span>
-                        <br className="hidden md:block" />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-accent drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">
+                        <br className="hidden sm:block" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-400 to-accent drop-shadow-[0_0_15px_rgba(16,185,129,0.5)] block sm:inline mt-2 sm:mt-0">
                             TAN FÁCIL
                         </span>
                     </h1>
@@ -69,13 +69,13 @@ export default async function HomePage() {
                         Digitaliza tu club, administra tus canchas sin esfuerzo y potencia tus ingresos. Únete a la nueva era del deporte amateur.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center w-full max-w-sm sm:max-w-xl mx-auto z-20">
-                        <Link href="#explorar" className="w-full sm:w-auto btn btn-primary text-lg shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] px-10 py-4 group">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-stretch sm:items-center w-full max-w-sm sm:max-w-xl mx-auto z-20 px-2 sm:px-0">
+                        <Link href="#explorar" className="w-full sm:w-auto btn btn-primary text-base sm:text-lg shadow-[0_0_30px_rgba(16,185,129,0.4)] hover:shadow-[0_0_50px_rgba(16,185,129,0.6)] px-6 sm:px-10 py-4 group flex items-center justify-center">
                             Explorar Canchas
                             <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                         </Link>
 
-                        <Link href="/register" className="w-full sm:w-auto btn btn-ghost text-lg px-10 py-4 glass hover:bg-white/10 text-white font-medium border-white/20">
+                        <Link href="/register" className="w-full sm:w-auto btn btn-ghost text-base sm:text-lg px-6 sm:px-10 py-4 glass hover:bg-white/10 text-white font-medium border-white/20 flex items-center justify-center">
                             Soy Administrador
                         </Link>
                     </div>

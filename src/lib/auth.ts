@@ -5,8 +5,9 @@ import { dash } from "@better-auth/infra";
 import bcrypt from "bcryptjs";
 
 export const auth = betterAuth({
-    secret: process.env.BETTER_AUTH_SECRET || "default-secret-key-for-dev",
-    baseURL: process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+    secret: process.env.BETTER_AUTH_SECRET,
+    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
+    trustedOrigins: process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`, process.env.BETTER_AUTH_URL as string].filter(Boolean) : ["http://localhost:3000"],
     database: prismaAdapter(prisma, {
         provider: "sqlite",
     }),
