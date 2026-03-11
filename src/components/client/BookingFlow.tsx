@@ -231,10 +231,10 @@ export default function BookingFlow({
     const depositAmount = field.complex?.downPaymentFixed || 0
 
     return (
-        <div className="glass-card w-full p-4 sm:p-6 md:p-8 max-w-2xl mx-auto transform transition-all duration-500 relative bg-[#0f172a]/80 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className="glass-card w-full p-4 sm:p-6 md:p-8 max-w-2xl mx-auto transform transition-all duration-500 relative bg-[#050505]/95 backdrop-blur-3xl border border-white/5 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden">
             {/* Background Glows */}
-            <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
-            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent/10 rounded-full blur-[100px] pointer-events-none"></div>
+            <div className="absolute -top-20 -left-20 w-64 h-64 bg-primary/20 rounded-full blur-[120px] pointer-events-none animate-pulse"></div>
+            <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-accent/20 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDelay: '1s' }}></div>
 
             <div className="mb-8 relative z-10">
                 <div className="flex items-center justify-between mb-3 px-1">
@@ -350,37 +350,38 @@ export default function BookingFlow({
 
                         <div className="bg-white text-slate-900 rounded-3xl overflow-hidden shadow-2xl relative">
                             {/* Ticket Header */}
-                            <div className="bg-slate-900 text-white p-6 relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+                            <div className="bg-[#111] text-white p-6 relative overflow-hidden border-b border-white/10">
+                                <div className="absolute top-0 right-0 p-24 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                                 <div className="relative z-10 flex justify-between items-start">
                                     <div>
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-1">Cancha</p>
-                                        <h3 className="text-2xl font-black leading-none">{field.name}</h3>
-                                        <div className="text-xs text-gray-400 mt-1 uppercase tracking-wide font-bold">Fútbol {field.type} • Sintético</div>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-1">Cancha</p>
+                                        <h3 className="text-2xl font-black leading-none tracking-tight">{field.name}</h3>
+                                        <div className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Fútbol {field.type} • Sintético</div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1">Fecha</p>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Fecha</p>
                                         <p className="text-xl font-bold">{date}</p>
-                                        <p className="text-3xl font-black text-primary leading-none mt-1">{selectedTime}:00</p>
+                                        <p className="text-3xl font-black text-primary drop-shadow-[0_0_10px_rgba(16,185,129,0.3)] leading-none mt-1">{selectedTime}:00</p>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Perforated Line */}
-                            <div className="relative h-6 bg-slate-900">
-                                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-slate-100"></div> {/* White part bg */}
-                                <div className="absolute -left-3 top-[-10px] w-6 h-6 rounded-full bg-[#020617] z-10"></div> {/* Left Notch */}
-                                <div className="absolute -right-3 top-[-10px] w-6 h-6 rounded-full bg-[#020617] z-10"></div> {/* Right Notch */}
-                                <div className="absolute bottom-[1px] left-2 right-2 border-b-2 border-dashed border-gray-400/50 z-0"></div>
+                            <div className="relative h-6 bg-[#111]">
+                                <div className="absolute bottom-0 left-0 w-full h-[3px] bg-[#0A0A0A]"></div>
+                                <div className="absolute -left-3 top-[-10px] w-6 h-6 rounded-full bg-[#050505] z-10 shadow-inner"></div>
+                                <div className="absolute -right-3 top-[-10px] w-6 h-6 rounded-full bg-[#050505] z-10 shadow-inner"></div>
+                                <div className="absolute bottom-[1px] left-2 right-2 border-b-2 border-dashed border-white/5 z-0"></div>
                             </div>
 
                             {/* Ticket Body */}
-                            <div className="p-6 bg-slate-100 space-y-3">
-                                <div className="flex justify-between items-center text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-300 pb-2">
+                            <div className="p-6 bg-[#0A0A0A] space-y-3 relative overflow-hidden">
+                                <div className="absolute bottom-0 right-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl"></div>
+                                <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-white/10 pb-2">
                                     <span>Concepto</span>
                                     <span>Importe</span>
                                 </div>
-                                <div className="flex justify-between items-center font-bold text-slate-800">
+                                <div className="flex justify-between items-center font-bold text-gray-200">
                                     <span>Alquiler Cancha</span>
                                     <span>${field.price}</span>
                                 </div>
@@ -388,34 +389,34 @@ export default function BookingFlow({
                                     if (qty === 0) return null
                                     const itm = inventory.find(i => i.id === id)
                                     return (
-                                        <div key={id} className="flex justify-between items-center text-sm text-gray-600 font-medium">
+                                        <div key={id} className="flex justify-between items-center text-sm text-gray-400 font-medium">
                                             <span>{itm?.name} (x{qty})</span>
                                             <span>${(itm?.price || 0) * qty}</span>
                                         </div>
                                     )
                                 })}
 
-                                <div className="flex justify-between items-center pt-4 mt-2 border-t-2 border-slate-900">
-                                    <span className="text-xl font-black text-slate-900 tracking-tighter uppercase">Total Cancha</span>
-                                    <span className="text-3xl font-black text-slate-900 tracking-tighter">${currentTotal}</span>
+                                <div className="flex justify-between items-center pt-4 mt-2 border-t border-white/10">
+                                    <span className="text-xl font-black text-white tracking-tighter uppercase relative z-10">Total Cancha</span>
+                                    <span className="text-3xl font-black text-white tracking-tighter relative z-10">${currentTotal}</span>
                                 </div>
 
                                 {hasDeposit && (
-                                    <div className={`mt-4 rounded-2xl p-4 border-2 transition-all duration-300 ${paymentType === 'DEPOSIT' ? 'bg-emerald-500/10 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-slate-200 border-slate-300'}`}>
+                                    <div className={`mt-4 rounded-2xl p-4 border transition-all duration-300 relative z-10 ${paymentType === 'DEPOSIT' ? 'bg-primary/10 border-primary shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-[#111] border-white/5'}`}>
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className={`text-[10px] font-black uppercase tracking-widest ${paymentType === 'DEPOSIT' ? 'text-emerald-600' : 'text-slate-500'}`}>Seña Obligatoria</span>
-                                            <span className={`text-2xl font-black ${paymentType === 'DEPOSIT' ? 'text-emerald-600' : 'text-slate-800'}`}>${depositAmount}</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-widest ${paymentType === 'DEPOSIT' ? 'text-primary' : 'text-gray-500'}`}>Seña Obligatoria</span>
+                                            <span className={`text-2xl font-black ${paymentType === 'DEPOSIT' ? 'text-primary' : 'text-gray-300'}`}>${depositAmount}</span>
                                         </div>
-                                        <p className={`text-[9px] font-bold uppercase tracking-tight ${paymentType === 'DEPOSIT' ? 'text-emerald-700/70' : 'text-slate-500'}`}>
+                                        <p className={`text-[9px] font-bold uppercase tracking-tight ${paymentType === 'DEPOSIT' ? 'text-primary/70' : 'text-gray-600'}`}>
                                             Monto mínimo para bloquear el turno
                                         </p>
                                     </div>
                                 )}
 
-                                <div className="mt-4 pt-4 border-t border-dashed border-gray-400/30">
+                                <div className="mt-4 pt-4 border-t border-dashed border-white/10 relative z-10">
                                     <div className="flex justify-between items-end">
                                         <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total a Pagar Ahora</span>
-                                        <span className="text-4xl font-black text-slate-900 tracking-tighter">
+                                        <span className="text-4xl font-black text-white tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">
                                             ${paymentType === 'DEPOSIT' ? depositAmount : currentTotal}
                                         </span>
                                     </div>
@@ -430,9 +431,9 @@ export default function BookingFlow({
                             <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest pl-1">Adicionales</h3>
                             <div className="grid grid-cols-1 gap-3">
                                 {inventory.map(item => (
-                                    <div key={item.id} className="flex items-center justify-between p-3 bg-slate-800/40 border border-white/5 rounded-2xl hover:bg-slate-800/60 transition-colors">
+                                    <div key={item.id} className="flex items-center justify-between p-3 bg-[#111] border border-white/5 rounded-2xl hover:bg-[#1a1a1a] hover:border-white/10 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-xl shadow-inner border border-white/5">🎒</div>
+                                            <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-xl shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] border border-white/5">🎒</div>
                                             <div>
                                                 <p className="text-white font-bold text-sm">{item.name}</p>
                                                 <p className="text-primary text-xs font-bold">${item.price}</p>

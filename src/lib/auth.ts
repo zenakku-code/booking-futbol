@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
+import { dash } from "@better-auth/infra";
 import bcrypt from "bcryptjs";
 
 export const auth = betterAuth({
@@ -34,7 +35,10 @@ export const auth = betterAuth({
                 required: false,
             }
         }
-    }
+    },
+    plugins: [
+        dash(),
+    ]
 });
 
 // Wrapper for backwards compatibility across the old Next.js App Router codebase

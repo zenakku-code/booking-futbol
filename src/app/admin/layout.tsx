@@ -63,11 +63,11 @@ export default function AdminLayout({
 
 
     return (
-        <div className="min-h-screen flex bg-[#020617] relative">
+        <div className="min-h-screen flex bg-[#050505] relative text-white">
             <SubscriptionCheck />
             {/* Mobile Header */}
-            <div className="md:hidden fixed top-0 w-full z-50 glass-card rounded-none border-x-0 border-t-0 border-b border-white/10 px-6 py-4 flex items-center justify-between">
-                <span className="font-bold text-white text-lg">Admin Panel</span>
+            <div className="md:hidden fixed top-0 w-full z-50 glass rounded-none border-x-0 border-t-0 border-b border-white/5 px-6 py-4 flex items-center justify-between">
+                <span className="font-bold text-white text-lg tracking-tight">Admin <span className="text-primary italic">Pro</span></span>
                 <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="text-white p-2">
                     ☰
                 </button>
@@ -83,17 +83,16 @@ export default function AdminLayout({
 
             {/* Sidebar */}
             <aside className={`
-                fixed md:sticky top-0 h-[100dvh] w-72 glass border-r border-white/5 p-6 flex flex-col gap-8 z-50 transition-transform duration-300 ease-in-out overflow-y-auto custom-scrollbar
+                fixed md:sticky top-0 h-[100dvh] w-72 bg-[#0a0a0a]/95 backdrop-blur-3xl border-r border-white/5 p-6 flex flex-col gap-8 z-50 transition-transform duration-300 ease-in-out overflow-y-auto custom-scrollbar shadow-[10px_0_50px_rgba(0,0,0,0.5)]
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
-                bg-[#0f172a]/95 md:bg-transparent
             `}>
-                <div className="flex items-center gap-3 px-2">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20">
+                <div className="flex items-center gap-3 px-2 group cursor-default">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#111] to-[#050505] border border-white/10 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
                         <span className="text-xl">⚽</span>
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold text-white tracking-tight">Tiki Taka App</h1>
-                        <span className="text-xs text-primary font-bold tracking-widest uppercase">Admin Pro</span>
+                        <h1 className="text-xl font-black text-white tracking-tighter">TIKI<span className="italic">TAKA</span></h1>
+                        <span className="text-[10px] text-primary font-bold tracking-[0.2em] uppercase">Admin Pro</span>
                     </div>
                 </div>
 
@@ -169,14 +168,15 @@ function NavLink({ href, children, icon, onClick }: { href: string; children: Re
             href={href}
             onClick={onClick}
             className={`
-                px-4 py-3.5 rounded-xl transition-all duration-200 font-medium flex items-center gap-3 group relative overflow-hidden
+                px-4 py-3.5 rounded-xl transition-all duration-300 font-medium flex items-center gap-3 group relative overflow-hidden
                 ${isActive
-                    ? 'bg-primary text-slate-900 shadow-[0_0_20px_-5px_rgba(34,197,94,0.4)] md:translate-x-2'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'}
+                    ? 'bg-primary/10 text-primary border border-primary/20 shadow-[inset_0_0_20px_rgba(16,185,129,0.1)]'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'}
             `}
         >
-            <span className={`text-xl ${isActive ? 'scale-110' : 'group-hover:scale-110'} transition-transform`}>{icon}</span>
-            <span className="relative z-10">{children}</span>
+            {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary drop-shadow-[0_0_5px_rgba(16,185,129,0.8)] rounded-r-full"></div>}
+            <span className={`text-xl ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'group-hover:scale-110'} transition-transform z-10 relative`}>{icon}</span>
+            <span className="relative z-10 tracking-wide text-sm font-semibold">{children}</span>
         </Link>
     )
 }

@@ -12,45 +12,39 @@ datasource db {
 }
 
 model Complex {
-  id          String    @id @default(uuid())
-  name        String
-  slug        String    @unique
-  address     String?
-  logoUrl     String?
-  
+  id                   String                @id @default(uuid())
+  name                 String
+  slug                 String                @unique
+  address              String?
+  logoUrl              String?
   // Payment Config
-  downPaymentFixed   Float    @default(0)
-  downPaymentEnabled Boolean  @default(false)
-  
+  downPaymentFixed     Float                 @default(0)
+  downPaymentEnabled   Boolean               @default(false)
   // Subscription & Trial
-  subscriptionActive Boolean  @default(true) // Start active (trial)
-  trialEndsAt        DateTime?
-  isActive           Boolean  @default(true) // For manual ban/disable
-  subscriptionDate   DateTime?
-  subscriptionEndsAt DateTime? // When the paid plan expires
-  planType           String?   // "MONTHLY" | "QUARTERLY"
-  
-  fields      Field[]
-  accounts    Account[]
-  users       User[]
-  inventory   InventoryItem[]
-  apiKeys     ApiKey[]
+  subscriptionActive   Boolean               @default(true) // Start active (trial)
+  trialEndsAt          DateTime?
+  isActive             Boolean               @default(true) // For manual ban/disable
+  subscriptionDate     DateTime?
+  subscriptionEndsAt   DateTime? // When the paid plan expires
+  planType             String? // "MONTHLY" | "QUARTERLY"
+  fields               Field[]
+  accounts             Account[]
+  users                User[]
+  inventory            InventoryItem[]
+  apiKeys              ApiKey[]
   subscriptionPayments SubscriptionPayment[]
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
 }
 
 model SubscriptionPayment {
   id         String   @id @default(uuid())
   amount     Float
-  planType   String   // "MONTHLY" | "QUARTERLY"
+  planType   String // "MONTHLY" | "QUARTERLY"
   status     String   @default("pending") // pending, approved, rejected
-  externalId String?  // Payment provider ID (MP)
-  
+  externalId String? // Payment provider ID (MP)
   complexId  String
   complex    Complex  @relation(fields: [complexId], references: [id])
-  
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -60,14 +54,13 @@ model SubscriptionPayment {
 model Field {
   id            String    @id @default(uuid())
   name          String
-  type          String    // "5", "7", "11"
+  type          String // "5", "7", "11"
   price         Float
   imageUrl      String?
   availableDays String    @default("Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo")
   openTime      String    @default("09:00")
   closeTime     String    @default("23:00")
   bookings      Booking[]
-  
   // SaaS Link
   complexId     String?
   complex       Complex?  @relation(fields: [complexId], references: [id])
@@ -76,42 +69,36 @@ model Field {
 }
 
 model InventoryItem {
-  id          String   @id @default(uuid())
-  name        String
-  price       Float    // Price per rental
-  stock       Int      @default(0)
-  
-  complexId   String
-  complex     Complex  @relation(fields: [complexId], references: [id])
-  
-  bookings    BookingItem[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String        @id @default(uuid())
+  name      String
+  price     Float // Price per rental
+  stock     Int           @default(0)
+  complexId String
+  complex   Complex       @relation(fields: [complexId], references: [id])
+  bookings  BookingItem[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   @@index([complexId])
 }
 
 model Booking {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   fieldId     String
-  field       Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  field       Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   date        DateTime
-  startTime   String   
-  endTime     String   
+  startTime   String
+  endTime     String
   clientName  String
   clientPhone String?
   totalPrice  Float
-  status      String   @default("pending") // pending, confirmed, confirmed_partial, cancelled, collecting
-  
+  status      String        @default("pending") // pending, confirmed, confirmed_partial, cancelled, collecting
   // Payment Upgrade Phase 3
-  paymentType String   @default("FULL") // FULL, SPLIT, DEPOSIT
-  paidAmount  Float    @default(0)
-  
+  paymentType String        @default("FULL") // FULL, SPLIT, DEPOSIT
+  paidAmount  Float         @default(0)
   items       BookingItem[]
   payments    Payment[]
-  
-  createdAt   DateTime @default(now())
+  createdAt   DateTime      @default(now())
 
   @@index([fieldId])
   @@index([fieldId, date])
@@ -119,23 +106,22 @@ model Booking {
 }
 
 model Payment {
-  id          String   @id @default(uuid())
-  amount      Float
-  status      String   @default("pending") // pending, approved, rejected
-  externalId  String?  // MercadoPago Payment ID
-  payerEmail  String?
-  
-  bookingId   String
-  booking     Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  amount     Float
+  status     String   @default("pending") // pending, approved, rejected
+  externalId String? // MercadoPago Payment ID
+  payerEmail String?
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([bookingId])
   @@index([externalId])
 }
 
 // Join table for Booking and InventoryItem to track rented items per booking
+
 model BookingItem {
   id              String        @id @default(uuid())
   bookingId       String
@@ -143,7 +129,7 @@ model BookingItem {
   inventoryItemId String
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
   quantity        Int           @default(1)
-  priceAtBooking  Float         // Snapshot of price when booked
+  priceAtBooking  Float // Snapshot of price when booked
   returned        Boolean       @default(false)
 
   @@index([bookingId])
@@ -156,12 +142,9 @@ model Account {
   accessToken  String
   refreshToken String?
   publicKey    String?
-  userId       String   @default("admin") 
-  
-  // SaaS Link
-  complexId    String?   @unique
-  complex      Complex?  @relation(fields: [complexId], references: [id])
-  
+  userId       String   @default("admin") // SaaS Link
+  complexId    String?  @unique
+  complex      Complex? @relation(fields: [complexId], references: [id])
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -169,26 +152,25 @@ model Account {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
+  id            String   @id @default(uuid())
+  email         String   @unique
   name          String?
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean  @default(false)
   image         String?
-  password      String?   
-  role          String    @default("USER") // USER, ADMIN, SUPERADMIN
-  
+  password      String?
+  role          String   @default("USER") // USER, ADMIN, SUPERADMIN
   // SaaS Link
   complexId     String?
-  complex       Complex?  @relation(fields: [complexId], references: [id])
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  complex       Complex? @relation(fields: [complexId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Better Auth Relations
-  sessions      Session[]
-  accounts      AuthAccount[]
+  sessions Session[]
+  accounts AuthAccount[]
 
   @@index([complexId])
+  @@map("user")
 }
 
 model Session {
@@ -203,6 +185,7 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@map("session")
 }
 
 model AuthAccount {
@@ -226,21 +209,24 @@ model AuthAccount {
 }
 
 model Verification {
-  id         String    @id @default(uuid())
+  id         String   @id @default(uuid())
   identifier String
   value      String
   expiresAt  DateTime
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
 }
 
 model ApiKey {
-  id        String   @id @default(uuid())
-  key       String   @unique
+  id        String    @id @default(uuid())
+  key       String    @unique
   name      String
   complexId String
-  complex   Complex  @relation(fields: [complexId], references: [id])
-  createdAt DateTime @default(now())
+  complex   Complex   @relation(fields: [complexId], references: [id])
+  createdAt DateTime  @default(now())
   lastUsed  DateTime?
 
   @@index([complexId])
