@@ -4,10 +4,21 @@ import { prisma } from "./prisma";
 import { dash } from "@better-auth/infra";
 import bcrypt from "bcryptjs";
 
+// Fallback seguro: usa JWT_SECRET si BETTER_AUTH_SECRET no existe en Vercel
+const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET || "dev-only-secret-change-me-in-production";
+
+const baseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+
+// Construir orígenes confiables dinámicamente
+const trustedOrigins: string[] = ["http://localhost:3000"];
+if (process.env.VERCEL_URL) trustedOrigins.push(`https://${process.env.VERCEL_URL}`);
+if (process.env.NEXT_PUBLIC_BASE_URL) trustedOrigins.push(process.env.NEXT_PUBLIC_BASE_URL);
+if (process.env.BETTER_AUTH_URL) trustedOrigins.push(process.env.BETTER_AUTH_URL);
+
 export const auth = betterAuth({
-    secret: process.env.BETTER_AUTH_SECRET,
-    baseURL: process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000",
-    trustedOrigins: process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`, process.env.BETTER_AUTH_URL as string].filter(Boolean) : ["http://localhost:3000"],
+    secret: authSecret,
+    baseURL,
+    trustedOrigins,
     database: prismaAdapter(prisma, {
         provider: "sqlite",
     }),

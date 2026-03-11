@@ -7,7 +7,7 @@ const globalForPrisma = globalThis as unknown as {
 
 const createPrismaClient = () => {
     const url = process.env.DATABASE_URL
-    const token = process.env.TURSO_AUTH_TOKEN
+    const token = process.env.TURSO_AUTH_TOKEN || process.env.DATABASE_AUTH_TOKEN
 
     if (process.env.NODE_ENV !== 'production') {
         console.log('[Prisma] Environment check:', {
