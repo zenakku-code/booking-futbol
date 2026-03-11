@@ -5,7 +5,7 @@ export default function FieldCard({ field }: { field: any }) {
         <Link href={`/${field.complex?.slug || 'error'}/fields/${field.id}`} className="block group w-full h-full">
             <div className="glass-card flex flex-col overflow-hidden relative transition-all duration-300 transform group-hover:-translate-y-2 group-hover:shadow-2xl hover:shadow-primary/20 h-full">
                 {/* Image Section - Fixed Aspect Ratio */}
-                <div className="relative w-full pt-[60%] bg-slate-800 overflow-hidden">
+                <div className="relative w-full aspect-[4/3] xs:aspect-video sm:aspect-[4/3] bg-[#0A0A0A] overflow-hidden">
                     <div className="absolute inset-0 flex items-center justify-center">
                         {field.imageUrl ? (
                             <img
@@ -16,8 +16,8 @@ export default function FieldCard({ field }: { field: any }) {
                                 decoding="async"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-primary/20 transition-colors">
-                                <span className="text-6xl filter drop-shadow-lg opacity-80 group-hover:scale-110 transition-transform duration-300">⚽</span>
+                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#111] to-[#050505] group-hover:from-[#111] group-hover:to-primary/20 transition-colors">
+                                <span className="text-6xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)] opacity-80 group-hover:scale-110 group-hover:drop-shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all duration-300">⚽</span>
                             </div>
                         )}
                     </div>
@@ -30,11 +30,11 @@ export default function FieldCard({ field }: { field: any }) {
                     </div>
 
                     {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-80" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-90" />
                 </div>
 
                 {/* Content Section */}
-                <div className="p-6 flex-1 flex flex-col relative z-20 bg-gradient-to-b from-slate-900/50 to-transparent">
+                <div className="p-4 sm:p-6 flex-1 flex flex-col relative z-20 bg-gradient-to-b from-[#050505]/50 to-transparent">
                     <div className="mb-4">
                         <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors line-clamp-1">{field.name}</h3>
                         <p className="text-gray-400 text-sm line-clamp-2">
