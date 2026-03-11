@@ -59,8 +59,19 @@ export async function POST(request: Request) {
             const newUser = await tx.user.create({
                 data: {
                     email,
+                    password: hashedPassword, // Keep for legacy if needed, but Better Auth uses AuthAccount
+                    complexId: newComplex.id,
+                    name: complexName // Set name as complex name by default
+                }
+            })
+
+            // 5. Create AuthAccount for Better Auth
+            await tx.authAccount.create({
+                data: {
+                    userId: newUser.id,
+                    accountId: newUser.id,
+                    providerId: "credential",
                     password: hashedPassword,
-                    complexId: newComplex.id
                 }
             })
 

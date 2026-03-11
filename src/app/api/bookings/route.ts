@@ -145,10 +145,15 @@ export async function POST(request: Request) {
         // 3. Security: Calculate Price on Server Side (Ignore client totalPrice)
         let calculatedTotal = field.price // Base price
 
-        // Calculate items total
+        // 4. Batch fetch inventory items to avoid N+1 queries
+        const itemIds = items.map((i: any) => i.id)
+        const inventoryItems = await prisma.inventoryItem.findMany({
+            where: { id: { in: itemIds } }
+        })
+
         const validItemsPayload = []
         for (const item of items) {
-            const invItem = await prisma.inventoryItem.findUnique({ where: { id: item.id } })
+            const invItem = inventoryItems.find(i => i.id === item.id)
             if (invItem) {
                 calculatedTotal += invItem.price * item.quantity
                 validItemsPayload.push({
