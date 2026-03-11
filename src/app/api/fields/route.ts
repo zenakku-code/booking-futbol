@@ -42,7 +42,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No autorizado o falta complexId' }, { status: 401 })
         }
 
-        let { name, type, price, imageUrl, availableDays, openTime, closeTime } = body
+        const { name, imageUrl, availableDays, openTime, closeTime } = body
+        let { type, price } = body
 
         // Fallbacks automatically added for integration testing scripts that omit them
         if (!type) type = 'Fútbol 5'
