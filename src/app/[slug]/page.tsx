@@ -101,8 +101,7 @@ export default async function ComplexPage({
                         </h2>
 
                         <p className="text-lg sm:text-xl md:text-2xl text-gray-400 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-                            Reserva tu cancha en el mejor complejo de la zona.
-                            Césped de calidad profesional y excelente iluminación.
+                            {currentComplex.description || 'Reserva tu cancha en el mejor complejo de la zona. Césped de calidad profesional y excelente iluminación.'}
                         </p>
 
                         <div className="flex flex-col md:flex-row gap-4 justify-center items-center">

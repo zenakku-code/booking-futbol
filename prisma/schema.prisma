@@ -16,6 +16,7 @@ model Complex {
   name                 String
   slug                 String                @unique
   address              String?
+  description          String?
   logoUrl              String?
   // Payment Config
   downPaymentFixed     Float                 @default(0)

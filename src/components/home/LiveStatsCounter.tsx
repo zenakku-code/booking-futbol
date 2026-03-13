@@ -56,8 +56,8 @@ export function LiveStatsCounter() {
     }, [])
 
     return (
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 mt-16 animate-fade-in" style={{ animationDelay: '0.4s', opacity: 0 }}>
-            <div className="flex flex-col items-center glass-card px-8 py-6 w-full sm:w-auto min-w-[200px] border-t-2 border-t-accent/50">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 mt-16 animate-fade-in relative z-20">
+            <div className="flex flex-col items-center glass-card px-10 py-8 w-full sm:w-auto min-w-[220px] border-t-2 border-accent/50 shadow-2xl relative">
                 <div className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tighter mix-blend-screen drop-shadow-[0_0_15px_rgba(14,165,233,0.5)]">
                     {isLoading ? <span className="opacity-50 text-2xl">...</span> : <AnimatedCounter value={stats.complexes} />}
                 </div>

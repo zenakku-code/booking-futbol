@@ -11,6 +11,37 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
         }
 
+        // Content moderation: Block offensive/obscene names
+        const blockedWords = [
+            // Spanish offensive
+            'puto', 'puta', 'mierda', 'verga', 'culo', 'pendejo', 'pendeja',
+            'boludo', 'pelotudo', 'pelotuda', 'forro', 'trolo', 'trola',
+            'concha', 'choto', 'chota', 'mogolico', 'mogolica', 'tarado',
+            'idiota', 'estupido', 'estupida', 'maricon', 'pija', 'poronga',
+            'cogido', 'coger', 'garchar', 'cagar', 'carajo', 'hdp',
+            'sorete', 'pajero', 'pajera', 'ojete', 'orto',
+            // English offensive
+            'fuck', 'shit', 'ass', 'dick', 'bitch', 'bastard',
+            'nigger', 'nigga', 'faggot', 'retard', 'whore', 'slut',
+            'cock', 'pussy', 'cunt', 'damn', 'penis', 'vagina'
+        ]
+
+        const nameToCheck = complexName.toLowerCase().replace(/[^a-záéíóúñü]/gi, ' ')
+        const emailPrefix = email.split('@')[0].toLowerCase().replace(/[^a-záéíóúñü]/gi, ' ')
+        const textToCheck = `${nameToCheck} ${emailPrefix}`
+
+        const foundWord = blockedWords.find(word => {
+            const regex = new RegExp(`\\b${word}\\b|${word}`, 'i')
+            return regex.test(textToCheck)
+        })
+
+        if (foundWord) {
+            return NextResponse.json({
+                error: 'El nombre del complejo o email contiene contenido inapropiado. Por favor usá un nombre profesional.'
+            }, { status: 400 })
+        }
+
+
         // 0. Rate Limit (Global protection for registry)
         const { headers } = await import('next/headers')
         const { rateLimit } = await import('@/lib/rate-limit')
