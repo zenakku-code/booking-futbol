@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { dash } from "@better-auth/infra";
+import { admin, magicLink } from "better-auth/plugins";
 import bcrypt from "bcryptjs";
 
 // Fallback seguro: usa JWT_SECRET si BETTER_AUTH_SECRET no existe en Vercel
@@ -36,6 +37,12 @@ export const auth = betterAuth({
             }
         }
     },
+    socialProviders: {
+        google: {
+            clientId: process.env.GOOGLE_CLIENT_ID || "",
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+        },
+    },
     user: {
         additionalFields: {
             role: {
@@ -50,6 +57,34 @@ export const auth = betterAuth({
     },
     plugins: [
         dash(),
+        admin(),
+        magicLink({
+            sendMagicLink: async ({ email, url, token }, request) => {
+                console.log(`[MagicLink] Sending to ${email}: ${url}`);
+                
+                // Integración opcional con Resend (se activa si hay API KEY)
+                if (process.env.RESEND_API_KEY) {
+                    try {
+                        await fetch('https://api.resend.com/emails', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+                            },
+                            body: JSON.stringify({
+                                from: 'Tiki Taka <noreply@tikitaka.com>',
+                                to: email,
+                                subject: 'Tu enlace de acceso a Tiki Taka',
+                                html: `<p>Hacé clic en el siguiente enlace para entrar a tu cuenta:</p><a href="${url}">${url}</a>`
+                            })
+                        });
+                        console.log(`[MagicLink] Email sent via Resend to ${email}`);
+                    } catch (e) {
+                        console.error(`[MagicLink] Failed to send email to ${email}`, e);
+                    }
+                }
+            }
+        }),
     ]
 });
 
@@ -62,6 +97,7 @@ export async function getSession() {
     return {
         id: sessionData.user.id,
         email: sessionData.user.email,
+        name: sessionData.user.name,
         role: sessionData.user.role,
         complexId: sessionData.user.complexId,
     };

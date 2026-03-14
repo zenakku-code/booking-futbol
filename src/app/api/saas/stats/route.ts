@@ -19,35 +19,57 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        // Calculate Total Revenue from SubscriptionPayment (approved)
-        const totalRevenue = await prisma.subscriptionPayment.aggregate({
-            where: { status: 'approved' },
+        // Fetch System Config for MRR calculation
+        const config = await prisma.systemConfig.findFirst()
+        const monthlyPrice = config?.monthlyPrice || 10000
+        const quarterlyPrice = config?.quarterlyPrice || 27000
+
+        // Fetch Total Revenue from Snapshots
+        const revenueAgg = await prisma.revenueSnapshot.aggregate({
             _sum: { amount: true }
         })
+        const totalRevenue = revenueAgg._sum.amount || 0
 
-        // Count Active Subscriptions by Plan (using Complex current plan logic or active payments?)
-        // Better to count current active subscriptions in Complex
-        const activeMonthly = await prisma.complex.count({
+        // Count Subscriptions with Grouping
+        const subscriptionStats = await prisma.complex.groupBy({
+            by: ['planType'],
+            where: { subscriptionActive: true },
+            _count: true
+        })
+
+        const activeMonthly = subscriptionStats.find(s => s.planType === 'MONTHLY')?._count || 0
+        const activeQuarterly = subscriptionStats.find(s => s.planType === 'QUARTERLY')?._count || 0
+
+        const activeTrial = await prisma.complex.count({
             where: {
                 subscriptionActive: true,
-                planType: 'MONTHLY',
-                // subscriptionEndsAt: { gt: new Date() } // Optional: strict count
+                planType: null,
+                trialEndsAt: { gt: new Date() }
             }
         })
 
-        const activeQuarterly = await prisma.complex.count({
-            where: {
-                subscriptionActive: true,
-                planType: 'QUARTERLY'
-            }
-        })
+        // MRR Calculation (Monthly Recurring Revenue)
+        const mrr = (activeMonthly * monthlyPrice) + (activeQuarterly * (quarterlyPrice / 3))
+
+        // Conversion Calculation
+        const totalComplexes = await prisma.complex.count()
+        const conversionRate = totalComplexes > 0 
+            ? ((activeMonthly + activeQuarterly) / totalComplexes) * 100 
+            : 0
 
         return NextResponse.json({
-            revenue: totalRevenue._sum.amount || 0,
+            revenue: totalRevenue,
+            mrr: mrr,
+            conversionRate: conversionRate,
             subscriptions: {
                 monthly: activeMonthly,
                 quarterly: activeQuarterly,
+                trial: activeTrial,
                 total: activeMonthly + activeQuarterly
+            },
+            growth: {
+                lastMonth: 12, // Placeholder for historical comparison
+                thisMonth: activeMonthly + activeQuarterly
             }
         })
 

@@ -21,13 +21,13 @@ export default function StatCard({ title, value, icon, trend, color, borderColor
     }
 
     return (
-        <div className={`relative overflow-hidden rounded-3xl border p-6 md:p-8 transition-all hover:-translate-y-1 hover:shadow-2xl group ${borderColor || 'border-white/5'} ${highlight ? 'ring-1 ring-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)] bg-amber-950/10' : 'bg-slate-900/40'}`}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${color || 'from-slate-800/20 to-slate-900/20'} z-0 opacity-100`} />
-            <div className="absolute right-0 top-0 p-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className={`glass-card p-5 md:p-8 transition-all hover:-translate-y-1 hover:shadow-2xl group ${borderColor || 'border-white/5'} ${highlight ? 'ring-2 ring-amber-500/30 bg-amber-950/20' : ''}`}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${color || 'from-slate-800/10 to-slate-900/10'} z-0 opacity-50`} />
+            <div className="absolute right-0 top-0 p-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
             <div className="relative z-10 flex flex-col h-full justify-between">
                 <div className="flex justify-between items-start mb-6">
-                    <span className="p-3 bg-slate-950/50 rounded-2xl border border-white/10 text-white group-hover:scale-110 transition-transform shadow-lg">
+                    <span className="p-3 bg-slate-950/50 rounded-full border border-white/10 text-white group-hover:scale-110 transition-transform shadow-lg">
                         {icons[icon] || icon}
                     </span>
                     {highlight && <span className="flex h-3 w-3 relative">

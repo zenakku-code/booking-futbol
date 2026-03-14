@@ -45,27 +45,30 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
 
     if (isConnected) {
         return (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-fade-in">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-2">
-                        <img src="/mercadopago.png" alt="Mercado Pago" className="w-full h-full object-contain" />
+            <div className="glass-card bg-emerald-500/[0.03] border border-emerald-500/20 rounded-full p-8 flex flex-col md:flex-row items-center justify-between gap-8 animate-fade-in shadow-[0_0_40px_rgba(16,185,129,0.05)]">
+                <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-2xl overflow-hidden p-3 border border-white/5 relative group">
+                        <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <img src="/mercadopago.png" alt="Mercado Pago" className="w-full h-full object-contain transform group-hover:scale-110 transition-transform" />
                     </div>
                     <div className="text-center md:text-left">
-                        <h3 className="text-emerald-400 font-bold text-lg">Mercado Pago Conectado</h3>
-                        <p className="text-emerald-200/70 text-xs font-mono">ID Vendedor: {mpUserId || '***************'}</p>
+                        <h3 className="text-emerald-400 font-black text-xl tracking-tight">Mercado Pago Conectado</h3>
+                        <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-1.5 flex items-center justify-center md:justify-start gap-2">
+                             Vendedor: <span className="text-emerald-500/50 font-mono tracking-normal">{mpUserId || '***************'}</span>
+                        </p>
                     </div>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                    <span className="text-emerald-400 font-bold text-xs bg-emerald-500/20 px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-                        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
-                        Activo
+                <div className="flex flex-col items-center md:items-end gap-3">
+                    <span className="text-emerald-400 font-black text-[10px] bg-emerald-500/10 border border-emerald-500/20 px-5 py-2 rounded-full uppercase tracking-[0.2em] flex items-center gap-2.5 shadow-lg shadow-emerald-500/5">
+                        <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+                        Pasarela Online Activa
                     </span>
                     <button
                         onClick={handleDisconnect}
                         disabled={loading}
-                        className="text-white/40 hover:text-red-400 text-[10px] uppercase font-bold tracking-wider transition-colors disabled:opacity-50"
+                        className="text-gray-500 hover:text-red-400 text-[9px] uppercase font-black tracking-[0.25em] transition-all disabled:opacity-30 hover:underline"
                     >
-                        {loading ? '...' : 'Desconectar'}
+                        {loading ? 'Sincronizando...' : 'Desvincular Cuenta'}
                     </button>
                 </div>
             </div>
@@ -73,16 +76,18 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
     }
 
     return (
-        <div className="bg-slate-800/50 border border-white/10 rounded-2xl p-6 group hover:border-blue-500/30 transition-all">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-lg overflow-hidden p-2 grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500">
+        <div className="glass-card p-8 border border-white/[0.03] group hover:border-primary/30 transition-all duration-700 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-[80px] pointer-events-none"></div>
+            
+            <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl overflow-hidden p-4 border border-white/5 grayscale group-hover:grayscale-0 transition-all duration-700 transform group-hover:rotate-3">
                         <img src="/mercadopago.png" alt="Conectar Mercado Pago" className="w-full h-full object-contain" />
                     </div>
-                    <div className="text-center md:text-left">
-                        <h3 className="text-white font-bold text-lg group-hover:text-[#009EE3] transition-colors">Conectar Mercado Pago</h3>
-                        <p className="text-gray-400 text-sm max-w-md">
-                            Vincula tu cuenta oficial para recibir los pagos de las señas automáticamente y de forma segura sin compartir contraseñas.
+                    <div className="text-center md:text-left space-y-2">
+                        <h3 className="text-white font-black text-2xl tracking-tight group-hover:text-primary transition-colors">Cobros Automatizados</h3>
+                        <p className="text-gray-500 text-sm font-bold leading-relaxed max-w-lg">
+                            Vincula tu cuenta oficial para recibir los pagos de las señas automáticamente. <span className="text-gray-400">Tus clientes podrán pagar con tarjeta, transferencia o saldo en cuenta.</span>
                         </p>
                     </div>
                 </div>
@@ -90,24 +95,28 @@ export default function OAuthConnect({ isConnected, mpUserId, complexId }: OAuth
                 <button
                     onClick={handleConnect}
                     disabled={loading}
-                    className="btn bg-[#009EE3] hover:bg-[#0081B9] text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:scale-105 transition-all w-full md:w-auto justify-center disabled:opacity-70 disabled:scale-100"
+                    className="btn btn-primary w-full md:w-auto px-12 py-5 text-xs font-black uppercase tracking-[0.25em] shadow-2xl active:scale-95 transition-all flex items-center justify-center gap-3 rounded-full"
                 >
                     {loading ? (
-                        <>
-                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Conectando...
-                        </>
+                        <div className="flex items-center gap-3">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <span>Conectando...</span>
+                        </div>
                     ) : (
-                        'Vincular Ahora'
+                        <>Vincular Ahora ⚡</>
                     )}
                 </button>
             </div>
-            <p className="text-[10px] text-gray-500 mt-4 text-center md:text-left">
-                Serás redirigido al sitio seguro de Mercado Pago. Nosotros nunca veremos tus claves.
-            </p>
+            
+            <div className="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+                <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-primary/40">🔒</span> Seguridad Garantizada: Nunca accedemos a tus claves.
+                </p>
+                <div className="flex items-center gap-4 opacity-30 grayscale group-hover:opacity-60 group-hover:grayscale-0 transition-all duration-700">
+                    <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Soportado por</span>
+                    <img src="/mercadopago.png" className="h-3 w-auto object-contain" alt="MP Logo" />
+                </div>
+            </div>
         </div>
     )
 }

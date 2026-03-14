@@ -22,7 +22,7 @@ export default function ClientLink({ slug }: { slug: string }) {
     }
 
     return (
-        <div className="inline-flex items-center gap-3 bg-slate-800/50 p-2 pr-4 rounded-xl border border-white/10 group hover:border-primary/30 transition-all hover:bg-slate-800/80">
+        <div className="inline-flex items-center gap-3 bg-slate-800/50 p-2 pr-4 rounded-full border border-white/10 group hover:border-primary/30 transition-all hover:bg-slate-800/80">
             {/* Icono */}
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">

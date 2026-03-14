@@ -36,10 +36,28 @@ export async function POST(request: Request) {
 
         // SECURITY FIX: Calculate expected amount on the server
         const complexConfig = booking.field.complex;
-        let amountToCharge = booking.totalPrice;
+        
+        // Calcular lo ya pagado para validar límites
+        const totalPaid = (booking as any).payments
+            .filter((p: any) => p.status === 'approved')
+            .reduce((sum: number, p: any) => sum + p.amount, 0)
+        const grandTotalPaid = totalPaid + ((booking as any).paidAmount || 0)
+        const remaining = Math.max(0, booking.totalPrice - grandTotalPaid)
 
-        if (complexConfig && complexConfig.downPaymentEnabled && complexConfig.downPaymentFixed > 0) {
-            amountToCharge = Math.min(complexConfig.downPaymentFixed, booking.totalPrice);
+        let amountToCharge = body.amount; // Priorizar el monto que viene del cliente (Vaquita)
+
+        if (!amountToCharge || isNaN(amountToCharge) || amountToCharge <= 0) {
+            // Si no viene monto (ej: flujo inicial de reserva), calcular por defecto
+            if (complexConfig && complexConfig.downPaymentEnabled && complexConfig.downPaymentFixed > 0) {
+                amountToCharge = Math.min(complexConfig.downPaymentFixed, booking.totalPrice);
+            } else {
+                amountToCharge = booking.totalPrice;
+            }
+        }
+
+        // Validar que el monto no exceda lo que falta pagar (con margen de 1 peso por redondeo)
+        if (amountToCharge > remaining + 1) {
+            return NextResponse.json({ error: `El monto excede el total pendiente ($${remaining})` }, { status: 400 })
         }
 
         // Check if a pending payment already exists and reuse it to avoid spamming the DB?

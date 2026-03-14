@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { getComplexId } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import Link from "next/link"
 import ClientLink from "@/components/admin/ClientLink"
 import StatCard from "@/components/admin/StatCard"
 
@@ -107,195 +108,211 @@ export default async function AdminDashboard() {
     const isTrialActive = daysRemaining !== null && daysRemaining > 0
 
     return (
-        <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto pb-20">
+        <div className="space-y-12 animate-fade-in w-full max-w-7xl mx-auto pb-32">
             {/* Header Section */}
-            <header className="flex flex-col lg:flex-row lg:items-center justify-between border-b border-white/5 pb-8 gap-6">
-                <div>
-                    <h2 className="text-3xl md:text-5xl font-black text-white mb-2 tracking-tight">
-                        {complex?.name || 'Dashboard'}
+            <header className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-white/[0.03] pb-12 mb-4 gap-8 px-1 overflow-hidden relative group">
+                <div className="relative z-10">
+                    <p className="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-4 flex items-center gap-2">
+                        <span className="w-8 h-[1px] bg-primary/50"></span>
+                        Dashboard Operativo
+                    </p>
+                    <h2 className="text-5xl md:text-7xl font-black text-white mb-3 tracking-tighter leading-none">
+                        {complex?.name || 'Mi Complejo'}
                     </h2>
-                    <p className="text-gray-400 text-base">Visión general del estado de tu complejo.</p>
+                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.2em]">Visión integral del rendimiento y flujo de caja</p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 relative z-10">
                     {complex?.slug && <ClientLink slug={complex.slug} />}
 
-                    <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 self-start">
+                    <div className="flex items-center gap-4 bg-white/[0.02] px-6 py-4 rounded-full border border-white/5 self-start shadow-2xl backdrop-blur-md">
                         <span className="relative flex h-3 w-3">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></span>
                         </span>
-                        <span className="text-sm font-medium text-white whitespace-nowrap">Sistema Operativo</span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Canal Online</span>
+                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter mt-1">Sincronizado</span>
+                        </div>
                     </div>
                 </div>
+                
+                {/* Background Accent */}
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
             </header>
 
-            {/* Trial Days Banner */}
+            {/* Trial Days Banner (Premium Redesign) */}
             {isTrialActive && (
-                <div className={`glass-card p-6 border-2 ${daysRemaining <= 2 ? 'border-red-500/50 bg-red-500/10' :
-                        daysRemaining <= 5 ? 'border-amber-500/50 bg-amber-500/10' :
-                            'border-blue-500/50 bg-blue-500/10'
-                    }`}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${daysRemaining <= 2 ? 'bg-red-500/20 text-red-400' :
-                                    daysRemaining <= 5 ? 'bg-amber-500/20 text-amber-400' :
-                                        'bg-blue-500/20 text-blue-400'
-                                }`}>
-                                <span className="text-2xl">⏱️</span>
+                <div className={`glass-card p-1 border border-white/[0.03] overflow-hidden group shadow-2xl shadow-black/40`}>
+                    <div className={`flex flex-col sm:flex-row items-center justify-between gap-8 p-8 ${daysRemaining <= 2 ? 'bg-red-500/[0.03]' : 'bg-primary/[0.02]'}`}>
+                        <div className="flex items-center gap-6">
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center relative ${daysRemaining <= 2 ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
+                                <div className={`absolute inset-0 rounded-full animate-pulse opacity-20 ${daysRemaining <= 2 ? 'bg-red-500' : 'bg-primary'}`}></div>
+                                <span className="text-4xl relative z-10">⏳</span>
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-white mb-1">
-                                    {daysRemaining === 0 ? '¡Último día de prueba!' :
-                                        daysRemaining === 1 ? '¡1 día restante de prueba!' :
-                                            `${daysRemaining} días restantes de prueba`}
+                                <h3 className="text-2xl font-black text-white mb-1 tracking-tight">
+                                    {daysRemaining === 0 ? '¡Hoy finaliza tu prueba!' :
+                                        daysRemaining === 1 ? '¡Último día de cortesía!' :
+                                            `${daysRemaining} días de prueba activa`}
                                 </h3>
-                                <p className="text-sm text-gray-400">
-                                    {daysRemaining <= 2 ? '¡Contacta con soporte para continuar usando el sistema!' :
-                                        daysRemaining <= 5 ? 'Tu período de prueba está por finalizar.' :
-                                            'Estás en período de prueba gratuito.'}
+                                <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                                    {daysRemaining <= 2 ? 'Tu acceso profesional está a punto de expirar' : 'Disfrutando del plan profesional sin límites'}
                                 </p>
                             </div>
                         </div>
                         {daysRemaining <= 5 && (
-                            <button className="px-6 py-3 bg-gradient-to-r from-primary to-accent text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/50 transition-all whitespace-nowrap">
-                                Contactar Soporte
-                            </button>
+                            <Link 
+                                href="/admin/subscription"
+                                className="btn-primary py-5 px-10 text-[10px] font-black uppercase tracking-[0.25em] shadow-xl hover:scale-105 active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center"
+                            >
+                                Mantener Acceso Pro ⚡
+                            </Link>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Stats Grid - Enhanced Scale */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-1">
                 <StatCard
                     title="Ingresos (Mes)"
                     value={stats.monthlyRevenue}
                     icon="Money"
-                    trend="Este mes"
-                    color="from-green-500/20 to-green-900/10"
-                    borderColor="border-green-500/30"
+                    trend="Flujo Mensual"
+                    color="from-emerald-500/10"
+                    borderColor="border-emerald-500/10"
                     isCurrency
                 />
                 <StatCard
                     title="Reservas Totales"
                     value={stats.totalBookings}
                     icon="Calendar"
-                    trend="Histórico"
-                    color="from-blue-500/20 to-blue-900/10"
-                    borderColor="border-blue-500/30"
+                    trend="Volumen"
+                    color="from-blue-500/10"
+                    borderColor="border-blue-500/10"
                 />
                 <StatCard
-                    title="Canchas Activas"
+                    title="Canchas"
                     value={stats.totalFields}
                     icon="Stadium"
                     trend="Capacidad"
-                    color="from-purple-500/20 to-purple-900/10"
-                    borderColor="border-purple-500/30"
+                    color="from-indigo-500/10"
+                    borderColor="border-indigo-500/10"
                 />
                 <StatCard
                     title="Pendientes"
                     value={stats.pendingBookings}
                     icon="Clock"
-                    trend="Requiere Acción"
-                    color="from-amber-500/20 to-amber-900/10"
-                    borderColor="border-amber-500/50"
+                    trend="Acción Requerida"
+                    color="from-amber-500/10"
+                    borderColor="border-amber-500/20"
                     highlight={stats.pendingBookings > 0}
                 />
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Revenue Chart Section - Takes 2 cols on Desktop */}
-                <div className="lg:col-span-2 glass-card p-6 md:p-8 flex flex-col">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                                <span className="text-primary">●</span> Rendimiento Semanal
-                            </h3>
-                            <p className="text-sm text-gray-400 mt-1">Ingresos de los últimos 7 días</p>
-                        </div>
-                        <div className="hidden sm:flex gap-4 text-xs font-bold text-gray-500 uppercase">
-                            <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                Ingresos
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 px-1">
+                {/* Revenue Chart Section */}
+                <div className="lg:col-span-2 glass-card p-1 border border-white/[0.03] shadow-2xl flex flex-col min-h-[500px]">
+                    <div className="p-8 md:p-10 flex-1 flex flex-col">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-4">
+                            <div>
+                                <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-4">
+                                    Desempeño <span className="text-primary italic">Financiero</span>
+                                </h3>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Monitoreo de ingresos últimos 7 días</p>
+                            </div>
+                            <div className="flex gap-6 text-[9px] font-black text-gray-500 uppercase tracking-widest bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                                    Ventas Directas
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div className="flex-1 flex items-end justify-between gap-2 sm:gap-4 h-64 w-full relative pt-10">
-                        {/* Grid Lines */}
-                        <div className="absolute inset-x-0 top-10 bottom-0 flex flex-col justify-between text-[10px] text-gray-600 pointer-events-none z-0">
-                            {[100, 75, 50, 25, 0].map((pct) => (
-                                <div key={pct} className="border-t border-white/5 w-full h-0 relative">
-                                    <span className="absolute -top-3 right-0 opacity-0">{pct}%</span>
+                        <div className="flex-1 flex items-end justify-between gap-4 sm:gap-8 h-80 w-full relative pt-10">
+                            {/* Grid Lines */}
+                            <div className="absolute inset-x-0 top-10 bottom-0 flex flex-col justify-between text-[9px] font-black text-white/5 pointer-events-none z-0 px-2 uppercase tracking-widest">
+                                {[100, 75, 50, 25, 0].map((pct) => (
+                                    <div key={pct} className="border-t border-white/[0.05] w-full h-0 relative flex items-center">
+                                        <span className="absolute -left-10 opacity-30">{pct}%</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {stats.chartData.map((d: any, i: number) => (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-4 z-10 group relative h-full justify-end">
+                                    {/* Tooltip (Premium Design) */}
+                                    <div className="absolute bottom-full mb-5 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-slate-950 text-white p-4 rounded-2xl border border-white/10 whitespace-nowrap z-20 pointer-events-none shadow-[0_20px_40px_rgba(0,0,0,0.4)] transform translate-y-4 group-hover:translate-y-0 min-w-[140px]">
+                                        <p className="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-2 border-b border-white/5 pb-2">{d.fullDate}</p>
+                                        <p className="text-primary font-black text-xl tracking-tighter">${d.revenue.toLocaleString()}</p>
+                                        <p className="text-[9px] text-emerald-400 font-bold uppercase mt-1">✓ Confirmado</p>
+                                    </div>
+
+                                    {/* Bar Track */}
+                                    <div className="w-full max-w-[40px] sm:max-w-[60px] h-full bg-white/[0.01] rounded-t-[1.5rem] relative flex items-end overflow-hidden border border-white/[0.03] group-hover:border-primary/20 group-hover:bg-primary/[0.02] transition-all duration-700">
+                                        <div
+                                            className="w-full bg-gradient-to-t from-emerald-600 to-primary shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all duration-1000 ease-out group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] group-hover:translate-y-[-2px] relative"
+                                            style={{ height: `${d.revenue > 0 ? (d.revenue / maxRevenue) * 100 : 0}%`, minHeight: d.revenue > 0 ? '10px' : '0px' }}
+                                        >
+                                            <div className="absolute inset-0 bg-[url('/grain.png')] opacity-20 mix-blend-overlay"></div>
+                                            <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent"></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Label */}
+                                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest group-hover:text-white group-hover:scale-110 transition-all duration-500">
+                                        {d.date}
+                                    </span>
                                 </div>
                             ))}
                         </div>
-
-                        {stats.chartData.map((d: any, i: number) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-2 z-10 group relative h-full justify-end">
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-800 text-white text-[10px] sm:text-xs py-1 px-2 rounded border border-white/10 whitespace-nowrap z-20 pointer-events-none shadow-xl transform translate-y-2 group-hover:translate-y-0">
-                                    {d.fullDate}: <span className="text-primary font-bold">${d.revenue}</span>
-                                </div>
-
-                                {/* Bar Track (Background) ensures visibility even if empty */}
-                                <div className="w-full max-w-[32px] sm:max-w-[40px] h-full bg-slate-800/50 rounded-t-lg relative flex items-end overflow-hidden border border-white/5 group-hover:border-white/20 transition-colors">
-                                    {/* Solid Bar Value */}
-                                    <div
-                                        className="w-full bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all duration-300 group-hover:bg-emerald-400 group-hover:shadow-[0_0_30px_rgba(52,211,153,0.8)]"
-                                        style={{ height: `${d.revenue > 0 ? (d.revenue / maxRevenue) * 100 : 0}%`, minHeight: d.revenue > 0 ? '4px' : '0px' }}
-                                    ></div>
-                                </div>
-
-                                {/* Label */}
-                                <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase group-hover:text-white transition-colors">
-                                    {d.date}
-                                </span>
-                            </div>
-                        ))}
                     </div>
                 </div>
 
-                {/* Activity Feed - Takes 1 col */}
-                <div className="glass-card p-6 md:p-8 flex flex-col h-full min-h-[400px]">
-                    <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                        <span className="text-accent">●</span> Última Actividad
-                    </h3>
-                    <div className="space-y-2 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar -mr-2 p-2">
-                        {stats.recentActivity.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center py-10 opacity-50">
-                                <span className="text-4xl mb-2">💤</span>
-                                <p className="text-sm text-gray-400">Sin actividad reciente.</p>
-                            </div>
-                        ) : (
-                            stats.recentActivity.map((booking: any) => (
-                                <div key={booking.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-all cursor-default group border border-transparent hover:border-white/10">
-                                    <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border border-white/5 shadow-lg
-                                        ${booking.status === 'confirmed' ? 'bg-green-500/20 text-green-400' :
-                                            booking.status === 'pending' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400'}
-                                    `}>
-                                        <span className="text-lg">
-                                            {booking.status === 'confirmed' ? '✓' : booking.status === 'pending' ? '⏳' : '✕'}
-                                        </span>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-white font-bold text-sm truncate">{booking.clientName}</p>
-                                        <div className="flex items-center gap-2 text-[10px] text-gray-400 uppercase tracking-wide">
-                                            <span>{booking.field.name}</span>
-                                            <span>•</span>
-                                            <span>${booking.totalPrice}</span>
+                {/* Activity Feed */}
+                <div className="glass-card p-1 border border-white/[0.03] shadow-2xl flex flex-col h-full min-h-[500px] overflow-hidden">
+                    <div className="p-8 md:p-10 flex flex-col h-full">
+                        <h3 className="text-2xl font-black text-white mb-10 tracking-tight flex items-center justify-between">
+                            Actividad
+                            <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">En Vivo</span>
+                        </h3>
+                        <div className="space-y-4 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                            {stats.recentActivity.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full text-center py-20 opacity-30">
+                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 text-3xl">🏟️</div>
+                                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Esperando interacciones...</p>
+                                </div>
+                            ) : (
+                                stats.recentActivity.map((booking: any) => (
+                                    <div key={booking.id} className="flex items-center gap-6 p-5 rounded-3xl bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-500 cursor-default group border border-white/[0.02] hover:border-white/10 shadow-sm relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        
+                                        <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border border-white/5 shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 relative z-10
+                                            ${booking.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                booking.status === 'pending' ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}
+                                        `}>
+                                            <span className="text-2xl font-black">
+                                                {booking.status === 'confirmed' ? '✓' : booking.status === 'pending' ? '⏳' : '✕'}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0 relative z-10">
+                                            <p className="text-white font-black text-lg truncate leading-none group-hover:text-primary transition-colors tracking-tight">{booking.clientName}</p>
+                                            <div className="flex items-center gap-3 mt-3">
+                                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-black/40 px-3 py-1 rounded-lg border border-white/5">{booking.field.name}</span>
+                                                <span className="text-xs font-black text-primary tracking-tighter">${booking.totalPrice.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right relative z-10">
+                                            <span className="text-[10px] font-black text-gray-600 group-hover:text-white transition-colors uppercase tracking-widest font-mono">
+                                                {new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
                                         </div>
                                     </div>
-                                    <div className="text-right">
-                                        <span className="text-[10px] font-mono text-gray-500 block">
-                                            {new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))
-                        )}
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

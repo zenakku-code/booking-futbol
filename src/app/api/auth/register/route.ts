@@ -11,15 +11,26 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Todos los campos son requeridos' }, { status: 400 })
         }
 
+        // Security: Input length limits
+        if (complexName.length > 100 || email.length > 100 || password.length > 100) {
+            return NextResponse.json({ error: 'Entrada demasiado larga' }, { status: 400 })
+        }
+
         // Content moderation: Block offensive/obscene names
         const blockedWords = [
-            // Spanish offensive
+            // Spanish offensive & Lunfardo
             'puto', 'puta', 'mierda', 'verga', 'culo', 'pendejo', 'pendeja',
-            'boludo', 'pelotudo', 'pelotuda', 'forro', 'trolo', 'trola',
+            'boludo', 'pelotudo', 'pelotuda', 'forro', 'forra', 'trolo', 'trola',
             'concha', 'choto', 'chota', 'mogolico', 'mogolica', 'tarado',
             'idiota', 'estupido', 'estupida', 'maricon', 'pija', 'poronga',
             'cogido', 'coger', 'garchar', 'cagar', 'carajo', 'hdp',
-            'sorete', 'pajero', 'pajera', 'ojete', 'orto',
+            'sorete', 'pajero', 'pajera', 'ojete', 'orto', 'conchudo', 'conchuda',
+            'malparido', 'malparida', 'chupala', 'chupame', 'chupete', 'pete',
+            'petear', 'garca', 'turro', 'turra', 'groncho', 'groncha', 'mufa',
+            'alcahuete', 'buchon', 'buchona', 'vigilante', 'yuta', 'rati',
+            'zorra', 'atorrante', 'reputa', 'reputo', 'pajuerano', 'otario',
+            'careta', 'chanta', 'vendehumo', 'ortiva', 'forreado', 'forreada',
+            'me la como', 'me la chupa', 'me la chupan', 'rompeme el culo',
             // English offensive
             'fuck', 'shit', 'ass', 'dick', 'bitch', 'bastard',
             'nigger', 'nigga', 'faggot', 'retard', 'whore', 'slut',
@@ -30,14 +41,20 @@ export async function POST(request: Request) {
         const emailPrefix = email.split('@')[0].toLowerCase().replace(/[^a-záéíóúñü]/gi, ' ')
         const textToCheck = `${nameToCheck} ${emailPrefix}`
 
-        const foundWord = blockedWords.find(word => {
-            const regex = new RegExp(`\\b${word}\\b|${word}`, 'i')
-            return regex.test(textToCheck)
-        })
+        // Optimized regex: join all words with boundaries
+        const profanityRegex = new RegExp(`\\b(${blockedWords.join('|')})\\b`, 'i')
 
-        if (foundWord) {
+        if (profanityRegex.test(textToCheck)) {
             return NextResponse.json({
                 error: 'El nombre del complejo o email contiene contenido inapropiado. Por favor usá un nombre profesional.'
+            }, { status: 400 })
+        }
+
+        // 0. Password Complexity Check
+        const passwordRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/
+        if (!passwordRegex.test(password)) {
+            return NextResponse.json({
+                error: 'La contraseña debe tener al menos 8 caracteres, incluir una mayúscula y un número.'
             }, { status: 400 })
         }
 

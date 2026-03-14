@@ -35,52 +35,61 @@ export default function PaymentSettings({ initialComplex }: { initialComplex: an
     }
 
     return (
-        <div className="glass p-6 rounded-2xl border border-white/5">
-            <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                💰 Configuración de Seña
-            </h3>
+        <div className="glass-card p-8 border border-white/[0.03]">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-xl shadow-inner border border-emerald-500/20">
+                    💰
+                </div>
+                <div>
+                    <h3 className="text-white font-black text-xl tracking-tight">Configuración de Seña</h3>
+                    <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-0.5">Control de pagos anticipados</p>
+                </div>
+            </div>
 
-            <div className="space-y-6">
-                <div className="flex items-center justify-between cursor-pointer" onClick={() => setEnabled(!enabled)}>
-                    <div>
-                        <label className="text-white font-medium block cursor-pointer">Habilitar Seña</label>
-                        <p className="text-xs text-gray-400">Permite a los usuarios reservar pagando solo un adelanto.</p>
+            <div className="space-y-8">
+                <div 
+                    className={`p-6 rounded-full border transition-all cursor-pointer group flex items-center justify-between ${enabled ? 'bg-emerald-500/5 border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.05)]' : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04]'}`}
+                    onClick={() => setEnabled(!enabled)}
+                >
+                    <div className="max-w-[70%]">
+                        <label className="text-white font-black text-sm block cursor-pointer tracking-tight">Habilitar Seña Obrigatória</label>
+                        <p className="text-[10px] text-gray-500 font-bold mt-1 tracking-wide leading-relaxed">Pide un adelanto fijo para confirmar la reserva. Esto evita reservas falsas y asegura tu ingreso.</p>
                     </div>
-                    <div className="relative inline-flex items-center pointer-events-none">
-                        <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={enabled}
-                            readOnly // Controlled by parent div click
-                        />
-                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                    <div className="relative inline-flex items-center">
+                        <div className={`w-14 h-7 rounded-full transition-all duration-500 border relative ${enabled ? 'bg-emerald-500 border-emerald-400/50 shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-800 border-white/5'}`}>
+                            <div className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-all duration-500 shadow-xl ${enabled ? 'translate-x-7' : 'translate-x-0'}`}></div>
+                        </div>
                     </div>
                 </div>
 
-                <div className={`transition-all duration-300 ${enabled ? 'opacity-100' : 'opacity-40 pointer-events-none grayscale'}`}>
-                    <label className="block text-gray-400 text-sm mb-2">Monto de la Seña (Fijo)</label>
-                    <div className="relative">
-                        <span className="absolute left-4 top-3 text-gray-500">$</span>
+                <div className={`transition-all duration-500 space-y-3 ${enabled ? 'opacity-100 translate-y-0' : 'opacity-20 pointer-events-none grayscale translate-y-2'}`}>
+                    <label className="block text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1">Monto Fijo de Seña</label>
+                    <div className="relative group">
+                        <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-black text-lg">$</span>
                         <input
                             type="number"
                             value={amount}
                             onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
-                            className="w-full p-3 pl-8 bg-slate-900/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors font-mono"
+                            className="w-full p-5 pl-10 bg-black/20 border border-white/5 rounded-full text-white font-black text-2xl outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-mono tracking-tighter"
                             placeholder="Ej: 5000"
                         />
                     </div>
-                    <p className="text-[10px] text-gray-500 mt-2">
-                        Este monto será obligatorio para reservar si no se paga el total. Si la cancha cuesta menos que la seña, se cobrará el valor de la cancha.
-                    </p>
+                    <div className="bg-white/[0.02] p-4 rounded-full border border-white/5 flex gap-3 items-start">
+                        <span className="text-sm opacity-50 mt-0.5">💡</span>
+                        <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest leading-relaxed">
+                            IMPORTANTE: SI LA CANCHA CUESTA MENOS QUE LA SEÑA (ej. promo), EL SISTEMA COBRARÁ AUTOMÁTICAMENTE EL VALOR TOTAL DE LA CANCHA.
+                        </p>
+                    </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/5 flex justify-end">
+                <div className="pt-8 mt-4 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-[10px] text-gray-600 font-black uppercase tracking-widest">Cambios pendientes de guardado</p>
                     <button
                         onClick={handleSave}
                         disabled={loading}
-                        className="btn btn-primary px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-50 shadow-lg shadow-primary/10"
+                        className="btn-primary w-full sm:w-auto px-10 py-4 text-xs font-black uppercase tracking-[0.2em] disabled:opacity-30 transition-all shadow-xl shadow-primary/10"
                     >
-                        {loading ? 'Guardando...' : 'Guardar Cambios'}
+                        {loading ? 'Procesando...' : 'Guardar Configuración'}
                     </button>
                 </div>
             </div>

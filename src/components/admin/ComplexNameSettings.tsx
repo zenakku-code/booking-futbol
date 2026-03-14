@@ -61,60 +61,80 @@ export default function ComplexNameSettings({ initialComplex }: Props) {
     if (!initialComplex) return null
 
     return (
-        <div className="glass p-6 rounded-2xl">
-            <h3 className="text-white font-bold text-lg mb-4">Información del Complejo</h3>
-
-            <div className="space-y-4">
+        <div className="glass-card p-8 border border-white/[0.03]">
+            <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl shadow-inner border border-primary/20">
+                    🏢
+                </div>
                 <div>
-                    <label className="block text-gray-400 text-sm mb-2">Nombre Visible</label>
+                    <h3 className="text-white font-black text-xl tracking-tight">Información del Complejo</h3>
+                    <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mt-0.5">Datos públicos de tu negocio</p>
+                </div>
+            </div>
+
+            <div className="space-y-6">
+                <div className="group">
+                    <label className="block text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1">Nombre Visible</label>
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                        className="w-full p-4 bg-black/20 border border-white/5 rounded-full text-white font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all placeholder:text-gray-700"
                         placeholder="Ej: La Bombonera"
                     />
                 </div>
 
-                <div>
-                    <label className="block text-gray-400 text-sm mb-2">Dirección Exacta</label>
+                <div className="group">
+                    <label className="block text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1">Dirección Exacta</label>
                     <input
                         type="text"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
-                        className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all"
+                        className="w-full p-4 bg-black/20 border border-white/5 rounded-full text-white font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all placeholder:text-gray-700"
                         placeholder="Ej: Av. del Libertador 1234, CABA"
                     />
-                    <p className="text-gray-500 text-xs mt-2">Aparecerá en tu tarjeta pública.</p>
-                </div>
-
-                <div>
-                    <label className="block text-gray-400 text-sm mb-2">Descripción / Eslogan</label>
-                    <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        className="w-full p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all min-h-[100px]"
-                        placeholder="Ej: Canchas profesionales con la mejor iluminación LED de la zona."
-                    />
-                    <p className="text-gray-500 text-xs mt-2">Describe las prestaciones de tu complejo.</p>
-                </div>
-
-                <div className="pt-2">
-                    <p className="text-gray-500 text-xs mb-4">
-                        Tu URL: <span className="text-primary font-mono">/{initialComplex.slug}</span>
+                    <p className="text-gray-600 text-[10px] font-bold mt-2.5 flex items-center gap-1.5 ml-1">
+                        <span className="text-primary/50">ℹ</span> Aparecerá en tu tarjeta pública para tus clientes.
                     </p>
-                    <div className="flex items-center justify-between">
+                </div>
+
+                <div className="group lg:col-span-2">
+                    <label className="block text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1">Descripción / Eslogan del Complejo</label>
+                    <div className="relative">
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            className="w-full p-6 bg-black/20 border border-white/5 rounded-[2.5rem] text-white font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all min-h-[140px] placeholder:text-gray-700 resize-none text-lg leading-relaxed pt-8"
+                            placeholder="Ej: Canchas profesionales con la mejor iluminación LED de la zona."
+                        />
+                        <div className="absolute top-0 right-8 -translate-y-1/2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-[9px] font-black uppercase tracking-widest text-primary shadow-2xl">
+                            Mensaje de Bienvenida ✨
+                        </div>
+                    </div>
+                    <p className="text-gray-600 text-[10px] font-bold mt-4 flex items-center gap-1.5 ml-1">
+                        ℹ️ Este texto aparecerá en la cabecera de tu página pública. Úsalo para destacar promociones o el espíritu del complejo.
+                    </p>
+                </div>
+
+                <div className="pt-6 mt-6 border-t border-white/5">
+                    <div className="bg-white/[0.02] p-4 rounded-full border border-white/[0.05] mb-6 flex items-center justify-between">
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Tu URL Pública</span>
+                        <span className="text-primary font-black text-xs tracking-tight">tikitaka.com/{initialComplex.slug}</span>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <button
                             onClick={handleSave}
                             disabled={isLoading || !hasChanges}
-                            className="btn btn-primary px-6 py-2 disabled:opacity-50"
+                            className="btn-primary w-full sm:w-auto px-10 py-4 text-xs font-black uppercase tracking-[0.2em] disabled:opacity-30 disabled:grayscale transition-all"
                         >
-                            {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+                            {isLoading ? 'Procesando...' : 'Guardar Cambios'}
                         </button>
+                        
                         {message && (
-                            <span className={`text-sm ${message.startsWith('✓') ? 'text-green-400' : 'text-red-400'}`}>
-                                {message}
-                            </span>
+                            <div className={`flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest ${message.startsWith('✓') ? 'text-emerald-400 bg-emerald-500/5 border border-emerald-500/10' : 'text-red-400 bg-red-500/5 border border-red-500/10'}`}>
+                                {message.startsWith('✓') ? '✓' : '⚠'} {message.replace('✓ ', '')}
+                            </div>
                         )}
                     </div>
                 </div>

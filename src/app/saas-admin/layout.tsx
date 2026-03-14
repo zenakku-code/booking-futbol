@@ -7,23 +7,33 @@ export default function SuperAdminLayout({
     children: React.ReactNode
 }) {
     return (
-        <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-primary/30">
+        <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-primary/30 relative overflow-hidden">
+            {/* Ambient Background */}
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-500/10 blur-[120px] rounded-2xl"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 blur-[120px] rounded-2xl"></div>
+            </div>
             {/* Super Admin Header */}
             <header className="bg-slate-950 border-b border-white/5 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
-                            S
-                        </div>
-                        <h1 className="font-bold text-lg tracking-tight">SaaS Control Center</h1>
-                    </div>
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/dashboard" className="text-sm text-gray-400 hover:text-white transition-colors">
-                            Ir a Mi Panel
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-primary flex items-center justify-center font-black text-white shadow-2xl shadow-primary/20">
+                            ⚽
+                        </div>
+                        <div>
+                            <h1 className="font-black text-xl tracking-tighter uppercase leading-none">
+                                TIKI<span className="text-primary italic">TAKA</span>
+                            </h1>
+                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em]">SaaS Control</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-6">
+                        <Link href="/admin" className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-white transition-all bg-white/5 px-5 py-2.5 rounded-xl border border-white/5 active:scale-95">
+                            Ir a Mi Panel ⚡
                         </Link>
-                        <div className="h-4 w-px bg-white/10"></div>
-                        <span className="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded-full border border-indigo-500/20 font-mono">
-                            SUPER ADMIN
+                        <div className="h-6 w-px bg-white/5"></div>
+                        <span className="text-[10px] font-black bg-indigo-500/10 text-indigo-400 px-4 py-2 rounded-xl border border-indigo-500/20 tracking-widest uppercase">
+                            Super Admin
                         </span>
                     </div>
                 </div>

@@ -70,32 +70,32 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted, depo
 
     if (isCompleted) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center animate-fade-in">
-                <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mb-6 animate-bounce">
-                    <span className="text-6xl">{remaining <= 10 ? '🎉' : '✅'}</span>
+            <div className="flex flex-col items-center justify-center p-10 text-center animate-fade-in glass-card border-primary/20 bg-primary/5">
+                <div className="w-24 h-24 bg-primary rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(34,197,94,0.4)]">
+                    <span className="text-5xl">{remaining <= 10 ? '🏆' : '✅'}</span>
                 </div>
-                <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-                    {remaining <= 10 ? '¡Misión Cumplida!' : '¡Reserva Asegurada!'}
+                <h2 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter">
+                    {remaining <= 10 ? '¡PARTIDO PAGADO!' : '¡RESERVA LISTA!'}
                 </h2>
-                <p className="text-emerald-300 text-lg md:text-xl max-w-md mx-auto mb-8 font-medium">
+                <p className="text-gray-400 text-sm max-w-xs mx-auto mb-8 font-bold uppercase tracking-widest">
                     {remaining <= 10
-                        ? 'La cancha está pagada completamente. ¡A jugar! ⚽'
-                        : `Ya se cubrió la seña mínima ($${depositGoal}). El turno está bloqueado.`}
+                        ? 'El pago se completó con éxito. ¡A la cancha! ⚽'
+                        : `Seña mínima de $${depositGoal} alcanzada. El turno está reservado.`}
                 </p>
-                <div className="bg-slate-900/50 p-6 rounded-3xl border border-white/10 w-full max-w-sm backdrop-blur-md">
-                    <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-2">Detalle</p>
-                    <p className="text-white font-bold text-xl mb-1">{(booking as any).field.name}</p>
-                    <div className="flex justify-center items-center gap-2 text-gray-300">
-                        <span>🗓️ {new Date((booking as any).date).toLocaleDateString()}</span>
-                        <span>⏰ {(booking as any).startTime}hs</span>
+                <div className="bg-black/40 p-6 rounded-[2rem] border border-white/10 w-full backdrop-blur-3xl shadow-2xl">
+                    <p className="text-[10px] text-primary font-black uppercase tracking-[0.3em] mb-3">Detalles del Turno</p>
+                    <p className="text-white font-black text-2xl mb-1 tracking-tight">{(booking as any).field.name}</p>
+                    <div className="flex justify-center items-center gap-4 text-gray-400 font-bold text-xs uppercase tracking-widest mt-2">
+                        <span className="flex items-center gap-1.5"><span className="text-primary text-base">📅</span> {new Date((booking as any).date).toLocaleDateString()}</span>
+                        <span className="flex items-center gap-1.5"><span className="text-primary text-base">⏰</span> {(booking as any).startTime}hs</span>
                     </div>
                 </div>
                 {remaining > 10 && (
                     <button
                         onClick={() => window.location.reload()}
-                        className="mt-8 text-primary font-bold hover:underline text-sm"
+                        className="mt-10 btn btn-primary px-8 py-3 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl"
                     >
-                        Seguir pagando para completar el total →
+                        Saldar el resto →
                     </button>
                 )}
             </div>
@@ -103,43 +103,43 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted, depo
     }
 
     return (
-        <div className="glass p-6 md:p-8 rounded-3xl animate-fade-in-up border border-white/10 shadow-2xl relative overflow-hidden mx-auto w-full max-w-md">
-            {/* Glow effect */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50 blur-sm"></div>
+        <div className="glass-card p-8 rounded-[2rem] animate-fade-in-up border-white/10 shadow-2xl relative overflow-hidden mx-auto w-full max-w-md bg-slate-950/40 backdrop-blur-2xl">
+            {/* Glossy top light */}
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none"></div>
 
-            <h3 className="text-center text-lg md:text-xl font-bold mb-6 text-white tracking-wide">¿Cuánto ponés hoy?</h3>
+            <h3 className="text-center text-xs font-black mb-8 text-gray-500 uppercase tracking-[0.4em]">¿Cuánto aportás hoy?</h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+            <div className="grid grid-cols-3 gap-3 mb-10">
                 <button
                     type="button"
                     onClick={() => handleAmountChange(oneShare)}
-                    className="group relative flex sm:flex-col items-center justify-between sm:justify-center p-4 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.02] transition-all duration-300 active:scale-95 cursor-pointer z-10"
+                    className="group relative flex flex-col items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-xs uppercase font-bold text-gray-400 group-hover:text-primary transition-colors pointer-events-none">1/{totalPlayers} P.</span>
-                    <span className="text-xl font-black text-white group-hover:text-primary transition-colors pointer-events-none">${oneShare}</span>
+                    <span className="text-[8px] uppercase font-black text-gray-500 group-hover:text-primary transition-colors tracking-widest mb-1">Tu Parte</span>
+                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors leading-none tracking-tighter">${oneShare}</span>
                 </button>
 
                 <button
                     type="button"
                     onClick={() => handleAmountChange(halfShare)}
-                    className="group relative flex sm:flex-col items-center justify-between sm:justify-center p-4 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.02] transition-all duration-300 active:scale-95 cursor-pointer z-10"
+                    className="group relative flex flex-col items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-xs uppercase font-bold text-gray-400 group-hover:text-primary transition-colors pointer-events-none">La Mitad</span>
-                    <span className="text-xl font-black text-white group-hover:text-primary transition-colors pointer-events-none">${halfShare}</span>
+                    <span className="text-[8px] uppercase font-black text-gray-500 group-hover:text-primary transition-colors tracking-widest mb-1">Mitad</span>
+                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors leading-none tracking-tighter">${halfShare}</span>
                 </button>
 
                 <button
                     type="button"
                     onClick={() => handleAmountChange(safeRemaining)}
-                    className="group relative flex sm:flex-col items-center justify-between sm:justify-center p-4 bg-slate-800/50 rounded-2xl border border-white/5 hover:bg-primary/10 hover:border-primary/50 hover:scale-[1.02] transition-all duration-300 active:scale-95 cursor-pointer z-10"
+                    className="group relative flex flex-col items-center justify-center p-4 bg-white/5 rounded-2xl border border-white/5 hover:bg-primary/20 hover:border-primary/40 transition-all duration-300 active:scale-95 cursor-pointer z-10"
                 >
-                    <span className="text-xs uppercase font-bold text-gray-400 group-hover:text-primary transition-colors pointer-events-none">Total</span>
-                    <span className="text-xl font-black text-white group-hover:text-primary transition-colors pointer-events-none">${safeRemaining}</span>
+                    <span className="text-[8px] uppercase font-black text-gray-500 group-hover:text-primary transition-colors tracking-widest mb-1">Todo</span>
+                    <span className="text-lg font-black text-white group-hover:text-primary transition-colors leading-none tracking-tighter">${safeRemaining}</span>
                 </button>
             </div>
 
-            <div className="relative mb-3 group bg-slate-900/50 rounded-3xl border border-white/10 focus-within:border-primary/50 transition-colors p-2 transition-all">
-                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 font-black text-3xl group-focus-within:text-white transition-colors">$</span>
+            <div className="relative mb-4 group bg-black/40 rounded-3xl border border-white/5 focus-within:border-primary/40 transition-all p-4 shadow-inner">
+                <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-600 font-black text-3xl group-focus-within:text-primary transition-colors">$</span>
                 <input
                     type="number"
                     value={amount === 0 ? '' : amount}
@@ -153,12 +153,14 @@ export default function SplitPaymentForm({ booking, remaining, isCompleted, depo
                     style={{ appearance: 'textfield' }}
                 />
             </div>
-            <p className="text-center text-xs text-gray-500 mb-8">Faltan abonar <span className="text-emerald-400 font-bold">${safeRemaining}</span></p>
+            <p className="text-center text-[10px] font-black uppercase tracking-widest text-gray-600 mb-10">
+                Faltan abonar <span className="text-white">${safeRemaining}</span>
+            </p>
 
             <button
                 onClick={handlePay}
                 disabled={loading || amount <= 0}
-                className="w-full btn btn-primary py-5 text-xl font-black rounded-2xl shadow-[0_0_40px_-10px_rgba(34,197,94,0.4)] hover:shadow-[0_0_60px_-10px_rgba(34,197,94,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none flex items-center justify-center gap-3 group relative overflow-hidden"
+                className="w-full btn btn-primary py-6 text-xl font-black rounded-full shadow-[0_0_30px_-5px_rgba(34,197,94,0.4)] hover:shadow-[0_0_50px_-10px_rgba(34,197,94,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 disabled:shadow-none flex items-center justify-center gap-3 group relative overflow-hidden"
             >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-2xl"></div>
                 {loading ? (

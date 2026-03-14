@@ -2,6 +2,27 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getComplexId } from '@/lib/auth'
 
+export async function GET() {
+    try {
+        const complexId = await getComplexId()
+        if (!complexId) {
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+        }
+
+        const complex = await (prisma as any).complex.findUnique({
+            where: { id: complexId }
+        })
+
+        if (!complex) {
+            return NextResponse.json({ error: 'Complejo no encontrado' }, { status: 404 })
+        }
+
+        return NextResponse.json({ complex })
+    } catch (error: any) {
+        return NextResponse.json({ error: 'Error al obtener datos' }, { status: 500 })
+    }
+}
+
 export async function PATCH(request: Request) {
     try {
         const complexId = await getComplexId()

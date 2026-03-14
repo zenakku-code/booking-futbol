@@ -29,9 +29,9 @@ export default function AccountSettings({ initialAccount }: { initialAccount: an
     }
 
     return (
-        <div className="glass p-8 rounded-2xl max-w-2xl">
+        <div className="glass p-8 rounded-full max-w-2xl">
             <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-blue-500/20 rounded-xl">
+                <div className="p-3 bg-blue-500/20 rounded-full">
                     <img src="/mercadopago.png" alt="MP" className="w-8 h-8 object-contain" />
                 </div>
                 <div>
@@ -43,7 +43,7 @@ export default function AccountSettings({ initialAccount }: { initialAccount: an
             <div className="border-t border-slate-700 py-6">
                 {account ? (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between bg-green-500/10 p-4 rounded-xl border border-green-500/20">
+                        <div className="flex items-center justify-between bg-green-500/10 p-4 rounded-full border border-green-500/20">
                             <div className="flex items-center gap-2 text-green-400 font-bold">
                                 <span>✓</span>
                                 <span>Cuenta Conectada</span>

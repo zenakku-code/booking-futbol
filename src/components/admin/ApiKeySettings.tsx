@@ -76,7 +76,7 @@ export default function ApiKeySettings() {
     }
 
     return (
-        <div className="glass p-6 rounded-2xl">
+        <div className="glass p-6 rounded-full">
             <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                 <span>🔑</span> API Access
             </h3>
@@ -91,7 +91,7 @@ export default function ApiKeySettings() {
                     value={newKeyName}
                     onChange={(e) => setNewKeyName(e.target.value)}
                     placeholder="Nombre (ej: Website Bot)"
-                    className="flex-1 p-3 bg-slate-900/50 border border-white/10 rounded-xl text-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                    className="flex-1 p-3 bg-slate-900/50 border border-white/10 rounded-full text-white text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                 />
                 <button
                     onClick={handleCreateKey}

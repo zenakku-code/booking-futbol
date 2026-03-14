@@ -39,6 +39,10 @@ export async function GET(request: Request) {
         console.log('[API /saas/complexes] Fetching complexes from database...')
         const complexes = await prisma.complex.findMany({
             include: {
+                users: {
+                    take: 1,
+                    select: { id: true, email: true }
+                },
                 _count: {
                     select: { fields: true, users: true }
                 }
@@ -47,29 +51,49 @@ export async function GET(request: Request) {
         })
 
         console.log('[API /saas/complexes] Found', complexes.length, 'complexes')
+        const complexIds = complexes.map(c => c.id)
 
-        // Enhance with revenue and booking stats
-        const enhancedCallback = await Promise.all(complexes.map(async (c: any) => {
-            const bookingStats = await prisma.booking.aggregate({
-                where: {
-                    field: { complexId: c.id },
-                    status: 'confirmed'
-                },
-                _sum: { totalPrice: true },
-                _count: true
-            })
+        // 1. Efficiently fetch all field metrics in ONE query using groupBy
+        const fieldStats = await prisma.booking.groupBy({
+            by: ['fieldId'],
+            where: {
+                field: { complexId: { in: complexIds } },
+                status: 'confirmed'
+            },
+            _sum: { totalPrice: true },
+            _count: true
+        })
 
-            return {
-                ...c,
-                stats: {
-                    bookings: bookingStats._count || 0,
-                    users: c._count.users,
-                    revenue: bookingStats._sum.totalPrice || 0
+        // 2. Fetch the ID/ComplexID mapping for these fields
+        const fields = await prisma.field.findMany({
+            where: { id: { in: fieldStats.map(f => f.fieldId) } },
+            select: { id: true, complexId: true }
+        })
+
+        // 3. Construct a mapping of complexId -> totals
+        const complexStatsMap: Record<string, { bookings: number, revenue: number }> = {}
+        for (const stat of fieldStats) {
+            const complexId = fields.find(f => f.id === stat.fieldId)?.complexId
+            if (complexId) {
+                if (!complexStatsMap[complexId]) {
+                    complexStatsMap[complexId] = { bookings: 0, revenue: 0 }
                 }
+                complexStatsMap[complexId].bookings += stat._count || 0
+                complexStatsMap[complexId].revenue += stat._sum.totalPrice || 0
+            }
+        }
+
+        // 4. Return enhanced data without per-item DB hits
+        const enhancedCallback = complexes.map((c: any) => ({
+            ...c,
+            stats: {
+                bookings: complexStatsMap[c.id]?.bookings || 0,
+                users: c._count.users,
+                revenue: complexStatsMap[c.id]?.revenue || 0
             }
         }))
 
-        console.log('[API /saas/complexes] Returning enhanced data')
+        console.log('[API /saas/complexes] Returning enhanced data (N+1 optimized)')
         return NextResponse.json(enhancedCallback)
     } catch (e) {
         console.error('[API /saas/complexes] Database error:', e)
