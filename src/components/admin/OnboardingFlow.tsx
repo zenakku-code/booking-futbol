@@ -1,14 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 
 export default function OnboardingFlow({ userEmail }: { userEmail: string }) {
     const [step, setStep] = useState<'welcome' | 'form' | 'success'>('welcome')
     const [complexName, setComplexName] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState('')
-    const router = useRouter()
 
     const handleCreateComplex = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -144,7 +142,7 @@ export default function OnboardingFlow({ userEmail }: { userEmail: string }) {
                             </div>
                             <h2 className="text-4xl font-black text-white mb-6 tracking-tighter">¡Todo Listo!</h2>
                             <p className="text-gray-400 font-bold mb-10 max-w-sm mx-auto leading-relaxed">
-                                Tu complejo <span className="text-primary">"{complexName}"</span> ha sido configurado con éxito.
+                                Tu complejo <span className="text-primary">&quot;{complexName}&quot;</span> ha sido configurado con éxito.
                             </p>
                             
                             <div className="flex flex-col items-center gap-4">
