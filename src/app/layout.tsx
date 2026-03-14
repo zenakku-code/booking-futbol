@@ -11,6 +11,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Tiki Taka App | Reserva tu Cancha",
   description: "La mejor experiencia para reservar canchas de fútbol.",
+  icons: {
+    icon: '/logo-tikitaka.png',
+  },
 };
 
 import { Analytics } from "@vercel/analytics/react"

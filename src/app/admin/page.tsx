@@ -88,9 +88,19 @@ async function getStats(complexId: string) {
     }
 }
 
+import OnboardingFlow from "@/components/admin/OnboardingFlow"
+import { getSession } from "@/lib/auth"
+
 export default async function AdminDashboard() {
-    const complexId = await getComplexId()
-    if (!complexId) redirect('/admin/login')
+    const session = await getSession()
+    if (!session) redirect('/admin/login')
+
+    const complexId = session.complexId
+    
+    // Si no hay complejo vinculado, mostrar flujo de bienvenida
+    if (!complexId) {
+        return <OnboardingFlow userEmail={session.email} />
+    }
 
     const [stats, complex] = await Promise.all([
         getStats(complexId),

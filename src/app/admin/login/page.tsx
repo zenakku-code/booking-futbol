@@ -64,7 +64,7 @@ function LoginContent() {
         try {
             await signIn.social({
                 provider: 'google',
-                callbackURL: '/admin'
+                callbackURL: '/admin?firstLogin=true'
             })
         } catch (err) {
             setError('Error al conectar con Google')
@@ -79,8 +79,8 @@ function LoginContent() {
                 <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-[80px] group-hover:bg-primary/20 transition-all duration-1000"></div>
 
                 <div className="text-center mb-12 relative z-10">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-[2rem] mb-8 border border-primary/20 shadow-inner">
-                        <span className="text-4xl">⚽</span>
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-[2rem] mb-8 border border-primary/20 shadow-inner overflow-hidden">
+                        <img src="/logo-tikitaka.png" alt="Tiki Taka Logo" className="w-full h-full object-cover" />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-tighter leading-tight">
                         Tiki <span className="text-primary italic">Taka</span>

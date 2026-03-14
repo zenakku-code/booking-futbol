@@ -17,8 +17,8 @@ export default function SuperAdminLayout({
             <header className="bg-slate-950 border-b border-white/5 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-primary flex items-center justify-center font-black text-white shadow-2xl shadow-primary/20">
-                            ⚽
+                        <div className="w-10 h-10 rounded-xl overflow-hidden shadow-2xl shadow-primary/20 border border-white/10">
+                            <img src="/logo-tikitaka.png" alt="Logo" className="w-full h-full object-cover" />
                         </div>
                         <div>
                             <h1 className="font-black text-xl tracking-tighter uppercase leading-none">

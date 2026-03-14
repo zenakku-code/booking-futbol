@@ -28,6 +28,8 @@ model Complex {
   subscriptionDate     DateTime?
   subscriptionEndsAt   DateTime? // When the paid plan expires
   planType             String? // "MONTHLY" | "QUARTERLY"
+  // SaaS Power-up
+  features             String                @default("{}") // JSON string for feature flags/limits
   fields               Field[]
   accounts             Account[]
   users                User[]
@@ -239,4 +241,35 @@ model SystemConfig {
   quarterlyPrice Float    @default(27000)
   annualPrice    Float    @default(100000)
   updatedAt      DateTime @updatedAt
+}
+
+model SystemAuditLog {
+  id        String   @id @default(uuid())
+  action    String // e.g., "BAN_COMPLEX", "CHANGE_PRICES", "CREATE_NOTIFICATION"
+  details   String? // JSON string with specific info
+  userId    String // SuperAdmin ID
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model GlobalNotification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, danger
+  active    Boolean  @default(true)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RevenueSnapshot {
+  id        String   @id @default(uuid())
+  amount    Float
+  date      DateTime @default(now())
+  type      String // "SUBSCRIPTION", "COMMISSION" (if applicable later)
+  complexId String?
+
+  @@index([date])
 }

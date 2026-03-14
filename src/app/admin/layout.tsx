@@ -76,8 +76,8 @@ export default function AdminLayout({
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 w-full z-50 glass backdrop-blur-2xl border-b border-white/5 px-6 py-4 flex items-center justify-between shadow-2xl">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                        <span className="text-sm">⚽</span>
+                    <div className="w-10 h-10 rounded-xl overflow-hidden shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                        <img src="/logo-tikitaka.png" alt="Tiki Taka Logo" className="w-full h-full object-cover" />
                     </div>
                     <span className="font-black text-white text-lg tracking-tighter">
                         TIKI<span className="text-primary italic">TAKA</span>
@@ -107,8 +107,8 @@ export default function AdminLayout({
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
                 <div className="flex items-center gap-3 px-2 group cursor-default">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#111] to-[#050505] border border-white/10 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
-                        <span className="text-xl">⚽</span>
+                    <div className="w-12 h-12 rounded-xl overflow-hidden border border-white/10 shadow-[0_0_15px_rgba(16,185,129,0.2)] group-hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all">
+                        <img src="/logo-tikitaka.png" alt="Tiki Taka Logo" className="w-full h-full object-cover" />
                     </div>
                     <div>
                         <h1 className="text-2xl font-black text-white tracking-tighter drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">TIKI<span className="text-primary italic">TAKA</span></h1>

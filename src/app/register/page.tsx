@@ -50,8 +50,8 @@ export default function RegisterPage() {
 
             <div className="w-full max-w-md relative z-10 transition-all duration-500">
                 <div className="text-center mb-12">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-[2.5rem] mb-8 border border-primary/20 shadow-inner">
-                        <span className="text-4xl text-primary animate-pulse">⚡</span>
+                    <div className="inline-flex items-center justify-center w-20 h-20 bg-primary/10 rounded-[2.5rem] mb-8 border border-primary/20 shadow-inner overflow-hidden">
+                        <img src="/logo-tikitaka.png" alt="Tiki Taka Logo" className="w-full h-full object-cover" />
                     </div>
                     <h1 className="text-4xl md:text-5xl font-black text-white mb-3 tracking-tighter leading-tight">
                         Tiki <span className="text-primary italic">Taka</span>

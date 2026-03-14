@@ -2,14 +2,14 @@
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-    LayoutDashboard, 
-    Building2, 
-    Megaphone, 
-    History, 
-    DollarSign, 
-    TrendingUp, 
-    Users, 
+import {
+    LayoutDashboard,
+    Building2,
+    Megaphone,
+    History,
+    DollarSign,
+    TrendingUp,
+    Users,
     PlusCircle,
     Search,
     ShieldCheck,
@@ -70,14 +70,14 @@ export default function SuperAdminDashboard() {
     const [prices, setPrices] = useState({ monthly: 10000, quarterly: 27000, annual: 100000 })
     const [savingPrices, setSavingPrices] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
-    const [modal, setModal] = useState<{ 
-        isOpen: boolean, 
-        title: string, 
+    const [modal, setModal] = useState<{
+        isOpen: boolean,
+        title: string,
         type: 'confirm' | 'form',
         content?: React.ReactNode,
         onConfirm?: (data?: any) => void
     }>({ isOpen: false, title: '', type: 'confirm' })
-    
+
     const router = useRouter()
 
     useEffect(() => {
@@ -132,7 +132,7 @@ export default function SuperAdminDashboard() {
 
     const handleCreateComplex = async (name: string) => {
         if (!name) return
-        
+
         setRefreshing(true)
         try {
             const res = await fetch('/api/saas/complexes', {
@@ -142,9 +142,9 @@ export default function SuperAdminDashboard() {
             })
             if (res.ok) {
                 const data = await res.json()
-                setModal({ 
-                    isOpen: true, 
-                    title: '¡Éxito! 🎉', 
+                setModal({
+                    isOpen: true,
+                    title: '¡Éxito! 🎉',
                     type: 'confirm',
                     content: (
                         <div className="space-y-4">
@@ -183,10 +183,10 @@ export default function SuperAdminDashboard() {
                     </p>
                     <div className="space-y-2">
                         <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nombre del Complejo</label>
-                        <input 
+                        <input
                             id="new-complex-name"
-                            className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary outline-none" 
-                            placeholder="Ej: La Masía Fútbol" 
+                            className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary outline-none"
+                            placeholder="Ej: La Masía Fútbol"
                         />
                     </div>
                 </div>
@@ -246,9 +246,9 @@ export default function SuperAdminDashboard() {
                     })
                     if (res.ok) {
                         const updated = await res.json()
-                        setModal({ 
-                            isOpen: true, 
-                            title: 'Trial Extendido! ⏳🎉', 
+                        setModal({
+                            isOpen: true,
+                            title: 'Trial Extendido! ⏳🎉',
                             type: 'confirm',
                             content: (
                                 <div className="space-y-4">
@@ -281,7 +281,7 @@ export default function SuperAdminDashboard() {
                 <div className="space-y-4">
                     <p className="text-red-400 text-sm font-bold">¡ADVERTENCIA CRÍTICA!</p>
                     <p className="text-gray-300 text-xs leading-relaxed">
-                        Estás a punto de eliminar permanentemente el complejo <span className="text-white font-bold">{complexName}</span>. 
+                        Estás a punto de eliminar permanentemente el complejo <span className="text-white font-bold">{complexName}</span>.
                         Esta acción borrará:
                     </p>
                     <ul className="text-[10px] text-gray-500 space-y-1 list-disc pl-4 uppercase font-black tracking-widest">
@@ -304,9 +304,9 @@ export default function SuperAdminDashboard() {
                         body: JSON.stringify({ complexId, action: 'DELETE_COMPLEX' })
                     })
                     if (res.ok) {
-                        setModal({ 
-                            isOpen: true, 
-                            title: 'Eliminado Correctamente', 
+                        setModal({
+                            isOpen: true,
+                            title: 'Eliminado Correctamente',
                             type: 'confirm',
                             content: <p className="text-gray-400 text-sm">El complejo ha sido borrado del sistema.</p>,
                             onConfirm: () => setModal({ ...modal, isOpen: false })
@@ -388,29 +388,29 @@ export default function SuperAdminDashboard() {
                         <div className="space-y-3 pt-2">
                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Acciones Administrativas</p>
                             <div className="grid grid-cols-2 gap-3">
-                                <button 
+                                <button
                                     onClick={() => handleImpersonate(c.users?.[0]?.id || '')}
                                     disabled={!c.users?.[0]?.id}
                                     className={`flex items-center justify-center gap-2 py-4 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${c.users?.[0]?.id ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20' : 'bg-gray-500/10 text-gray-500 border-gray-500/10 opacity-50 cursor-not-allowed'}`}
                                 >
                                     <ShieldCheck size={16} /> Soporte
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => handleExtendTrial(c.id)}
                                     className="flex items-center justify-center gap-2 py-4 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-all text-[10px] font-black uppercase tracking-widest"
                                 >
                                     <PlusCircle size={16} /> +7 Días Trial
                                 </button>
-                                <a 
-                                    href={`/${c.slug}`} 
-                                    target="_blank" 
+                                <a
+                                    href={`/${c.slug}`}
+                                    target="_blank"
                                     rel="noopener noreferrer"
                                     className="col-span-2 flex items-center justify-center gap-2 py-4 rounded-xl bg-white/5 text-gray-400 border border-white/10 hover:border-white/20 transition-all text-[10px] font-black uppercase tracking-widest"
                                 >
                                     <ExternalLink size={16} /> Visitar Sitio Público
                                 </a>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => handleDeleteComplex(c.id, c.name)}
                                 className="w-full flex items-center justify-center gap-2 py-4 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 hover:bg-red-500/10 transition-all text-[10px] font-black uppercase tracking-widest"
                             >
@@ -427,7 +427,7 @@ export default function SuperAdminDashboard() {
         e.preventDefault()
         const form = e.target as HTMLFormElement
         const formData = new FormData(form)
-        
+
         try {
             const res = await fetch('/api/saas/notifications', {
                 method: 'POST',
@@ -449,8 +449,8 @@ export default function SuperAdminDashboard() {
         }
     }
 
-    const filteredComplexes = complexes.filter(c => 
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    const filteredComplexes = complexes.filter(c =>
+        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.slug.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
@@ -462,9 +462,9 @@ export default function SuperAdminDashboard() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
                 <div>
                     <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-1">
-                        Control <span className="text-primary italic">SaaS</span>
+                        Control <span className="text-primary italic">Tiki Taka</span>
                     </h1>
-                    <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">Giga-Panel de Administración Global</p>
+                    <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">Panel de Administración Global</p>
                 </div>
 
                 <div className="flex w-full md:w-auto p-1 bg-white/5 rounded-xl border border-white/5 backdrop-blur-xl overflow-x-auto no-scrollbar scroll-smooth">
@@ -480,7 +480,7 @@ export default function SuperAdminDashboard() {
 
             <AnimatePresence mode="wait">
                 {activeTab === 'overview' && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -488,30 +488,30 @@ export default function SuperAdminDashboard() {
                     >
                         {/* Highlights Grid */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                            <StatCard 
-                                title="Ingresos Totales" 
-                                value={`$${stats?.revenue?.toLocaleString() || 0}`} 
+                            <StatCard
+                                title="Ingresos Totales"
+                                value={`$${stats?.revenue?.toLocaleString() || 0}`}
                                 subValue="Histórico acumulado"
                                 icon={<DollarSign className="text-emerald-400" />}
                                 gradient="from-emerald-900/20 to-slate-900"
                             />
-                            <StatCard 
-                                title="MRR Proyectado" 
-                                value={`$${stats?.mrr?.toLocaleString() || 0}`} 
+                            <StatCard
+                                title="MRR Proyectado"
+                                value={`$${stats?.mrr?.toLocaleString() || 0}`}
                                 subValue="Recurrente mensual"
                                 icon={<TrendingUp className="text-indigo-400" />}
                                 gradient="from-indigo-900/20 to-slate-900"
                             />
-                            <StatCard 
-                                title="Conversión" 
-                                value={`${stats?.conversionRate?.toFixed(1) || 0}%`} 
+                            <StatCard
+                                title="Conversión"
+                                value={`${stats?.conversionRate?.toFixed(1) || 0}%`}
                                 subValue="Visitas a venta"
                                 icon={<Activity className="text-amber-400" />}
                                 gradient="from-amber-900/20 to-slate-900"
                             />
-                            <StatCard 
-                                title="Locales" 
-                                value={complexes.length.toString()} 
+                            <StatCard
+                                title="Locales"
+                                value={complexes.length.toString()}
                                 subValue={`${stats?.subscriptions?.total || 0} activos`}
                                 icon={<Building2 className="text-blue-400" />}
                                 gradient="from-blue-900/20 to-slate-900"
@@ -526,7 +526,7 @@ export default function SuperAdminDashboard() {
                                 <div className="flex items-end gap-2 h-48 pt-4">
                                     {[20, 35, 25, 45, 60, 55, 75, 90, 85, 95].map((h, i) => (
                                         <div key={i} className="flex-1 group relative">
-                                            <motion.div 
+                                            <motion.div
                                                 initial={{ height: 0 }}
                                                 animate={{ height: `${h}%` }}
                                                 transition={{ delay: i * 0.05 }}
@@ -565,7 +565,7 @@ export default function SuperAdminDashboard() {
                 )}
 
                 {activeTab === 'complexes' && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="space-y-6"
@@ -574,15 +574,15 @@ export default function SuperAdminDashboard() {
                         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
                             <div className="relative flex-1">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
-                                <input 
-                                    type="text" 
-                                    placeholder="Buscar por nombre..." 
+                                <input
+                                    type="text"
+                                    placeholder="Buscar por nombre..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-11 pr-4 text-white placeholder:text-gray-600 focus:border-primary outline-none transition-all text-sm font-medium"
                                 />
                             </div>
-                            <button 
+                            <button
                                 onClick={openCreateModal}
                                 className="flex items-center justify-center gap-2 bg-primary text-white px-6 py-4 rounded-xl font-black uppercase text-[10px] tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20"
                             >
@@ -593,9 +593,9 @@ export default function SuperAdminDashboard() {
                         {/* Mobile Cards / Desktop Table */}
                         <div className="grid grid-cols-1 md:hidden gap-4">
                             {filteredComplexes.map(c => (
-                                <MobileComplexCard 
-                                    key={c.id} 
-                                    c={c} 
+                                <MobileComplexCard
+                                    key={c.id}
+                                    c={c}
                                     onView={() => handleViewComplex(c)}
                                 />
                             ))}
@@ -616,11 +616,11 @@ export default function SuperAdminDashboard() {
                                         <tr key={c.id} className="hover:bg-white/[0.02] transition-colors group">
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-3">
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleViewComplex(c)}
-                                                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-primary/20 border border-white/10 flex items-center justify-center font-black text-primary hover:scale-105 transition-transform"
+                                                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center font-black text-primary hover:scale-105 transition-transform"
                                                     >
-                                                        {c.name[0]}
+                                                        <img src="/logo-tikitaka.png" alt="Logo" className="w-full h-full object-cover" />
                                                     </button>
                                                     <div>
                                                         <div className="flex items-center gap-2">
@@ -656,7 +656,7 @@ export default function SuperAdminDashboard() {
                                                 </div>
                                             </td>
                                             <td className="px-8 py-6 text-right">
-                                                <button 
+                                                <button
                                                     onClick={() => handleViewComplex(c)}
                                                     className="px-4 py-2 rounded-xl bg-white/5 text-gray-400 border border-white/10 hover:border-white/30 transition-all text-[10px] font-black uppercase tracking-widest flex items-center gap-2 inline-flex"
                                                 >
@@ -672,7 +672,7 @@ export default function SuperAdminDashboard() {
                 )}
 
                 {activeTab === 'broadcasts' && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="grid grid-cols-1 md:grid-cols-2 gap-8"
@@ -738,15 +738,15 @@ export default function SuperAdminDashboard() {
                 )}
 
                 {activeTab === 'audit' && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="glass rounded-2xl border border-white/5 overflow-hidden"
                     >
                         <div className="p-6 border-b border-white/5 flex items-center justify-between">
                             <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest">Auditoría Central</h3>
-                            <button 
-                                onClick={fetchAllData} 
+                            <button
+                                onClick={fetchAllData}
                                 className="text-xs text-primary font-bold flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-lg border border-primary/10"
                                 disabled={refreshing}
                             >
@@ -825,11 +825,11 @@ export default function SuperAdminDashboard() {
 
 function TabButton({ active, onClick, icon, label }: any) {
     return (
-        <button 
+        <button
             onClick={onClick}
             className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs font-black tracking-widest uppercase transition-all
-                ${active 
-                    ? 'bg-primary text-white shadow-xl shadow-primary/20' 
+                ${active
+                    ? 'bg-primary text-white shadow-xl shadow-primary/20'
                     : 'text-gray-500 hover:text-white hover:bg-white/5'}
             `}
         >
@@ -868,7 +868,7 @@ function PlanBar({ label, count, total, color }: any) {
                 <span className="text-white">{count} ({Math.round(percentage)}%)</span>
             </div>
             <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                <motion.div 
+                <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
                     className={`h-full ${color} shadow-[0_0_10px_rgba(255,255,255,0.1)]`}
@@ -902,14 +902,14 @@ function ModalComponent({ config, onClose }: { config: any, onClose: () => void 
     return (
         <AnimatePresence>
             <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
-                    className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" 
+                    className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
                 />
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -922,13 +922,13 @@ function ModalComponent({ config, onClose }: { config: any, onClose: () => void 
                         {config.content}
                     </div>
                     <div className="p-6 border-t border-white/5 bg-white/[0.01] flex gap-3">
-                        <button 
+                        <button
                             onClick={onClose}
                             className="flex-1 px-6 py-3 rounded-xl bg-white/5 text-gray-400 font-bold uppercase text-[10px] tracking-widest hover:bg-white/10 transition-all"
                         >
                             Cancelar
                         </button>
-                        <button 
+                        <button
                             onClick={() => {
                                 config.onConfirm?.()
                                 if (config.type === 'confirm') onClose()
@@ -949,11 +949,11 @@ function MobileComplexCard({ c, onView }: { c: any, onView: () => void }) {
         <div className="glass p-5 rounded-2xl border border-white/5 space-y-4">
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                    <button 
+                    <button
                         onClick={onView}
-                        className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-primary/20 border border-white/10 flex items-center justify-center font-black text-primary active:scale-95 transition-transform"
+                        className="w-10 h-10 rounded-xl overflow-hidden border border-white/10 flex items-center justify-center font-black text-primary active:scale-95 transition-transform"
                     >
-                        {c.name[0]}
+                        <img src="/logo-tikitaka.png" alt="Logo" className="w-full h-full object-cover" />
                     </button>
                     <div>
                         <div className="flex items-center gap-2">
@@ -973,17 +973,17 @@ function MobileComplexCard({ c, onView }: { c: any, onView: () => void }) {
 
             <div className="grid grid-cols-2 gap-4 py-2 border-y border-white/5">
                 <MetricMini label="Reservas" val={c.stats?.bookings || 0} />
-                <MetricMini 
-                    label={c.subscriptionActive ? "Facturado" : "Días Trial"} 
-                    val={c.subscriptionActive 
-                        ? `$${c.stats?.revenue?.toLocaleString() || 0}` 
+                <MetricMini
+                    label={c.subscriptionActive ? "Facturado" : "Días Trial"}
+                    val={c.subscriptionActive
+                        ? `$${c.stats?.revenue?.toLocaleString() || 0}`
                         : `${getTrialDays(c.trialEndsAt)} días`
-                    } 
+                    }
                 />
             </div>
 
             <div className="pt-1">
-                <button 
+                <button
                     onClick={onView}
                     className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-primary/10 text-primary border border-primary/20 active:scale-[0.98] transition-all text-[10px] font-black uppercase tracking-widest"
                 >
