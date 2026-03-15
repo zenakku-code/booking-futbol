@@ -38,6 +38,7 @@ export default function AdminLayout({
 
     const [hasAccess, setHasAccess] = useState(true)
     const [complexName, setComplexName] = useState<string | null>(null)
+    const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
     useEffect(() => {
         if (sessionData?.user) {
@@ -51,11 +52,14 @@ export default function AdminLayout({
                 const subscriptionData = await subscriptionRes.json()
                 setHasAccess(subscriptionData.hasAccess !== false)
 
-                // Fetch complex name
+                // Fetch complex name and logo
                 const complexRes = await fetch('/api/admin/complex')
                 const complexData = await complexRes.json()
                 if (complexData.complex?.name) {
                     setComplexName(complexData.complex.name)
+                }
+                if (complexData.complex?.logoUrl) {
+                    setLogoUrl(complexData.complex.logoUrl)
                 }
             } catch (e) {
                 console.error('Failed to fetch admin data', e)
@@ -152,10 +156,16 @@ export default function AdminLayout({
                 </nav>
 
                 <div className="mt-auto pt-6 border-t border-white/5 space-y-4">
-                    <div className="flex items-center gap-3 p-3 rounded-full bg-white/5 border border-white/5">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/20 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-                            {sessionData?.user?.name?.[0]?.toUpperCase() || 'A'}
-                        </div>
+                    <div className="flex items-center gap-3 p-3 rounded-full bg-white/5 border border-white/5 overflow-hidden">
+                        {logoUrl ? (
+                            <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
+                                <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                            </div>
+                        ) : (
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs border border-primary/20 shadow-[0_0_10px_rgba(16,185,129,0.2)] shrink-0">
+                                {sessionData?.user?.name?.[0]?.toUpperCase() || 'A'}
+                            </div>
+                        )}
                         <div className="flex-1 overflow-hidden">
                             <p className="text-sm font-bold text-white truncate">
                                 {complexName || 'Administrador'}

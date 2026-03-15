@@ -58,8 +58,8 @@ export default function ComplexImageSettings({ initialComplex }: { initialComple
                     🖼️
                 </div>
                 <div>
-                    <h3 className="text-white font-black text-xl tracking-tight">Imagen del Complejo</h3>
-                    <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-0.5">Personaliza tu marca visual</p>
+                    <h3 className="text-white font-black text-xl tracking-tight">Logo del Complejo</h3>
+                    <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] mt-0.5">Define tu identidad visual</p>
                 </div>
             </div>
 
@@ -147,7 +147,7 @@ export default function ComplexImageSettings({ initialComplex }: { initialComple
                         disabled={isLoading}
                         className="btn-primary w-full py-4 rounded-full font-black text-xs uppercase tracking-[0.25em] shadow-xl shadow-primary/10 transition-all active:scale-[0.98] disabled:opacity-30"
                     >
-                        {isLoading ? 'Sincronizando...' : 'Publicar Imagen'}
+                        {isLoading ? 'Sincronizando...' : 'Publicar Logo'}
                     </button>
                 </div>
             </form>

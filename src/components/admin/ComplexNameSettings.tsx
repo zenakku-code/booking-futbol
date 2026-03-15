@@ -99,20 +99,21 @@ export default function ComplexNameSettings({ initialComplex }: Props) {
                 </div>
 
                 <div className="group lg:col-span-2">
-                    <label className="block text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1">Descripción / Eslogan del Complejo</label>
+                    <label className="block text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-2.5 ml-1">WhatsApp de contacto (Solo números)</label>
                     <div className="relative">
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full p-6 bg-black/20 border border-white/5 rounded-[2.5rem] text-white font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all min-h-[140px] placeholder:text-gray-700 resize-none text-lg leading-relaxed pt-8"
-                            placeholder="Ej: Canchas profesionales con la mejor iluminación LED de la zona."
-                        />
-                        <div className="absolute top-0 right-8 -translate-y-1/2 px-4 py-1.5 bg-primary/10 border border-primary/20 rounded-full text-[9px] font-black uppercase tracking-widest text-primary shadow-2xl">
-                            Mensaje de Bienvenida ✨
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl z-10">
+                            📱
                         </div>
+                        <input
+                            type="text"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value.replace(/\D/g, ''))}
+                            className="w-full p-4 pl-16 bg-black/20 border border-white/5 rounded-full text-white font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary/50 outline-none transition-all placeholder:text-gray-700"
+                            placeholder="Ej: 5491122334455"
+                        />
                     </div>
-                    <p className="text-gray-600 text-[10px] font-bold mt-4 flex items-center gap-1.5 ml-1">
-                        ℹ️ Este texto aparecerá en la cabecera de tu página pública. Úsalo para destacar promociones o el espíritu del complejo.
+                    <p className="text-gray-600 text-[10px] font-bold mt-2.5 flex items-center gap-1.5 ml-1">
+                        ℹ️ Ingresa el número con código de área (ej: 549...). Tus clientes podrán contactarte directamente.
                     </p>
                 </div>
 

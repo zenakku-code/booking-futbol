@@ -103,8 +103,12 @@ export default async function HomePage() {
                         <div className="flex animate-marquee gap-8 sm:gap-12 items-center whitespace-nowrap">
                             {[...complexes, ...complexes].map((complex: any, i: number) => (
                                 <div key={`${complex.id}-${i}`} className="flex items-center gap-3 shrink-0 px-4 sm:px-6 py-2 rounded-full bg-white/[0.03] border border-white/5">
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-black shrink-0">
-                                        {complex.name.charAt(0)}
+                                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xs font-black shrink-0 overflow-hidden">
+                                        {complex.logoUrl ? (
+                                            <img src={complex.logoUrl} alt={complex.name} className="w-full h-full object-cover" />
+                                        ) : (
+                                            complex.name.charAt(0)
+                                        )}
                                     </div>
                                     <span className="text-xs sm:text-sm text-gray-300 font-bold tracking-tight">{complex.name}</span>
                                 </div>
@@ -182,23 +186,23 @@ export default async function HomePage() {
                                 href={`/${complex.slug}`}
                                 className="group relative glass-card p-[1px] block no-underline overflow-hidden rounded-2xl sm:rounded-[2rem]"
                             >
-                                <div className="relative h-56 sm:h-64 md:h-72 w-full overflow-hidden bg-[#0A0A0A]">
+                                <div className="relative h-56 sm:h-64 md:h-72 w-full overflow-hidden bg-gradient-to-br from-[#111] to-[#050505] flex items-center justify-center">
                                     {complex.logoUrl ? (
-                                        <Image
-                                            src={complex.logoUrl}
-                                            alt={complex.name}
-                                            fill
-                                            priority={idx < 2}
-                                            className="object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                        />
+                                        <div className="relative w-32 h-32 sm:w-40 sm:h-40 group-hover:scale-110 transition-transform duration-700 rounded-full overflow-hidden border-4 border-white/5 shadow-2xl">
+                                            <Image
+                                                src={complex.logoUrl}
+                                                alt={complex.name}
+                                                fill
+                                                priority={idx < 2}
+                                                className="object-cover"
+                                                sizes="(max-width: 768px) 150px, 200px"
+                                            />
+                                        </div>
                                     ) : (
                                         <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#111] to-[#050505]">
                                             <span className="text-5xl opacity-40 group-hover:scale-110 transition-transform duration-500">🏟️</span>
                                         </div>
                                     )}
-
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent opacity-80" />
 
                                     <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10">
                                         <div className="glass bg-black/60 px-2.5 py-1 rounded-full border-white/10 backdrop-blur-md">

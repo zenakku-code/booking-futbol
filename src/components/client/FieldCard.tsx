@@ -37,9 +37,6 @@ export default function FieldCard({ field }: { field: any }) {
                 <div className="p-4 sm:p-6 flex-1 flex flex-col relative z-20 bg-gradient-to-b from-[#050505]/50 to-transparent">
                     <div className="mb-4">
                         <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors line-clamp-1">{field.name}</h3>
-                        <p className="text-gray-400 text-sm line-clamp-2">
-                            Cancha profesional de césped sintético. Iluminación LED y vestuarios incluidos.
-                        </p>
                     </div>
 
                     <div className="mt-auto pt-4 border-t border-white/5 flex items-center justify-between">

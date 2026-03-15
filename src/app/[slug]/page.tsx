@@ -31,19 +31,9 @@ export default async function ComplexPage({
     })
 
     return (
-        <div className="min-h-screen relative">
+        <div className="min-h-screen relative bg-[#050505]">
             {/* Fixed Background for better performance */}
-            <div className="fixed inset-0 z-0">
-                <Image
-                    src="/bg-hero.jpg" // Using same efficient hero asset
-                    alt="Stadium Background"
-                    fill
-                    priority
-                    className="object-cover"
-                    sizes="100vw"
-                />
-                <div className="absolute inset-0 bg-[#050505]/90 sm:bg-[#050505]/95" />
-            </div>
+            <div className="fixed inset-0 z-0 bg-[#050505]" />
 
             <div className="relative z-10">
                 {/* Header */}
@@ -100,13 +90,9 @@ export default async function ComplexPage({
                             {currentComplex.name}
                         </h2>
 
-                        <p className="text-lg sm:text-xl md:text-2xl text-gray-400 mb-8 md:mb-10 max-w-2xl mx-auto leading-relaxed drop-shadow-md">
-                            {currentComplex.description || 'Reserva tu cancha en el mejor complejo de la zona. Césped de calidad profesional y excelente iluminación.'}
-                        </p>
-
                         <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
                             <a href="#canchas" className="btn btn-primary text-lg px-10 py-4 rounded-full shadow-[0_0_40px_-10px_rgba(74,222,128,0.5)] hover:scale-105 transition-transform">
-                                Ver Canchas
+                                Reservar Ahora
                             </a>
                         </div>
                     </div>

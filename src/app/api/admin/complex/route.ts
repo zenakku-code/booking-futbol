@@ -44,9 +44,12 @@ export async function PATCH(request: Request) {
             return NextResponse.json({ error: 'Descripción inválida (máx 500 caracteres)' }, { status: 400 })
         }
         if (logoUrl !== undefined && typeof logoUrl === 'string' && logoUrl.length > 0) {
-            // Only allow https URLs or empty strings
-            if (!logoUrl.startsWith('https://') || logoUrl.length > 500) {
-                return NextResponse.json({ error: 'URL de logo inválida' }, { status: 400 })
+            // Allow https URLs or Base64 data URLs
+            const isBase64 = logoUrl.startsWith('data:image/')
+            const isHttps = logoUrl.startsWith('https://')
+            
+            if ((!isHttps && !isBase64) || logoUrl.length > 500000) { // Limit Base64 to ~500KB to be safe
+                return NextResponse.json({ error: 'URL de logo inválida o demasiado pesada' }, { status: 400 })
             }
         }
         // Basic sanitization to prevent XSS in fields
