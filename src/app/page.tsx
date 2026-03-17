@@ -212,14 +212,16 @@ export default async function HomePage() {
 
                                     <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 z-10">
                                         <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-1.5 tracking-tight group-hover:text-primary transition-colors">{complex.name}</h3>
-                                        <div className="flex items-center gap-1.5">
-                                            <svg className="w-3 h-3 text-primary shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                            </svg>
-                                            <span className="text-[10px] sm:text-xs font-bold text-gray-400 capitalize truncate">
-                                                {complex.address || 'Ubicación Premium'}
-                                            </span>
-                                        </div>
+                                        {complex.address && (
+                                            <div className="flex items-center gap-1.5">
+                                                <svg className="w-3 h-3 text-primary shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                                </svg>
+                                                <span className="text-[10px] sm:text-xs font-bold text-gray-400 capitalize truncate">
+                                                    {complex.address}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </Link>
