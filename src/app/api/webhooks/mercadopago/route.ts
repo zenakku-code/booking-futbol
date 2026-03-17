@@ -167,7 +167,7 @@ export async function POST(request: Request) {
                             status: 'approved',
                             externalId: String(paymentData.id)
                         },
-                        include: { complex: true }
+                        include: { complex: { include: { users: true } } }
                     })
 
                     const complex = payRecord.complex
