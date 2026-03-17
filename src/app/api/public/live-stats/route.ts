@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-
-// Revalidate cache every 60 seconds to avoid hitting the DB on every single visit
-export const revalidate = 60;
+import { getOrSetCache } from '@/lib/redis';
 
 export async function GET() {
     try {
-        const [complexesCount, bookingsCount] = await Promise.all([
-            prisma.complex.count(),
-            prisma.booking.count()
-        ]);
+        const stats = await getOrSetCache('live_stats', async () => {
+            const [complexesCount, bookingsCount] = await Promise.all([
+                prisma.complex.count(),
+                prisma.booking.count()
+            ]);
+            return {
+                complexes: complexesCount,
+                bookings: bookingsCount
+            };
+        }, 60); // 1 minute cache
 
-        return NextResponse.json({
-            complexes: complexesCount,
-            bookings: bookingsCount
-        });
+        return NextResponse.json(stats);
     } catch (error) {
         console.error("Error fetching live stats:", error);
         // Fallback or default numbers in case of DB downtime

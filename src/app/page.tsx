@@ -4,25 +4,33 @@ import Image from 'next/image'
 import { LiveStatsCounter } from '@/components/home/LiveStatsCounter'
 import { FloatingCTA } from '@/components/home/FloatingCTA'
 
+import { getOrSetCache } from "@/lib/redis"
+
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
-    const [complexes, pricingConfig, totalBookings] = await Promise.all([
-        (prisma as any).complex.findMany({
-            orderBy: { name: 'asc' },
-            where: { isActive: true }
-        }),
-        (prisma as any).systemConfig.findFirst({
-            orderBy: { updatedAt: 'desc' }
-        }),
-        (prisma as any).booking.count().catch(() => 0)
-    ])
+    const { complexes, prices, totalBookings } = await getOrSetCache('landing_page_data', async () => {
+        const [complexes, pricingConfig, totalBookings] = await Promise.all([
+            (prisma as any).complex.findMany({
+                orderBy: { name: 'asc' },
+                where: { isActive: true }
+            }),
+            (prisma as any).systemConfig.findFirst({
+                orderBy: { updatedAt: 'desc' }
+            }),
+            (prisma as any).booking.count().catch(() => 0)
+        ])
 
-    const prices = pricingConfig || {
-        monthlyPrice: 10000,
-        quarterlyPrice: 27000,
-        annualPrice: 100000
-    }
+        return {
+            complexes,
+            prices: pricingConfig || {
+                monthlyPrice: 10000,
+                quarterlyPrice: 27000,
+                annualPrice: 100000
+            },
+            totalBookings
+        }
+    }, 300) // 5 minutes TTL
 
     return (
         <main className="min-h-screen bg-background text-foreground selection:bg-primary/30 overflow-x-hidden font-sans relative">
