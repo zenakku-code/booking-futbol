@@ -37,6 +37,7 @@ type Complex = {
     createdAt: string
     trialEndsAt: string | null
     subscriptionActive: boolean
+    planType: string | null
     isActive: boolean
     stats?: ComplexStats
     users?: { id: string, email: string }[]
@@ -273,7 +274,27 @@ export default function SuperAdminDashboard() {
         })
     }
 
-    const handleAssignPlan = async (complexId: string, plan: string) => {
+    const handleAssignPlan = async (complexId: string, plan: string, confirmed = false) => {
+        if (!confirmed) {
+            setModal({
+                isOpen: true,
+                title: 'Confirmar Membresía 💎',
+                type: 'confirm',
+                content: (
+                    <div className="space-y-3">
+                        <p className="text-gray-300 text-sm">
+                            ¿Deseas asignar el plan <span className="text-white font-bold">{plan}</span> a este complejo?
+                        </p>
+                        <p className="text-[10px] text-amber-400 font-black uppercase tracking-widest bg-amber-400/10 p-2 rounded-lg">
+                            Esta acción actualizará la fecha de expiración y enviará una alerta a Telegram.
+                        </p>
+                    </div>
+                ),
+                onConfirm: () => handleAssignPlan(complexId, plan, true)
+            })
+            return
+        }
+
         setRefreshing(true)
         try {
             console.log('Assigning plan:', plan, 'to:', complexId)
@@ -387,9 +408,16 @@ export default function SuperAdminDashboard() {
                             <div className="flex justify-between items-center">
                                 <div>
                                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Estado</p>
-                                    <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border ${c.subscriptionActive ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
-                                        {c.subscriptionActive ? 'PREMIUM' : 'FREE / TRIAL'}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border ${c.subscriptionActive ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
+                                            {c.subscriptionActive ? 'PREMIUM' : 'FREE / TRIAL'}
+                                        </span>
+                                        {c.subscriptionActive && c.planType && (
+                                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 uppercase">
+                                                {c.planType === 'MONTHLY' ? 'MENSUAL' : c.planType === 'QUARTERLY' ? 'TRIMESTRAL' : 'ANUAL'}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Activo</p>
@@ -544,9 +572,17 @@ export default function SuperAdminDashboard() {
                     <div className="h-4 w-[1px] bg-white/10 mx-2" />
                     <button
                         onClick={() => {
-                            if (confirm('¿Cerrar sesión de Admin?')) {
-                                signOut({ fetchOptions: { onSuccess: () => router.push('/admin/login') } })
-                            }
+                            setModal({
+                                isOpen: true,
+                                title: 'Cerrar Sesión 🚪',
+                                type: 'confirm',
+                                content: (
+                                    <div className="space-y-3">
+                                        <p className="text-gray-300 text-sm">¿Estás seguro que deseas salir del Panel SaaS Admin?</p>
+                                    </div>
+                                ),
+                                onConfirm: () => signOut({ fetchOptions: { onSuccess: () => router.push('/admin/login') } })
+                            })
                         }}
                         className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
                     >
@@ -718,6 +754,11 @@ export default function SuperAdminDashboard() {
                                                         <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border ${c.subscriptionActive ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>
                                                             {c.subscriptionActive ? 'PREMIUM' : 'FREE'}
                                                         </span>
+                                                        {c.subscriptionActive && c.planType && (
+                                                            <span className="px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 uppercase">
+                                                                {c.planType === 'MONTHLY' ? 'MENSUAL' : c.planType === 'QUARTERLY' ? 'TRIMESTRAL' : 'ANUAL'}
+                                                            </span>
+                                                        )}
                                                         <span className={`px-2 py-0.5 rounded-lg text-[10px] font-black tracking-widest border ${c.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}>
                                                             {c.isActive ? 'ACTIVO' : 'BLOQUEADO'}
                                                         </span>
