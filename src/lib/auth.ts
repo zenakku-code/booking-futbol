@@ -58,7 +58,9 @@ export const auth = betterAuth({
         }
     },
     plugins: [
-        dash(),
+        dash({
+            apiKey: process.env.BETTER_AUTH_API_KEY
+        }),
         admin(),
         magicLink({
             sendMagicLink: async ({ email, url, token }, request) => {
