@@ -129,6 +129,21 @@ export async function PATCH(request: Request) {
                 newDate.setDate(newDate.getDate() + 7)
                 updateData = { trialEndsAt: newDate, subscriptionActive: true }
                 break
+            case 'ASSIGN_PLAN':
+                const now = new Date()
+                let endsAt = new Date()
+                if (value === 'MONTHLY') endsAt.setDate(now.getDate() + 30)
+                else if (value === 'QUARTERLY') endsAt.setDate(now.getDate() + 90)
+                else if (value === 'ANNUAL') endsAt.setDate(now.getDate() + 365)
+                
+                updateData = { 
+                    subscriptionActive: true, 
+                    planType: value,
+                    subscriptionDate: now,
+                    subscriptionEndsAt: endsAt,
+                    trialEndsAt: null // Clear trial if manual plan is assigned
+                }
+                break
             case 'DELETE_COMPLEX':
                 await prisma.$transaction(async (tx: any) => {
                     // 1. Delete Dependencies first (Leaf nodes in dependency graph)

@@ -272,6 +272,31 @@ export default function SuperAdminDashboard() {
         })
     }
 
+    const handleAssignPlan = async (complexId: string, plan: string) => {
+        setRefreshing(true)
+        try {
+            const res = await fetch('/api/saas/complexes', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ complexId, action: 'ASSIGN_PLAN', value: plan })
+            })
+            if (res.ok) {
+                setModal({
+                    isOpen: true,
+                    title: 'Membresía Asignada! 💎',
+                    type: 'confirm',
+                    content: <p className="text-emerald-400 text-sm font-bold">El plan {plan} ha sido asignado correctamente.</p>,
+                    onConfirm: () => setModal({ ...modal, isOpen: false })
+                })
+                fetchAllData()
+            }
+        } catch (e) {
+            alert('Error')
+        } finally {
+            setRefreshing(false)
+        }
+    }
+
     const handleDeleteComplex = async (complexId: string, complexName: string) => {
         setModal({
             isOpen: true,
@@ -401,6 +426,26 @@ export default function SuperAdminDashboard() {
                                 >
                                     <PlusCircle size={16} /> +7 Días Trial
                                 </button>
+                                <div className="col-span-2 grid grid-cols-3 gap-2 py-2">
+                                    <button
+                                        onClick={() => handleAssignPlan(c.id, 'MONTHLY')}
+                                        className="py-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 text-[8px] font-black uppercase tracking-tighter"
+                                    >
+                                        Plan Mensual
+                                    </button>
+                                    <button
+                                        onClick={() => handleAssignPlan(c.id, 'QUARTERLY')}
+                                        className="py-3 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[8px] font-black uppercase tracking-tighter"
+                                    >
+                                        Plan Trimestral
+                                    </button>
+                                    <button
+                                        onClick={() => handleAssignPlan(c.id, 'ANNUAL')}
+                                        className="py-3 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 text-[8px] font-black uppercase tracking-tighter"
+                                    >
+                                        Plan Anual
+                                    </button>
+                                </div>
                                 <a
                                     href={`/${c.slug}`}
                                     target="_blank"

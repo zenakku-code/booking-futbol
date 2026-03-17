@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST as activateTrial } from '@/app/api/subscription/activate-trial/route'
 import { POST as subscribe } from '@/app/api/subscription/subscribe/route'
-import { GET as getStatus } from '@/app/api/saas/status/route'
+import { GET as getStatus } from '@/app/api/subscription/status/route'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 
