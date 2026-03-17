@@ -35,18 +35,50 @@ type Booking = {
     items?: BookingItem[]
 }
 
-export default function BookingManagement({ initialBookings }: { initialBookings: any[] }) {
+export default function BookingManagement({ 
+    initialBookings, 
+    totalCount = 0, 
+    currentPage = 1, 
+    limit = 50 
+}: { 
+    initialBookings: any[],
+    totalCount?: number,
+    currentPage?: number,
+    limit?: number
+}) {
     const [bookings, setBookings] = useState<Booking[]>(initialBookings)
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
     const router = useRouter()
+    const [searchTerm, setSearchTerm] = useState('')
+
+    // Synchronize with server-side props
+    useEffect(() => {
+        setBookings(initialBookings)
+    }, [initialBookings])
+
+    const totalPages = Math.ceil(totalCount / limit)
+
+    const handlePageChange = (newPage: number) => {
+        const params = new URLSearchParams(window.location.search)
+        params.set('page', newPage.toString())
+        router.push(`?${params.toString()}`)
+    }
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault()
+        const params = new URLSearchParams(window.location.search)
+        if (searchTerm) {
+            params.set('search', searchTerm)
+        } else {
+            params.delete('search')
+        }
+        params.set('page', '1') // Reset to page 1 on search
+        router.push(`?${params.toString()}`)
+    }
 
     // Tools
     const [debugDate, setDebugDate] = useState(new Date().toISOString().split('T')[0])
     const [unlocking, setUnlocking] = useState(false)
-
-    useEffect(() => {
-        console.log('Admin Bookings List:', bookings)
-    }, [bookings])
 
     // FIX: Helper to display dates in UTC, ignoring local browser timezone
     const formatDate = (dateInput: string | Date) => {
@@ -149,11 +181,30 @@ export default function BookingManagement({ initialBookings }: { initialBookings
     return (
         <div className="space-y-8 animate-fade-in pb-20">
             <header>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
                         <h2 className="text-3xl font-bold text-white mb-2">Gestión de Reservas</h2>
                         <p className="text-gray-400">Descubre y gestiona las reservas de tus canchas.</p>
                     </div>
+                    
+                    <form onSubmit={handleSearch} className="flex items-center gap-3 w-full md:w-auto">
+                        <div className="relative group w-full md:w-80">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors">🔍</span>
+                            <input 
+                                type="text"
+                                placeholder="Buscar por nombre, teléfono o ID..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-sm text-white focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all backdrop-blur-xl"
+                            />
+                        </div>
+                        <button 
+                            type="submit"
+                            className="bg-primary/20 hover:bg-primary/30 text-primary border border-primary/20 px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest transition-all"
+                        >
+                            Filtrar
+                        </button>
+                    </form>
                 </div>
             </header>
 
@@ -259,6 +310,44 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                         </tbody>
                     </table>
                 </div>
+
+                {/* Desktop Pagination */}
+                {totalPages > 1 && (
+                    <div className="hidden md:flex items-center justify-between px-8 py-6 bg-white/[0.02] border-t border-white/5">
+                        <p className="text-xs text-gray-500 font-bold">
+                            Mostrando <span className="text-gray-300">{(currentPage - 1) * limit + 1}</span> a <span className="text-gray-300">{Math.min(currentPage * limit, totalCount)}</span> de <span className="text-gray-300">{totalCount}</span> reservas
+                        </p>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                                ←
+                            </button>
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => handlePageChange(i + 1)}
+                                    className={`w-10 h-10 rounded-xl text-xs font-black transition-all border ${
+                                        currentPage === i + 1 
+                                            ? 'bg-primary text-black border-primary' 
+                                            : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="p-2 rounded-xl bg-white/5 border border-white/10 text-gray-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                            >
+                                →
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Booking Detail Modal */}
                 {selectedBooking && (
@@ -482,8 +571,40 @@ export default function BookingManagement({ initialBookings }: { initialBookings
                         </div>
                     ))}
                     {bookings.length === 0 && (
-                        <div className="text-center py-10 text-gray-500">
-                            No hay reservas para mostrar.
+                        <div className="text-center py-20 px-5 glass rounded-[2rem] border border-white/5">
+                            <div className="text-4xl mb-4">🔍</div>
+                            <p className="text-gray-400 font-bold">No se encontraron reservas con esos filtros.</p>
+                            {searchTerm && (
+                                <button 
+                                    onClick={() => { setSearchTerm(''); router.push('?') }} 
+                                    className="mt-6 text-primary text-xs font-black uppercase tracking-widest underline"
+                                >
+                                    Limpiar filtros
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Mobile Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex items-center justify-center gap-4 py-4">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest disabled:opacity-30 transition-all"
+                            >
+                                Anterior
+                            </button>
+                            <span className="text-[10px] font-black text-white px-4 py-2 bg-white/5 rounded-xl border border-white/10">
+                                {currentPage} / {totalPages}
+                            </span>
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-6 py-3 rounded-2xl bg-white/5 border border-white/10 text-gray-400 font-black text-[10px] uppercase tracking-widest disabled:opacity-30 transition-all"
+                            >
+                                Siguiente
+                            </button>
                         </div>
                     )}
                 </div>

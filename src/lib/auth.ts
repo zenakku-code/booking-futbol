@@ -114,9 +114,10 @@ export const auth = betterAuth({
     ]
 });
 
+import { headers } from "next/headers";
+
 // Wrapper for backwards compatibility across the old Next.js App Router codebase
 export async function getSession() {
-    const { headers } = await import("next/headers");
     const requestHeaders = await headers();
     const sessionData = await auth.api.getSession({ headers: requestHeaders });
     if (!sessionData) return null;

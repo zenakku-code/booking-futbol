@@ -1,95 +1,80 @@
 import { prisma } from "@/lib/prisma"
-import { getComplexId } from "@/lib/auth"
+import { getSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import ClientLink from "@/components/admin/ClientLink"
 import StatCard from "@/components/admin/StatCard"
-
-// Force dynamic to ensure stats are fresh on every request
-export const dynamic = 'force-dynamic';
-
-async function getStats(complexId: string) {
-    const now = new Date()
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-
-    const totalFields = await (prisma as any).field.count({ where: { complexId } })
-
-    // Fetch all confirmed bookings for revenue calculation
-    const confirmedBookings = await (prisma as any).booking.findMany({
-        where: {
-            field: { complexId },
-            status: 'confirmed'
-        },
-        select: { totalPrice: true, date: true }
-    })
-
-    const totalRevenue = confirmedBookings.reduce((acc: number, b: any) => acc + b.totalPrice, 0)
-
-    const monthlyRevenue = confirmedBookings
-        .filter((b: any) => new Date(b.date) >= firstDayOfMonth)
-        .reduce((acc: number, b: any) => acc + b.totalPrice, 0)
-
-    const totalBookings = await (prisma as any).booking.count({
-        where: {
-            field: { complexId }
-        }
-    })
-
-    const pendingBookings = await (prisma as any).booking.count({
-        where: {
-            status: 'pending',
-            field: { complexId }
-        }
-    })
-
-    // Recent Activity Logic (Existing)
-    const recentActivity = await (prisma as any).booking.findMany({
-        where: { field: { complexId } },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-        include: { field: true }
-    })
-
-    // --- NEW: Calculate Last 7 Days Revenue ---
-    const chartData = []
-    const today = new Date()
-
-    for (let i = 6; i >= 0; i--) {
-        const d = new Date(today)
-        d.setDate(d.getDate() - i)
-        d.setHours(0, 0, 0, 0)
-
-        const nextDay = new Date(d)
-        nextDay.setDate(d.getDate() + 1)
-
-        // Sum revenue for this specific day
-        const dayRevenue = confirmedBookings
-            .filter((b: any) => {
-                const bDate = new Date(b.date)
-                return bDate >= d && bDate < nextDay
-            })
-            .reduce((acc: number, b: any) => acc + b.totalPrice, 0)
-
-        chartData.push({
-            date: d.toLocaleDateString('es-AR', { weekday: 'short' }), // "lun", "mar"
-            fullDate: d.toLocaleDateString(),
-            revenue: dayRevenue
-        })
-    }
-
-    return {
-        totalFields,
-        totalBookings,
-        pendingBookings,
-        totalRevenue,
-        monthlyRevenue,
-        recentActivity,
-        chartData // Return the new data
-    }
-}
-
 import OnboardingFlow from "@/components/admin/OnboardingFlow"
-import { getSession } from "@/lib/auth"
+import { getOrSetCache } from "@/lib/redis"
+
+// Optimized stats fetching with Prisma Aggregations and Redis Caching
+async function getStats(complexId: string) {
+    return getOrSetCache(`admin_stats_${complexId}`, async () => {
+        const now = new Date()
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        
+        const [totalFields, totalBookings, pendingBookings, confirmedRevenueTotal, monthlyRevenueTotal, recentActivity] = await Promise.all([
+            (prisma as any).field.count({ where: { complexId } }),
+            (prisma as any).booking.count({ where: { field: { complexId } } }),
+            (prisma as any).booking.count({ where: { status: 'pending', field: { complexId } } }),
+            (prisma as any).booking.aggregate({
+                where: { field: { complexId }, status: 'confirmed' },
+                _sum: { totalPrice: true }
+            }),
+            (prisma as any).booking.aggregate({
+                where: { 
+                    field: { complexId }, 
+                    status: 'confirmed',
+                    date: { gte: firstDayOfMonth }
+                },
+                _sum: { totalPrice: true }
+            }),
+            (prisma as any).booking.findMany({
+                where: { field: { complexId } },
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                include: { field: true }
+            })
+        ])
+
+        const chartData = []
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        const dayQueries = []
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today)
+            d.setDate(d.getDate() - i)
+            const nextDay = new Date(d)
+            nextDay.setDate(d.getDate() + 1)
+
+            dayQueries.push((prisma as any).booking.aggregate({
+                where: {
+                    field: { complexId },
+                    status: 'confirmed',
+                    date: { gte: d, lt: nextDay }
+                },
+                _sum: { totalPrice: true }
+            }).then((res: any) => ({
+                date: d.toLocaleDateString('es-AR', { weekday: 'short' }),
+                fullDate: d.toLocaleDateString(),
+                revenue: res._sum.totalPrice || 0
+            })))
+        }
+
+        const resolvedChartData = await Promise.all(dayQueries)
+
+        return {
+            totalFields,
+            totalBookings,
+            pendingBookings,
+            totalRevenue: confirmedRevenueTotal._sum.totalPrice || 0,
+            monthlyRevenue: monthlyRevenueTotal._sum.totalPrice || 0,
+            recentActivity,
+            chartData: resolvedChartData
+        }
+    }, 60)
+}
 
 export default async function AdminDashboard() {
     const session = await getSession()
@@ -97,7 +82,6 @@ export default async function AdminDashboard() {
 
     const complexId = session.complexId
     
-    // Si no hay complejo vinculado, mostrar flujo de bienvenida
     if (!complexId) {
         return <OnboardingFlow userEmail={session.email} />
     }

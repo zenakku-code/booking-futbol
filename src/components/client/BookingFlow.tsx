@@ -37,15 +37,17 @@ export default function BookingFlow({
     field,
     inventory = [],
     paymentSettings,
-    serverHasDeposit
+    serverHasDeposit,
+    initialAvailableDates = []
 }: {
     field: Field,
     inventory?: InventoryItem[],
     paymentSettings?: { downPaymentEnabled: boolean, downPaymentFixed: number },
-    serverHasDeposit?: boolean
+    serverHasDeposit?: boolean,
+    initialAvailableDates?: { date: string, dayName: string, dayNumber: number }[]
 }) {
     const [step, setStep] = useState(1)
-    const [date, setDate] = useState('')
+    const [date, setDate] = useState(() => initialAvailableDates[0]?.date || '')
     const [selectedTime, setSelectedTime] = useState('')
     const [clientName, setClientName] = useState('')
     const [clientPhone, setClientPhone] = useState('')
@@ -85,9 +87,11 @@ export default function BookingFlow({
     }, [hasDeposit, paymentType])
 
     // Generate valid dates (next 14 days)
-    const [availableDates, setAvailableDates] = useState<{ date: string, dayName: string, dayNumber: number, fullDate: Date }[]>([])
+    const [availableDates, setAvailableDates] = useState(initialAvailableDates)
 
     useEffect(() => {
+        if (initialAvailableDates.length > 0) return // Skip if provided by server
+
         const dates = []
         const today = new Date()
         const allowedDays = field.availableDays ? field.availableDays.split(',') : Object.values(DAYS_MAP)
@@ -102,7 +106,6 @@ export default function BookingFlow({
                     date: d.toLocaleDateString('en-CA'), // YYYY-MM-DD Local (Fixes UTC shift bug)
                     dayName: dayName.slice(0, 3), // Lun, Mar
                     dayNumber: d.getDate(),
-                    fullDate: d
                 })
             }
         }
@@ -111,7 +114,7 @@ export default function BookingFlow({
         if (dates.length > 0 && !date) {
             setDate(dates[0].date)
         }
-    }, [field.availableDays, date])
+    }, [field.availableDays, date, initialAvailableDates])
 
     // Generate Slots based on Open/Close time
     const [slots, setSlots] = useState<string[]>([])
