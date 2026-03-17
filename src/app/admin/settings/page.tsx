@@ -3,6 +3,7 @@ import ComplexImageSettings from "@/components/admin/ComplexImageSettings"
 import ComplexNameSettings from "@/components/admin/ComplexNameSettings"
 import OAuthConnect from "@/components/admin/OAuthConnect"
 import PaymentSettings from "@/components/admin/PaymentSettings"
+import ChangePasswordForm from "@/components/admin/ChangePasswordForm"
 import { getComplexId } from "@/lib/auth"
 import { redirect } from "next/navigation"
 
@@ -38,6 +39,7 @@ export default async function SettingsPage() {
                 {/* Right Column */}
                 <div className="space-y-8">
                     <ComplexImageSettings initialComplex={complex} />
+                    <ChangePasswordForm />
                 </div>
 
                 {/* Full Width - Integrations */}

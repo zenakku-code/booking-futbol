@@ -195,6 +195,16 @@ export async function POST(request: Request) {
                     })
 
                     console.log(`[WEBHOOK] Activated subscription for complex ${complex.id}`)
+
+                    // 3. Notify Admin via Telegram
+                    try {
+                        const { sendTelegramNotification } = await import('@/lib/telegram')
+                        const planName = payRecord.planType === 'ANNUAL' ? 'Anual' : (payRecord.planType === 'QUARTERLY' ? 'Trimestral' : 'Mensual')
+                        const alertMsg = `💰 <b>Suscripción Pagada</b>\n\n⚽ <b>Complejo:</b> ${complex.name}\n💳 <b>Plan:</b> ${planName}\n💵 <b>Monto:</b> $${payRecord.amount}\n📧 <b>Email:</b> ${complex.users?.[0]?.email || 'N/A'}`
+                        sendTelegramNotification(alertMsg).catch(console.error)
+                    } catch (e) {
+                        console.error('[WEBHOOK] Telegram alert failed:', e)
+                    }
                 }
             }
         }
