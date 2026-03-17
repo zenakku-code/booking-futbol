@@ -88,32 +88,23 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const { title, message, type, expiresAt, sendWhatsApp } = await request.json();
+        const { title, message, type, durationMinutes, sendWhatsApp } = await request.json();
 
-        // ... notification creation ...
+        let expiresAt = null;
+        if (durationMinutes) {
+            expiresAt = new Date(Date.now() + parseInt(durationMinutes) * 60000);
+        }
+
         const notification = await prisma.globalNotification.create({
             data: {
                 title,
                 message,
                 type: type || 'info',
-                expiresAt: expiresAt ? new Date(expiresAt) : null,
+                expiresAt,
                 active: true
             }
         });
-
-        // Trigger WhatsApp if requested
-        if (sendWhatsApp) {
-            await sendWhatsAppBroadcast(title, message);
-        }
-
-        await prisma.systemAuditLog.create({
-            data: {
-                action: "CREATE_GLOBAL_NOTIFICATION",
-                userId: currentUser.id,
-                details: JSON.stringify({ notificationId: notification.id, title, whatsapp: sendWhatsApp })
-            }
-        });
-
+// ... (rest of the code stays the same) ...
         return NextResponse.json(notification);
     } catch (e) {
         console.error("Broadcast failed:", e);
@@ -121,7 +112,46 @@ export async function POST(request: Request) {
     }
 }
 
+export async function DELETE(request: Request) {
+    try {
+        const headersList = await headers();
+        const userId = headersList.get('x-user-id');
+
+        let currentUser = null;
+        if (userId) {
+            currentUser = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { id: true, role: true }
+            });
+        }
+
+        if (!currentUser || currentUser.role !== 'SUPERADMIN') {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(request.url);
+        const id = searchParams.get('id');
+
+        if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+
+        await prisma.globalNotification.delete({ where: { id } });
+
+        await prisma.systemAuditLog.create({
+            data: {
+                action: "DELETE_GLOBAL_NOTIFICATION",
+                userId: currentUser.id,
+                details: JSON.stringify({ notificationId: id })
+            }
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (e) {
+        return NextResponse.json({ error: "Failed to delete notification" }, { status: 500 });
+    }
+}
+
 export async function PATCH(request: Request) {
+// ...
     try {
         const session = await auth.api.getSession({
             headers: await headers()

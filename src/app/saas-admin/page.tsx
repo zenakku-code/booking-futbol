@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signOut } from '@/lib/auth-client'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     LayoutDashboard,
@@ -275,23 +276,33 @@ export default function SuperAdminDashboard() {
     const handleAssignPlan = async (complexId: string, plan: string) => {
         setRefreshing(true)
         try {
+            console.log('Assigning plan:', plan, 'to:', complexId)
             const res = await fetch('/api/saas/complexes', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ complexId, action: 'ASSIGN_PLAN', value: plan })
             })
+            const data = await res.json()
             if (res.ok) {
                 setModal({
                     isOpen: true,
                     title: 'Membresía Asignada! 💎',
                     type: 'confirm',
-                    content: <p className="text-emerald-400 text-sm font-bold">El plan {plan} ha sido asignado correctamente.</p>,
+                    content: (
+                        <div className="space-y-4">
+                            <p className="text-emerald-400 text-sm font-bold">El plan {plan} ha sido asignado correctamente.</p>
+                            <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Se ha enviado una alerta a Telegram.</p>
+                        </div>
+                    ),
                     onConfirm: () => setModal({ ...modal, isOpen: false })
                 })
                 fetchAllData()
+            } else {
+                alert(`Error: ${data.error || 'No se pudo asignar el plan'}`)
             }
         } catch (e) {
-            alert('Error')
+            console.error('Assign plan error:', e)
+            alert('Error de conexión al intentar asignar plan')
         } finally {
             setRefreshing(false)
         }
@@ -481,6 +492,7 @@ export default function SuperAdminDashboard() {
                     title: formData.get('title'),
                     message: formData.get('message'),
                     type: formData.get('type'),
+                    durationMinutes: formData.get('durationMinutes'),
                     sendWhatsApp: formData.get('sendWhatsApp') === 'true'
                 })
             })
@@ -491,6 +503,18 @@ export default function SuperAdminDashboard() {
             }
         } catch (e) {
             alert('Error al crear notificación')
+        }
+    }
+
+    const handleDeleteNotification = async (id: string) => {
+        if (!confirm('¿Borrar anuncio?')) return
+        try {
+            const res = await fetch(`/api/saas/notifications?id=${id}`, { method: 'DELETE' })
+            if (res.ok) {
+                setNotifications(notifications.filter(n => n.id !== id))
+            }
+        } catch (e) {
+            alert('Error al borrar')
         }
     }
 
@@ -512,11 +536,22 @@ export default function SuperAdminDashboard() {
                     <p className="text-gray-500 text-xs font-bold tracking-widest uppercase">Panel de Administración Global</p>
                 </div>
 
-                <div className="flex w-full md:w-auto p-1 bg-white/5 rounded-xl border border-white/5 backdrop-blur-xl overflow-x-auto no-scrollbar scroll-smooth">
+                <div className="flex w-full md:w-auto p-1 bg-white/5 rounded-xl border border-white/5 backdrop-blur-xl overflow-x-auto no-scrollbar scroll-smooth items-center">
                     <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<LayoutDashboard size={14} />} label="Stats" />
                     <TabButton active={activeTab === 'complexes'} onClick={() => setActiveTab('complexes')} icon={<Building2 size={14} />} label="Locales" />
                     <TabButton active={activeTab === 'broadcasts'} onClick={() => setActiveTab('broadcasts')} icon={<Megaphone size={14} />} label="Radio" />
                     <TabButton active={activeTab === 'audit'} onClick={() => setActiveTab('audit')} icon={<History size={14} />} label="Logs" />
+                    <div className="h-4 w-[1px] bg-white/10 mx-2" />
+                    <button
+                        onClick={() => {
+                            if (confirm('¿Cerrar sesión de Admin?')) {
+                                signOut({ fetchOptions: { onSuccess: () => router.push('/admin/login') } })
+                            }
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
+                    >
+                        <LogOut size={14} /> Salir
+                    </button>
                 </div>
             </div>
 
@@ -751,6 +786,10 @@ export default function SuperAdminDashboard() {
                                         <input type="checkbox" name="sendWhatsApp" value="true" className="w-4 h-4 rounded border-white/10" id="wa-check" />
                                         <label htmlFor="wa-check" className="text-[10px] font-black text-gray-400 uppercase cursor-pointer">WhatsApp 📱</label>
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Duración (Minutos)</label>
+                                        <input type="number" name="durationMinutes" defaultValue={60} className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-primary outline-none text-xs" />
+                                    </div>
                                     <div className="sm:col-span-2">
                                         <button className="w-full bg-primary text-white font-black uppercase text-[10px] tracking-[0.2em] py-4 rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all">
                                             Enviar Ahora 🚀
@@ -765,15 +804,24 @@ export default function SuperAdminDashboard() {
                             <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest mb-6">Historial de Difusión</h3>
                             <div className="space-y-4 flex-1 overflow-y-auto custom-scrollbar pr-2">
                                 {notifications.map(n => (
-                                    <div key={n.id} className="p-4 bg-white/5 border border-white/5 rounded-xl border-l-4 border-l-primary flex justify-between items-start">
-                                        <div>
+                                    <div key={n.id} className="p-4 bg-white/5 border border-white/5 rounded-xl border-l-4 border-l-primary flex justify-between items-start group/notif">
+                                        <div className="flex-1">
                                             <p className="font-bold text-sm text-white">{n.title}</p>
                                             <p className="text-xs text-gray-500 line-clamp-2 mt-1">{n.message}</p>
-                                            <p className="text-[10px] text-gray-600 font-bold mt-2 uppercase">{new Date(n.createdAt).toLocaleString()}</p>
+                                            <div className="flex items-center gap-3 mt-2">
+                                                <p className="text-[10px] text-gray-600 font-bold uppercase">{new Date(n.createdAt).toLocaleString()}</p>
+                                                <span className={`px-2 py-0.5 rounded text-[8px] font-black ${n.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
+                                                    {n.active ? 'EN VIVO' : 'CERRADO'}
+                                                </span>
+                                            </div>
                                         </div>
-                                        <span className={`px-2 py-0.5 rounded text-[8px] font-black ${n.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-500/10 text-slate-400'}`}>
-                                            {n.active ? 'EN VIVO' : 'CERRADO'}
-                                        </span>
+                                        <button 
+                                            onClick={() => handleDeleteNotification(n.id)}
+                                            className="opacity-0 group-hover/notif:opacity-100 p-2 text-gray-600 hover:text-red-400 transition-all ml-2"
+                                            title="Eliminar Anuncio"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
                                     </div>
                                 ))}
                                 {notifications.length === 0 && <p className="text-gray-600 italic text-center text-sm py-10">No hay broadcasts registrados.</p>}
@@ -937,7 +985,8 @@ function getTrialDays(trialEndsAt: string | null) {
     const end = new Date(trialEndsAt)
     const now = new Date()
     const diff = end.getTime() - now.getTime()
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)))
+    // Use Math.floor to be more intuitive (7.01 days is 7 days remaining)
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
 }
 
 // --- New Mobile & UI Components ---

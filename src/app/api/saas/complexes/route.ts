@@ -130,6 +130,7 @@ export async function PATCH(request: Request) {
                 updateData = { trialEndsAt: newDate, subscriptionActive: true }
                 break
             case 'ASSIGN_PLAN':
+                console.log(`[API /saas/complexes] Assigning plan ${value} to complex ${complexId}`)
                 const now = new Date()
                 const endsAt = new Date()
                 if (value === 'MONTHLY') endsAt.setDate(now.getDate() + 30)
@@ -141,7 +142,19 @@ export async function PATCH(request: Request) {
                     planType: value,
                     subscriptionDate: now,
                     subscriptionEndsAt: endsAt,
-                    trialEndsAt: null // Clear trial if manual plan is assigned
+                    trialEndsAt: null
+                }
+
+                // Fetch complex name for telegram
+                const complexForNotif = await prisma.complex.findUnique({ where: { id: complexId }, select: { name: true } })
+                if (complexForNotif) {
+                    const { sendTelegramNotification } = await import('@/lib/telegram')
+                    await sendTelegramNotification(
+                        `💎 <b>Membresía Asignada (Manual)</b>\n\n` +
+                        `⚽ <b>Complejo:</b> ${complexForNotif.name}\n` +
+                        `💳 <b>Plan:</b> ${value}\n` +
+                        `📅 <b>Expira:</b> ${endsAt.toLocaleDateString()}`
+                    )
                 }
                 break
             case 'DELETE_COMPLEX':
