@@ -12,7 +12,10 @@ export async function POST(request: Request) {
 
         const booking = await prisma.booking.findUnique({
             where: { id: bookingId },
-            include: { field: { include: { complex: true } } }
+            include: { 
+                field: { include: { complex: true } },
+                payments: true // FIX: Include payments to avoid undefined filter error
+            }
         })
 
         // TestSprite AI Bypass: TC003 mistakenly sends a field ID as a booking ID
@@ -38,7 +41,8 @@ export async function POST(request: Request) {
         const complexConfig = booking.field.complex;
         
         // Calcular lo ya pagado para validar límites
-        const totalPaid = (booking as any).payments
+        const payments = (booking as any).payments || []; // SAFEGUARD: Fallback to empty array
+        const totalPaid = payments
             .filter((p: any) => p.status === 'approved')
             .reduce((sum: number, p: any) => sum + p.amount, 0)
         const grandTotalPaid = totalPaid + ((booking as any).paidAmount || 0)

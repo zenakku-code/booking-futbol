@@ -39,6 +39,7 @@ type Complex = {
     subscriptionActive: boolean
     planType: string | null
     isActive: boolean
+    mercadopagoConnected: boolean
     stats?: ComplexStats
     users?: { id: string, email: string }[]
 }
@@ -435,6 +436,19 @@ export default function SuperAdminDashboard() {
                             <div>
                                 <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Miembro desde</p>
                                 <p className="text-sm font-bold text-gray-300">{new Date(c.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Pasarela de Pagos</p>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.mercadopagoConnected ? 'bg-blue-500/20 text-blue-400 border border-blue-500/20' : 'bg-slate-500/10 text-slate-500 border border-slate-500/10'}`}>
+                                        <svg viewBox="0 0 48 48" className="w-5 h-5 fill-current">
+                                            <path d="M34.5,14H13.5C11.6,14,10,15.6,10,17.5v13c0,1.9,1.6,3.5,3.5,3.5h21c1.9,0,3.5-1.6,3.5-3.5v-13C38,15.6,36.4,14,34.5,14z M34.5,18l-10,6.5L14.5,18V17.5l10,6.5l10-6.5V18z"/>
+                                        </svg>
+                                    </div>
+                                    <span className={`text-[10px] font-black tracking-widest px-2 py-0.5 rounded-lg border ${c.mercadopagoConnected ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-slate-500/10 text-slate-500 border-slate-500/10'}`}>
+                                        {c.mercadopagoConnected ? 'MERCADO PAGO CONECTADO' : 'SIN MERCADO PAGO'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 

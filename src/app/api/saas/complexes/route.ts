@@ -43,6 +43,9 @@ export async function GET(request: Request) {
                     take: 1,
                     select: { id: true, email: true }
                 },
+                accounts: {
+                    select: { id: true, accessToken: true }
+                },
                 _count: {
                     select: { fields: true, users: true }
                 }
@@ -86,6 +89,7 @@ export async function GET(request: Request) {
         // 4. Return enhanced data without per-item DB hits
         const enhancedCallback = complexes.map((c: any) => ({
             ...c,
+            mercadopagoConnected: !!c.accounts?.accessToken,
             stats: {
                 bookings: complexStatsMap[c.id]?.bookings || 0,
                 users: c._count.users,

@@ -8,7 +8,9 @@ import bcrypt from "bcryptjs";
 // Fallback seguro: usa JWT_SECRET si BETTER_AUTH_SECRET no existe en Vercel
 const authSecret = process.env.BETTER_AUTH_SECRET || process.env.JWT_SECRET || "dev-only-secret-change-me-in-production";
 
-const baseURL = process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+const baseURL = process.env.BETTER_AUTH_URL || 
+                (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXT_PUBLIC_BASE_URL) || 
+                "http://localhost:3000";
 
 // Construir orígenes confiables dinámicamente
 const trustedOrigins: string[] = ["http://localhost:3000"];
@@ -60,28 +62,50 @@ export const auth = betterAuth({
         admin(),
         magicLink({
             sendMagicLink: async ({ email, url, token }, request) => {
-                console.log(`[MagicLink] Sending to ${email}: ${url}`);
+                console.log(`[MagicLink] Rendering link for ${email}: ${url}`);
                 
-                // Integración opcional con Resend (se activa si hay API KEY)
+                // Integración con Resend
                 if (process.env.RESEND_API_KEY) {
                     try {
-                        await fetch('https://api.resend.com/emails', {
+                        const from = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
+                        const res = await fetch('https://api.resend.com/emails', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
                             },
                             body: JSON.stringify({
-                                from: 'Tiki Taka <noreply@tikitaka.com>',
+                                from: from,
                                 to: email,
                                 subject: 'Tu enlace de acceso a Tiki Taka',
-                                html: `<p>Hacé clic en el siguiente enlace para entrar a tu cuenta:</p><a href="${url}">${url}</a>`
+                                html: `
+                                    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                                        <h2 style="color: #10b981;">Tiki Taka</h2>
+                                        <p>Hacé clic en el siguiente botón para entrar a tu cuenta. Este enlace expirará pronto.</p>
+                                        <div style="margin: 30px 0;">
+                                            <a href="${url}" style="background-color: #10b981; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                                                ENTRAR AHORA
+                                            </a>
+                                        </div>
+                                        <p style="font-size: 12px; color: #666;">Si no solicitaste este enlace, podés ignorar este correo.</p>
+                                        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                                        <p style="font-size: 10px; color: #999;">O copiá y pegá esta URL: <br/> ${url}</p>
+                                    </div>
+                                `
                             })
                         });
-                        console.log(`[MagicLink] Email sent via Resend to ${email}`);
+
+                        const data = await res.json();
+                        if (!res.ok) {
+                            console.error(`[MagicLink] Resend API Error:`, JSON.stringify(data, null, 2));
+                        } else {
+                            console.log(`[MagicLink] Email sent successfully to ${email} (via ${from})`);
+                        }
                     } catch (e) {
-                        console.error(`[MagicLink] Failed to send email to ${email}`, e);
+                        console.error(`[MagicLink] Connection error sending email to ${email}`, e);
                     }
+                } else {
+                    console.warn(`[MagicLink] RESEND_API_KEY missing - check your .env file!`);
                 }
             }
         }),
