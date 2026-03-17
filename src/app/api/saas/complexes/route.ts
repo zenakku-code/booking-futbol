@@ -131,7 +131,7 @@ export async function PATCH(request: Request) {
                 break
             case 'ASSIGN_PLAN':
                 const now = new Date()
-                let endsAt = new Date()
+                const endsAt = new Date()
                 if (value === 'MONTHLY') endsAt.setDate(now.getDate() + 30)
                 else if (value === 'QUARTERLY') endsAt.setDate(now.getDate() + 90)
                 else if (value === 'ANNUAL') endsAt.setDate(now.getDate() + 365)
