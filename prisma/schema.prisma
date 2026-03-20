@@ -1,8 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -10,30 +8,125 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Complex {
+  id                   String                @id @default(uuid())
+  name                 String
+  slug                 String                @unique
+  address              String?
+  description          String?
+  logoUrl              String?
+  downPaymentFixed     Float                 @default(0)
+  downPaymentEnabled   Boolean               @default(false)
+  subscriptionActive   Boolean               @default(true)
+  trialEndsAt          DateTime?
+  isActive             Boolean               @default(true)
+  subscriptionDate     DateTime?
+  subscriptionEndsAt   DateTime?
+  planType             String?
+  features             String                @default("{}")
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  accounts             Account?
+  apiKeys              ApiKey[]
+  fields               Field[]
+  inventory            InventoryItem[]
+  subscriptionPayments SubscriptionPayment[]
+  users                User[]
+}
+
+model SubscriptionPayment {
+  id         String   @id @default(uuid())
+  amount     Float
+  planType   String
+  status     String   @default("pending")
+  externalId String?
+  complexId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  complex    Complex  @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
+}
+
 model Field {
-  id        String   @id @default(uuid())
+  id            String    @id @default(uuid())
+  name          String
+  type          String
+  price         Float
+  imageUrl      String?
+  availableDays String    @default("Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo")
+  openTime      String    @default("09:00")
+  closeTime     String    @default("23:00")
+  complexId     String?
+  bookings      Booking[]
+  complex       Complex?  @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
+}
+
+model InventoryItem {
+  id        String        @id @default(uuid())
   name      String
-  type      String   // "5", "7", "11"
   price     Float
-  imageUrl  String?
-  availableDays String @default("Lunes,Martes,Miércoles,Jueves,Viernes,Sábado,Domingo") // Comma separated
-  openTime  String     @default("09:00")
-  closeTime String     @default("23:00")
-  bookings  Booking[]
+  stock     Int           @default(0)
+  complexId String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  bookings  BookingItem[]
+  complex   Complex       @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
 }
 
 model Booking {
-  id        String   @id @default(uuid())
-  fieldId   String
-  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  date      DateTime
-  startTime String   // e.g. "18:00"
-  endTime   String   // e.g. "19:00"
-  clientName String
+  id          String        @id @default(uuid())
+  fieldId     String
+  date        DateTime
+  startTime   String
+  endTime     String
+  clientName  String
   clientPhone String?
-  totalPrice Float
-  status    String   @default("pending") // pending, confirmed, cancelled
-  createdAt DateTime @default(now())
+  totalPrice  Float
+  status      String        @default("pending")
+  paymentType String        @default("FULL")
+  paidAmount  Float         @default(0)
+  createdAt   DateTime      @default(now())
+  field       Field         @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  items       BookingItem[]
+  payments    Payment[]
+
+  @@index([fieldId])
+  @@index([fieldId, date])
+  @@index([status])
+}
+
+model Payment {
+  id         String   @id @default(uuid())
+  amount     Float
+  status     String   @default("pending")
+  externalId String?
+  payerEmail String?
+  bookingId  String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([externalId])
+}
+
+model BookingItem {
+  id              String        @id @default(uuid())
+  bookingId       String
+  inventoryItemId String
+  quantity        Int           @default(1)
+  priceAtBooking  Float
+  returned        Boolean       @default(false)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+  booking         Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@index([bookingId])
+  @@index([inventoryItemId])
 }
 
 model Account {
@@ -42,15 +135,129 @@ model Account {
   accessToken  String
   refreshToken String?
   publicKey    String?
-  userId       String   @default("admin") // Simple single-user mapping
+  userId       String   @default("admin")
+  complexId    String?  @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  complex      Complex? @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
 }
 
 model User {
+  id            String        @id @default(uuid())
+  email         String        @unique
+  name          String?
+  emailVerified Boolean       @default(false)
+  image         String?
+  password      String?
+  role          String        @default("USER")
+  complexId     String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      AuthAccount[]
+  sessions      Session[]
+  complex       Complex?      @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
+  @@map("user")
+}
+
+model Session {
   id        String   @id @default(uuid())
-  email     String   @unique
-  password  String   // Hashed password
+  expiresAt DateTime
+  token     String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model AuthAccount {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_account")
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  key       String    @unique
+  name      String
+  complexId String
+  createdAt DateTime  @default(now())
+  lastUsed  DateTime?
+  complex   Complex   @relation(fields: [complexId], references: [id])
+
+  @@index([complexId])
+}
+
+model SystemConfig {
+  id             String   @id @default(uuid())
+  monthlyPrice   Float    @default(10000)
+  quarterlyPrice Float    @default(27000)
+  annualPrice    Float    @default(100000)
+  updatedAt      DateTime @updatedAt
+}
+
+model SystemAuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  details   String?
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model GlobalNotification {
+  id        String    @id @default(uuid())
+  title     String
+  message   String
+  type      String    @default("info")
+  active    Boolean   @default(true)
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model RevenueSnapshot {
+  id        String   @id @default(uuid())
+  amount    Float
+  date      DateTime @default(now())
+  type      String
+  complexId String?
+
+  @@index([date])
 }

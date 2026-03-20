@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { getComplexId } from '@/lib/auth'
+import { headers } from 'next/headers'
+import { rateLimit } from '@/lib/rate-limit'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
     try {
@@ -7,13 +12,13 @@ export async function GET(request: Request) {
         const fieldId = searchParams.get('fieldId')
         const date = searchParams.get('date')
 
-        const where: any = {}
-        if (fieldId) where.fieldId = fieldId
-        // Date filtering can be complex with timezones, simpler for now:
-        // If date provided, filter by day approximate or exact match?
-        // Let's assume frontend sends ISO date start of day or we fetch all and filter in client for mvp,
-        // OR just fetch all bookings for a field.
-        // Efficient way:
+        // Security check: Must provide fieldId for public availability check
+        if (!fieldId) {
+            return NextResponse.json({ error: 'fieldId is required parameter for public query' }, { status: 400 })
+        }
+
+        const where: any = { fieldId }
+
         if (date) {
             const startOfDay = new Date(date)
             startOfDay.setHours(0, 0, 0, 0)
@@ -25,49 +30,99 @@ export async function GET(request: Request) {
             }
         }
 
+        // Lazy Cleanup: Eliminar reservas pendientes abandonadas (> 15 mins)
+        // Esto libera los horarios automáticamente si el usuario no completó el pago
+        try {
+            await prisma.booking.deleteMany({
+                where: {
+                    status: 'pending',
+                    createdAt: {
+                        lt: new Date(Date.now() - 15 * 60 * 1000)
+                    }
+                }
+            })
+        } catch (e) {
+            console.error('Cleanup error (non-fatal)', e)
+        }
+
         const bookings = await prisma.booking.findMany({
             where,
             include: { field: true },
             orderBy: { date: 'asc' }
         })
-        return NextResponse.json(bookings)
+
+        // Security: Sanitize sensitive data for public view
+        const currentComplexId = await getComplexId()
+
+        const sanitizedBookings = bookings.map(b => {
+            const isOwner = currentComplexId && (b.field as any).complexId === currentComplexId
+
+            if (isOwner) return b
+
+            // Public View: Strict sanitization - whitelist fields
+            return {
+                id: b.id,
+                fieldId: b.fieldId,
+                date: b.date,
+                startTime: b.startTime,
+                endTime: b.endTime,
+                status: b.status,
+                clientName: 'Reservado', // Hide real names
+                // Explicitly excluding other sensitive fields
+            }
+        })
+
+        return NextResponse.json(sanitizedBookings, {
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0',
+            }
+        })
     } catch (error) {
+        console.error('Error fetching bookings:', error)
         return NextResponse.json({ error: 'Error fetching bookings' }, { status: 500 })
     }
 }
 
 export async function POST(request: Request) {
     try {
+        // 1. Rate Limiting Protection (Anti-Spam)
+        const headersList = await headers()
+        const ip = headersList.get('x-forwarded-for') || 'unknown'
+
+        // Limit: 5 bookings per minute per IP
+        if (!rateLimit(ip, 5, 60000)) {
+            console.warn(`[Security] Rate limit exceeded for IP: ${ip}`)
+            return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en un minuto.' }, { status: 429 })
+        }
+
         const body = await request.json()
-        const { fieldId, date, startTime, endTime, clientName, clientPhone, totalPrice } = body
+        const { fieldId, date, startTime, endTime, totalPrice, items = [], paymentType = 'FULL' } = body
+        // Mutable variables for sanitization
+        let { clientName, clientPhone } = body
 
         if (!fieldId || !date || !startTime || !endTime || !clientName) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        // TODO: Validate availability?
-        // Robust overlap check
+        // 2. Input Sanitization (Anti-XSS & Data Integrity)
+        clientName = typeof clientName === 'string' ? clientName.replace(/[<>]/g, '').trim().slice(0, 100) : 'Cliente'
+        clientPhone = clientPhone && typeof clientPhone === 'string' ? clientPhone.replace(/[^\d\+\-\s]/g, '').slice(0, 20) : null
+
+        // Validate overlap
+        // FIX: Force Noon UTC to avoid timezone shifts
+        const bookingDate = new Date(date + "T12:00:00Z");
+
         const overlappingBooking = await prisma.booking.findFirst({
             where: {
                 fieldId,
-                date: new Date(date),
+                date: bookingDate,
                 status: { not: 'cancelled' },
                 OR: [
-                    {
-                        // New booking starts during an existing one
-                        startTime: { lte: startTime },
-                        endTime: { gt: startTime }
-                    },
-                    {
-                        // New booking ends during an existing one
-                        startTime: { lt: endTime },
-                        endTime: { gte: endTime }
-                    },
-                    {
-                        // Existing booking is entirely inside new one
-                        startTime: { gte: startTime },
-                        endTime: { lte: endTime }
-                    }
+                    { startTime: { lte: startTime }, endTime: { gt: startTime } },
+                    { startTime: { lt: endTime }, endTime: { gte: endTime } },
+                    { startTime: { gte: startTime }, endTime: { lte: endTime } }
                 ]
             }
         })
@@ -76,8 +131,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'El horario seleccionado ya está ocupado (solapamiento)' }, { status: 409 })
         }
 
-        // Validate within field hours
-        const field = await prisma.field.findUnique({ where: { id: fieldId } })
+        const field = await prisma.field.findUnique({
+            where: { id: fieldId },
+            include: { complex: true } as any
+        })
         if (!field) return NextResponse.json({ error: 'Field not found' }, { status: 404 })
 
         const isWithinHours = startTime >= field.openTime && endTime <= field.closeTime
@@ -85,70 +142,168 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'El horario seleccionado está fuera de rango de apertura de la cancha' }, { status: 400 })
         }
 
-        const booking = await prisma.booking.create({
-            data: {
-                fieldId,
-                date: new Date(date),
-                startTime,
-                endTime,
-                clientName,
-                clientPhone,
-                totalPrice: parseFloat(totalPrice),
-                status: 'pending'
-            }
+        // 3. Security: Calculate Price on Server Side (Ignore client totalPrice)
+        let calculatedTotal = field.price // Base price
+
+        // 4. Batch fetch inventory items to avoid N+1 queries
+        const itemIds = items.map((i: any) => i.id)
+        const inventoryItems = await prisma.inventoryItem.findMany({
+            where: { id: { in: itemIds } }
         })
 
-        // Mercado Pago Integration
-        const account = await prisma.account.findFirst({
-            where: { provider: 'mercadopago' }
+        const validItemsPayload = []
+        for (const item of items) {
+            const invItem = inventoryItems.find(i => i.id === item.id)
+            if (invItem) {
+                calculatedTotal += invItem.price * item.quantity
+                validItemsPayload.push({
+                    ...item,
+                    priceAtBooking: invItem.price // Store for record
+                })
+            }
+        }
+
+        // Use transaction for Booking, BookingItems, and Stock update
+        const booking = await prisma.$transaction(async (tx) => {
+            const b = await tx.booking.create({
+                data: {
+                    fieldId,
+                    date: bookingDate, // FIX: Use forced Noon UTC date
+                    startTime,
+                    endTime,
+                    clientName,
+                    clientPhone,
+                    totalPrice: calculatedTotal, // TRUSTED SERVER PRICE
+                    status: 'pending',
+                    paymentType // Guardo el tipo de pago
+                } as any
+            })
+
+            // Create BookingItems and Update Stock
+            for (const item of items) {
+                const invItem = await (tx as any).inventoryItem.findUnique({ where: { id: item.id } })
+                if (invItem && invItem.stock >= item.quantity) {
+                    await (tx as any).bookingItem.create({
+                        data: {
+                            bookingId: b.id,
+                            inventoryItemId: item.id,
+                            quantity: item.quantity,
+                            priceAtBooking: invItem.price
+                        }
+                    })
+                    // Decrement stock
+                    await (tx as any).inventoryItem.update({
+                        where: { id: item.id },
+                        data: { stock: { decrement: item.quantity } }
+                    })
+                }
+            }
+
+            return b
         })
 
         let paymentUrl = null
+        // Fix trailing slash in base url if exists
+        const baseUrlRaw = process.env.NEXT_PUBLIC_BASE_URL ||
+            (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+        const baseUrl = baseUrlRaw.replace(/\/$/, '')
 
-        if (account && account.accessToken) {
-            try {
-                console.log('Using MP Access Token:', account.accessToken.substring(0, 15) + '...')
-                const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${account.accessToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        items: [
-                            {
-                                title: `Reserva Cancha - ${date}`,
+        if (paymentType === 'SPLIT') {
+            // Generar link interno para la página de pago dividido
+            paymentUrl = `${baseUrl}/pay/${booking.id}`
+        } else {
+            // Mercado Pago Integration (FULL or DEPOSIT)
+            const account = await prisma.account.findFirst({
+                where: { complexId: (field as any).complexId } as any
+            })
+
+            if (account && account.accessToken) {
+                try {
+                    const returnPath = (field as any).complex?.slug ? `/${(field as any).complex.slug}` : ''
+
+                    // Build MP items array
+                    const mpItems = []
+                    let amountToPay = 0
+
+                    if (paymentType === 'DEPOSIT') {
+                        if ((field as any).complex?.downPaymentEnabled && (field as any).complex?.downPaymentFixed > 0) {
+                            amountToPay = (field as any).complex.downPaymentFixed
+                            mpItems.push({
+                                title: `Seña Reserva - ${field.name} (${date})`,
                                 quantity: 1,
                                 currency_id: 'ARS',
-                                unit_price: parseFloat(totalPrice)
-                            }
-                        ],
-                        back_urls: {
-                            success: `http://localhost:3000/?status=success`,
-                            failure: `http://localhost:3000/?status=failure`,
-                            pending: `http://localhost:3000/?status=pending`
-                        },
-                        auto_return: 'approved',
-                        external_reference: booking.id
-                    })
-                })
+                                unit_price: amountToPay
+                            })
+                        } else {
+                            // ERROR: User requested DEPOSIT but it's not valid/enabled
+                            return NextResponse.json({ error: 'La seña no está habilitada o configurada correctamente para esta cancha.' }, { status: 400 })
+                        }
+                    } else {
+                        amountToPay = booking.totalPrice
+                        mpItems.push({
+                            title: `Reserva Cancha - ${date}`,
+                            quantity: 1,
+                            currency_id: 'ARS',
+                            unit_price: field.price
+                        })
 
-                const preference = await preferenceRes.json()
-                if (preference.init_point) {
-                    paymentUrl = preference.init_point
-                } else {
-                    console.error('MP Preference Error:', preference)
+                        // Add inventory items to MP only for FULL PAYMENT
+                        for (const item of items) {
+                            const invItem = await (prisma as any).inventoryItem.findUnique({ where: { id: item.id } })
+                            if (invItem && item.quantity > 0) {
+                                mpItems.push({
+                                    title: invItem.name,
+                                    quantity: item.quantity,
+                                    currency_id: 'ARS',
+                                    unit_price: invItem.price
+                                })
+                            }
+                        }
+                    }
+
+                    // 1. Create Internal Payment Intent (MANDATORY for Webhook to work)
+                    const paymentIntent = await (prisma as any).payment.create({
+                        data: {
+                            bookingId: booking.id,
+                            amount: amountToPay,
+                            status: 'pending'
+                        }
+                    })
+
+                    const preferenceRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${account.accessToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            items: mpItems,
+                            back_urls: {
+                                success: `${baseUrl}${returnPath}?status=success&booking_id=${booking.id}`,
+                                failure: `${baseUrl}${returnPath}?status=failure&booking_id=${booking.id}`,
+                                pending: `${baseUrl}${returnPath}?status=pending&booking_id=${booking.id}`
+                            },
+                            auto_return: 'approved',
+                            external_reference: paymentIntent.id, // Using PaymentIntent ID, NOT Booking ID
+                            notification_url: `${baseUrl}/api/webhooks/mercadopago?complexId=${(field as any).complexId}`
+                        })
+                    })
+
+                    const preference = await preferenceRes.json()
+                    if (preference.init_point) {
+                        paymentUrl = preference.init_point
+                    } else {
+                        console.error('MP Preference Init Error', preference)
+                    }
+                } catch (error) {
+                    console.error('MP Preference Error', error)
                 }
-            } catch (error) {
-                console.error('CRITICAL: Error creating MP preference', error)
             }
-        } else {
-            console.warn('MP Integration skipped: No account or access token found.')
         }
 
         return NextResponse.json({ ...booking, paymentUrl })
     } catch (error) {
-        console.error(error)
+        console.error('POST /bookings Error:', error)
         return NextResponse.json({ error: 'Error creating booking' }, { status: 500 })
     }
 }

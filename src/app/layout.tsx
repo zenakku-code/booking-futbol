@@ -5,12 +5,19 @@ import "./globals.css";
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
 });
 
 export const metadata: Metadata = {
-  title: "Booking Futbol | Reserva tu Cancha",
+  title: "Tiki Taka App | Reserva tu Cancha",
   description: "La mejor experiencia para reservar canchas de fútbol.",
+  icons: {
+    icon: '/logo-tikitaka.png',
+  },
 };
+
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export default function RootLayout({
   children,
@@ -21,6 +28,8 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <body className={outfit.className}>
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

@@ -1,105 +1,312 @@
 import { prisma } from "@/lib/prisma"
-import Link from 'next/link'
+import { getSession } from "@/lib/auth"
+import { redirect } from "next/navigation"
+import Link from "next/link"
+import ClientLink from "@/components/admin/ClientLink"
+import StatCard from "@/components/admin/StatCard"
+import OnboardingFlow from "@/components/admin/OnboardingFlow"
+import { getOrSetCache } from "@/lib/redis"
 
-// Force dynamic to ensure stats are fresh on every request
-export const dynamic = 'force-dynamic';
+// Optimized stats fetching with Prisma Aggregations and Redis Caching
+async function getStats(complexId: string) {
+    return getOrSetCache(`admin_stats_${complexId}`, async () => {
+        const now = new Date()
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        
+        const [totalFields, totalBookings, pendingBookings, confirmedRevenueTotal, monthlyRevenueTotal, recentActivity] = await Promise.all([
+            (prisma as any).field.count({ where: { complexId } }),
+            (prisma as any).booking.count({ where: { field: { complexId } } }),
+            (prisma as any).booking.count({ where: { status: 'pending', field: { complexId } } }),
+            (prisma as any).booking.aggregate({
+                where: { field: { complexId }, status: 'confirmed' },
+                _sum: { totalPrice: true }
+            }),
+            (prisma as any).booking.aggregate({
+                where: { 
+                    field: { complexId }, 
+                    status: 'confirmed',
+                    date: { gte: firstDayOfMonth }
+                },
+                _sum: { totalPrice: true }
+            }),
+            (prisma as any).booking.findMany({
+                where: { field: { complexId } },
+                orderBy: { createdAt: 'desc' },
+                take: 5,
+                include: { field: true }
+            })
+        ])
 
-async function getStats() {
-    const totalFields = await prisma.field.count()
-    const totalBookings = await prisma.booking.count()
-    const pendingBookings = await prisma.booking.count({ where: { status: 'pending' } })
-    return { totalFields, totalBookings, pendingBookings }
+        const chartData = []
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+
+        const dayQueries = []
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today)
+            d.setDate(d.getDate() - i)
+            const nextDay = new Date(d)
+            nextDay.setDate(d.getDate() + 1)
+
+            dayQueries.push((prisma as any).booking.aggregate({
+                where: {
+                    field: { complexId },
+                    status: 'confirmed',
+                    date: { gte: d, lt: nextDay }
+                },
+                _sum: { totalPrice: true }
+            }).then((res: any) => ({
+                date: d.toLocaleDateString('es-AR', { weekday: 'short' }),
+                fullDate: d.toLocaleDateString(),
+                revenue: res._sum.totalPrice || 0
+            })))
+        }
+
+        const resolvedChartData = await Promise.all(dayQueries)
+
+        return {
+            totalFields,
+            totalBookings,
+            pendingBookings,
+            totalRevenue: confirmedRevenueTotal._sum.totalPrice || 0,
+            monthlyRevenue: monthlyRevenueTotal._sum.totalPrice || 0,
+            recentActivity,
+            chartData: resolvedChartData
+        }
+    }, 60)
 }
 
 export default async function AdminDashboard() {
-    const stats = await getStats()
+    const session = await getSession()
+    if (!session) redirect('/admin/login')
+
+    const complexId = session.complexId
+    
+    if (!complexId) {
+        return <OnboardingFlow userEmail={session.email} />
+    }
+
+    const [stats, complex] = await Promise.all([
+        getStats(complexId),
+        (prisma as any).complex.findUnique({ where: { id: complexId } })
+    ])
+
+    const maxRevenue = Math.max(...stats.chartData.map((d: any) => d.revenue), 1) // Avoid div by zero
+
+    // Calculate remaining trial days
+    const trialEndsAt = complex?.trialEndsAt ? new Date(complex.trialEndsAt) : null
+    const now = new Date()
+    const daysRemaining = trialEndsAt
+        ? Math.max(0, Math.ceil((trialEndsAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        : null
+    const isTrialActive = daysRemaining !== null && daysRemaining > 0
 
     return (
-        <div className="space-y-8 animate-fade-in w-full max-w-7xl mx-auto">
-            {/* Header Section - Stack on mobile, Row on Desktop */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/5 pb-6 gap-4">
-                <div>
-                    <h2 className="text-3xl md:text-4xl font-black text-white mb-2 tracking-tight">Dashboard</h2>
-                    <p className="text-gray-400 text-base">Visión general del estado de tu complejo.</p>
+        <div className="space-y-12 animate-fade-in w-full max-w-7xl mx-auto pb-32">
+            {/* Header Section */}
+            <header className="flex flex-col lg:flex-row lg:items-end justify-between border-b border-white/[0.03] pb-12 mb-4 gap-8 px-1 overflow-hidden relative group">
+                <div className="relative z-10">
+                    <p className="text-primary font-black uppercase text-[10px] tracking-[0.4em] mb-4 flex items-center gap-2">
+                        <span className="w-8 h-[1px] bg-primary/50"></span>
+                        Dashboard Operativo
+                    </p>
+                    <h2 className="text-5xl md:text-7xl font-black text-white mb-3 tracking-tighter leading-none">
+                        {complex?.name || 'Mi Complejo'}
+                    </h2>
+                    <p className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.2em]">Visión integral del rendimiento y flujo de caja</p>
                 </div>
-                <div className="flex items-center gap-3 bg-white/5 px-4 py-2 rounded-full border border-white/5 self-start md:self-auto">
-                    <div className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse shadow-[0_0_10px_var(--primary)]"></div>
-                    <span className="text-sm font-medium text-white">Sistema Operativo</span>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 relative z-10">
+                    {complex?.slug && <ClientLink slug={complex.slug} />}
+
+                    <div className="flex items-center gap-4 bg-white/[0.02] px-6 py-4 rounded-full border border-white/5 self-start shadow-2xl backdrop-blur-md">
+                        <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-20"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></span>
+                        </span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest leading-none">Canal Online</span>
+                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter mt-1">Sincronizado</span>
+                        </div>
+                    </div>
                 </div>
+                
+                {/* Background Accent */}
+                <div className="absolute -top-24 -right-24 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
             </header>
 
-            {/* Stats Grid - 1 Col Mobile, 2 Col Tablet, 3 Col Desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Trial Days Banner (Premium Redesign) */}
+            {isTrialActive && (
+                <div className={`glass-card p-1 border border-white/[0.03] overflow-hidden group shadow-2xl shadow-black/40`}>
+                    <div className={`flex flex-col sm:flex-row items-center justify-between gap-8 p-8 ${daysRemaining <= 2 ? 'bg-red-500/[0.03]' : 'bg-primary/[0.02]'}`}>
+                        <div className="flex items-center gap-6">
+                            <div className={`w-20 h-20 rounded-full flex items-center justify-center relative ${daysRemaining <= 2 ? 'bg-red-500/10 text-red-400' : 'bg-primary/10 text-primary'}`}>
+                                <div className={`absolute inset-0 rounded-full animate-pulse opacity-20 ${daysRemaining <= 2 ? 'bg-red-500' : 'bg-primary'}`}></div>
+                                <span className="text-4xl relative z-10">⏳</span>
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-black text-white mb-1 tracking-tight">
+                                    {daysRemaining === 0 ? '¡Hoy finaliza tu prueba!' :
+                                        daysRemaining === 1 ? '¡Último día de cortesía!' :
+                                            `${daysRemaining} días de prueba activa`}
+                                </h3>
+                                <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">
+                                    {daysRemaining <= 2 ? 'Tu acceso profesional está a punto de expirar' : 'Disfrutando del plan profesional sin límites'}
+                                </p>
+                            </div>
+                        </div>
+                        {daysRemaining <= 5 && (
+                            <Link 
+                                href="/admin/subscription"
+                                className="btn-primary py-5 px-10 text-[10px] font-black uppercase tracking-[0.25em] shadow-xl hover:scale-105 active:scale-95 transition-all w-full sm:w-auto flex items-center justify-center"
+                            >
+                                Mantener Acceso Pro ⚡
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Stats Grid - Enhanced Scale */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 px-1">
                 <StatCard
-                    title="Canchas Activas"
-                    value={stats.totalFields}
-                    icon="Stadium"
-                    trend="+ Estable"
-                    color="from-emerald-500/20 to-emerald-900/10"
-                    borderColor="border-emerald-500/30"
+                    title="Ingresos (Mes)"
+                    value={stats.monthlyRevenue}
+                    icon="Money"
+                    trend="Flujo Mensual"
+                    color="from-emerald-500/10"
+                    borderColor="border-emerald-500/10"
+                    isCurrency
                 />
                 <StatCard
                     title="Reservas Totales"
                     value={stats.totalBookings}
                     icon="Calendar"
-                    trend="+ Actividad reciente"
-                    color="from-blue-500/20 to-blue-900/10"
-                    borderColor="border-blue-500/30"
+                    trend="Volumen"
+                    color="from-blue-500/10"
+                    borderColor="border-blue-500/10"
+                />
+                <StatCard
+                    title="Canchas"
+                    value={stats.totalFields}
+                    icon="Stadium"
+                    trend="Capacidad"
+                    color="from-indigo-500/10"
+                    borderColor="border-indigo-500/10"
                 />
                 <StatCard
                     title="Pendientes"
                     value={stats.pendingBookings}
                     icon="Clock"
-                    trend="Requiere Revisión"
-                    color="from-amber-500/20 to-amber-900/10"
-                    borderColor="border-amber-500/50"
-                    highlight
+                    trend="Acción Requerida"
+                    color="from-amber-500/10"
+                    borderColor="border-amber-500/20"
+                    highlight={stats.pendingBookings > 0}
                 />
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Chart Section - Takes 2 cols on Desktop */}
-                <div className="lg:col-span-2 glass-card p-6 md:p-8">
-                    <div className="flex items-center justify-between mb-8">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span className="text-primary">●</span> Estadísticas de Ocupación
-                        </h3>
-                        <div className="flex gap-2">
-                            <div className="h-2 w-2 rounded-full bg-primary"></div>
-                            <div className="h-2 w-2 rounded-full bg-gray-600"></div>
-                        </div>
-                    </div>
-
-                    <div className="h-64 w-full flex items-center justify-center rounded-2xl bg-slate-950/50 border border-dashed border-white/10 relative overflow-hidden group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                        <div className="text-center">
-                            <p className="text-3xl font-bold text-gray-700 mb-2">Coming Soon</p>
-                            <p className="text-sm text-gray-500">Gráfico de rendimiento semanal</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Activity Feed - Takes 1 col */}
-                <div className="glass-card p-6 md:p-8 flex flex-col h-full">
-                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                        <span className="text-accent">●</span> Última Actividad
-                    </h3>
-                    <div className="space-y-4 flex-1 overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
-                        {[1, 2, 3, 4, 5].map((_, i) => (
-                            <div key={i} className="flex items-start gap-4 p-3 rounded-xl hover:bg-white/5 transition-all cursor-default group border border-transparent hover:border-white/5">
-                                <div className="w-10 h-10 rounded-full bg-slate-800 flex-shrink-0 flex items-center justify-center border border-white/5 group-hover:border-primary/50 transition-colors">
-                                    <span className="text-lg">👤</span>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-white font-medium text-sm truncate">Nueva reserva #204{i}</p>
-                                    <p className="text-xs text-gray-500">Hace {i * 12 + 2} minutos</p>
-                                </div>
-                                <Link href="/admin/bookings" className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity hover:underline">
-                                    Ver
-                                </Link>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 px-1">
+                {/* Revenue Chart Section */}
+                <div className="lg:col-span-2 glass-card p-1 border border-white/[0.03] shadow-2xl flex flex-col min-h-[500px]">
+                    <div className="p-8 md:p-10 flex-1 flex flex-col">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-16 gap-4">
+                            <div>
+                                <h3 className="text-2xl font-black text-white tracking-tight flex items-center gap-4">
+                                    Desempeño <span className="text-primary italic">Financiero</span>
+                                </h3>
+                                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.3em] mt-2">Monitoreo de ingresos últimos 7 días</p>
                             </div>
-                        ))}
+                            <div className="flex gap-6 text-[9px] font-black text-gray-500 uppercase tracking-widest bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_10px_rgba(16,185,129,0.5)]"></span>
+                                    Ventas Directas
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex-1 flex items-end justify-between gap-4 sm:gap-8 h-80 w-full relative pt-10">
+                            {/* Grid Lines */}
+                            <div className="absolute inset-x-0 top-10 bottom-0 flex flex-col justify-between text-[9px] font-black text-white/5 pointer-events-none z-0 px-2 uppercase tracking-widest">
+                                {[100, 75, 50, 25, 0].map((pct) => (
+                                    <div key={pct} className="border-t border-white/[0.05] w-full h-0 relative flex items-center">
+                                        <span className="absolute -left-10 opacity-30">{pct}%</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {stats.chartData.map((d: any, i: number) => (
+                                <div key={i} className="flex-1 flex flex-col items-center gap-4 z-10 group relative h-full justify-end">
+                                    {/* Tooltip (Premium Design) */}
+                                    <div className="absolute bottom-full mb-5 opacity-0 group-hover:opacity-100 transition-all duration-500 bg-slate-950 text-white p-4 rounded-2xl border border-white/10 whitespace-nowrap z-20 pointer-events-none shadow-[0_20px_40px_rgba(0,0,0,0.4)] transform translate-y-4 group-hover:translate-y-0 min-w-[140px]">
+                                        <p className="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-2 border-b border-white/5 pb-2">{d.fullDate}</p>
+                                        <p className="text-primary font-black text-xl tracking-tighter">${d.revenue.toLocaleString()}</p>
+                                        <p className="text-[9px] text-emerald-400 font-bold uppercase mt-1">✓ Confirmado</p>
+                                    </div>
+
+                                    {/* Bar Track */}
+                                    <div className="w-full max-w-[40px] sm:max-w-[60px] h-full bg-white/[0.01] rounded-t-[1.5rem] relative flex items-end overflow-hidden border border-white/[0.03] group-hover:border-primary/20 group-hover:bg-primary/[0.02] transition-all duration-700">
+                                        <div
+                                            className="w-full bg-gradient-to-t from-emerald-600 to-primary shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all duration-1000 ease-out group-hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] group-hover:translate-y-[-2px] relative"
+                                            style={{ height: `${d.revenue > 0 ? (d.revenue / maxRevenue) * 100 : 0}%`, minHeight: d.revenue > 0 ? '10px' : '0px' }}
+                                        >
+                                            <div className="absolute inset-0 bg-[url('/grain.png')] opacity-20 mix-blend-overlay"></div>
+                                            <div className="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/20 to-transparent"></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Label */}
+                                    <span className="text-[10px] font-black text-gray-600 uppercase tracking-widest group-hover:text-white group-hover:scale-110 transition-all duration-500">
+                                        {d.date}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Activity Feed */}
+                <div className="glass-card p-1 border border-white/[0.03] shadow-2xl flex flex-col h-full min-h-[500px] overflow-hidden">
+                    <div className="p-8 md:p-10 flex flex-col h-full">
+                        <h3 className="text-2xl font-black text-white mb-10 tracking-tight flex items-center justify-between">
+                            Actividad
+                            <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-xl border border-white/5">En Vivo</span>
+                        </h3>
+                        <div className="space-y-4 flex-1 overflow-y-auto max-h-[500px] pr-2 custom-scrollbar">
+                            {stats.recentActivity.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-full text-center py-20 opacity-30">
+                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 text-3xl">🏟️</div>
+                                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em]">Esperando interacciones...</p>
+                                </div>
+                            ) : (
+                                stats.recentActivity.map((booking: any) => (
+                                    <div key={booking.id} className="flex items-center gap-6 p-5 rounded-3xl bg-white/[0.02] hover:bg-white/[0.06] transition-all duration-500 cursor-default group border border-white/[0.02] hover:border-white/10 shadow-sm relative overflow-hidden">
+                                        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        
+                                        <div className={`w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center border border-white/5 shadow-inner transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 relative z-10
+                                            ${booking.status === 'confirmed' ? 'bg-emerald-500/10 text-emerald-400' :
+                                                booking.status === 'pending' ? 'bg-amber-500/10 text-amber-400' : 'bg-red-500/10 text-red-400'}
+                                        `}>
+                                            <span className="text-2xl font-black">
+                                                {booking.status === 'confirmed' ? '✓' : booking.status === 'pending' ? '⏳' : '✕'}
+                                            </span>
+                                        </div>
+                                        <div className="flex-1 min-w-0 relative z-10">
+                                            <p className="text-white font-black text-lg truncate leading-none group-hover:text-primary transition-colors tracking-tight">{booking.clientName}</p>
+                                            <div className="flex items-center gap-3 mt-3">
+                                                <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-black/40 px-3 py-1 rounded-lg border border-white/5">{booking.field.name}</span>
+                                                <span className="text-xs font-black text-primary tracking-tighter">${booking.totalPrice.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right relative z-10">
+                                            <span className="text-[10px] font-black text-gray-600 group-hover:text-white transition-colors uppercase tracking-widest font-mono">
+                                                {new Date(booking.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -107,46 +314,4 @@ export default async function AdminDashboard() {
     )
 }
 
-function StatCard({ title, value, icon, trend, color, borderColor, highlight }: { title: string, value: number, icon: string, trend?: string, color?: string, borderColor?: string, highlight?: boolean }) {
-    // Icon mapping simple
-    const icons: any = {
-        'Stadium': <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" /></svg>,
-        'Calendar': <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>,
-        'Clock': <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    }
 
-    return (
-        <div className={`relative overflow-hidden rounded-3xl border p-6 md:p-8 transition-all hover:-translate-y-1 hover:shadow-2xl group ${borderColor || 'border-white/5'} ${highlight ? 'ring-1 ring-amber-500/50 shadow-[0_0_30px_-5px_rgba(245,158,11,0.3)] bg-amber-950/10' : 'bg-slate-900/40'}`}>
-            {/* Background Gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${color || 'from-slate-800/20 to-slate-900/20'} z-0 opacity-100`} />
-            <div className="absolute right-0 top-0 p-32 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-
-            <div className="relative z-10 flex flex-col h-full justify-between">
-                <div className="flex justify-between items-start mb-6">
-                    <span className="p-3 bg-slate-950/50 rounded-2xl border border-white/10 text-white group-hover:scale-110 transition-transform shadow-lg">
-                        {icons[icon] || icon}
-                    </span>
-                    {highlight && <span className="flex h-3 w-3 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-                    </span>}
-                </div>
-
-                <div>
-                    <div className="flex items-end gap-3 mb-1">
-                        <h3 className="text-4xl md:text-5xl font-black text-white tracking-tighter">{value}</h3>
-                    </div>
-                    <p className="text-gray-400 text-sm font-bold uppercase tracking-wider">{title}</p>
-                </div>
-
-                {trend && (
-                    <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-2">
-                        <span className={`text-xs font-bold px-2 py-1 rounded ${highlight ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-400 bg-emerald-500/10'}`}>
-                            {trend}
-                        </span>
-                    </div>
-                )}
-            </div>
-        </div>
-    )
-}
